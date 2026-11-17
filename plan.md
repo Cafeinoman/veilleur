@@ -24,7 +24,7 @@
 |---|---|---|
 | G0-R | Dépôt git, environnement, contrôles, création du dépôt GitHub | fait |
 | G1 | Protocole 1.0 et `veilleur-protocol` | fait, avec réserves (étiquette `g1`) |
-| G2 | Cœur, stockage, administration, service HTTP | code écrit et contrôlé, à livrer (`/livrer`) |
+| G2 | Cœur, stockage, administration, service HTTP | fait, avec réserves (PR à fusionner, puis étiquette `g2`) |
 | G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | à faire |
 | G4 | Rendus, récepteur de référence | à faire |
 | G5 | Déploiement NixOS et repli systemd | à faire |
@@ -142,6 +142,17 @@ Réserves à la livraison (7 passages du vérificateur ; le 8ᵉ, interrompu, n'
 - [x] Spécification du protocole complétée (§9 : document d'abonnement, paquets d'un abonnement, codes d'erreur de l'API), en anglais et en français ; modèle de menace §4 mis à jour.
 
 Fini quand : un tour complet sur un collecteur factice, du jumelage à la récupération d'un paquet par l'API, sans réseau (`tests/server/test_cli_admin.py::test_end_to_end_without_network`).
+
+Réserves à la livraison (2 passages du vérificateur ; B1 corrigé avant le 2ᵉ, B2 corrigé après lui sur décision de l'utilisateur, sans 3ᵉ passage). Chaque écart a son test en `xfail` strict dans `tests/verif/test_g2_*.py` :
+- [ ] Le correctif de B2 (`0e30a66` : élément trop profond pour être haché écarté comme `bad_item`) n'a pas été revu par un vérificateur indépendant.
+- [ ] EF-05, autres arrêts du tour par un greffon qui viole son contrat : liste d'éléments paresseuse qui lève une exception (`_normalise` hors du `try`), `CollectorError` dont le code n'est pas une chaîne. Piste : un garde-fou autour de chaque collecte dans `run_round`.
+- [ ] Une déclaration d'équipe cassée (greffon absent) fait échouer `veilleur round` et `serve` avant toute collecte, au lieu de `collector_missing`.
+- [ ] EF-10 : `sync_team` peut dupliquer un abonnement d'équipe supprimé puis redéclaré dans la même seconde (pierre tombale qui masque la ligne vivante).
+- [ ] Protocole §7.4 : quand un filtre modifie les champs en place, `_current_view` garde l'empreinte stockée ; le `hash` publié ne correspond plus aux `fields`.
+- [ ] ES-05 : le service en marche ne suit pas un `key rotate` lancé par un autre processus ; deux rotations en moins de 90 jours : la seconde remplace la première déclaration.
+- [ ] EF-12 : un surrogate isolé dans les paramètres d'un `PUT` donne `500 internal_error` au lieu d'un 400.
+- [ ] EF-70, EF-80 : noms de valeur `LABEL`, `LIMIT`, `AFTER`, `LISTEN`, `PORT` non traduits dans l'aide française ; argument `collecteur` sans aide.
+- [ ] Hors spécification : un filtre qui renvoie une adresse invalide est compté `package_too_large` au lieu de `filter_failed` (`adapters/sealer.py`) ; `veilleur.db` en 0644 (0600 suggéré) ; requêtes non authentifiées non limitées en débit et corps lu avant l'authentification ; `history` sans plafond de jobs ; `export` après purge redondant ; `subscription show`/`export` par `uid` ambigus entre jumelages ; `GET` avec corps accepté ; une faute dans `pairings` d'une déclaration d'équipe supprime l'abonnement ; `1` et `1.0` donnent deux collectes distinctes (EF-04).
 
 Reste hors de G2, prévu plus loin : client HTTP réel (G3 ; G2 fournit le mode hors ligne), notificateurs `ntfy` et `webhook` et leur configuration (G3), rendus `markdown` et `html` (G4).
 
