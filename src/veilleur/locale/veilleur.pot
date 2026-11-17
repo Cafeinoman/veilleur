@@ -1,0 +1,93 @@
+# Translations template for Veilleur.
+# Copyright (C) 2026 Veilleur contributors
+# This file is distributed under the same license as the Veilleur project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Veilleur VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-11-15 16:33+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#, python-format
+msgid "%(heading)s:"
+msgstr ""
+
+#, python-format
+msgid "%(prog)s: error: %(message)s\n"
+msgstr ""
+
+msgid "Administration of the Veilleur watch server."
+msgstr ""
+
+#, python-brace-format
+msgid "Veilleur {version}, watch server under the EUPL-1.2 licence"
+msgstr ""
+
+#, python-format
+msgid "ambiguous option: %(option)s could match %(matches)s"
+msgstr ""
+
+#, python-format
+msgid "argument %(argument_name)s: %(message)s"
+msgstr ""
+
+msgid "command"
+msgstr ""
+
+msgid "expected one argument"
+msgstr ""
+
+#, python-format
+msgid "invalid %(type)s value: %(value)r"
+msgstr ""
+
+#, python-format
+msgid "invalid choice: %(value)r (choose from %(choices)s)"
+msgstr ""
+
+msgid "language of messages (default: from the system)"
+msgstr ""
+
+#, python-format
+msgid "not allowed with argument %s"
+msgstr ""
+
+#, python-format
+msgid "one of the arguments %s is required"
+msgstr ""
+
+msgid "options"
+msgstr ""
+
+msgid "positional arguments"
+msgstr ""
+
+msgid "show the version"
+msgstr ""
+
+msgid "show this help message and exit"
+msgstr ""
+
+msgid "subcommands"
+msgstr ""
+
+#, python-format
+msgid "the following arguments are required: %s"
+msgstr ""
+
+#, python-format
+msgid "unrecognized arguments: %s"
+msgstr ""
+
+msgid "usage: "
+msgstr ""
+

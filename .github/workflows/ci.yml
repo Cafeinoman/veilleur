@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: EUPL-1.2
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Tests and checks (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: uv sync --locked
+      - name: Tests (including translation catalogues, licence headers, bilingual documentation)
+        run: uv run --locked pytest
+      - name: Lint
+        run: uv run --locked ruff check src tests tools
+      - name: Types
+        run: uv run --locked mypy
+      - name: Architecture
+        run: uv run --locked lint-imports
