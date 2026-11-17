@@ -67,7 +67,9 @@ def format_time(moment: datetime) -> str:
     """UTC timestamp to the second: `2026-11-17T06:00:00Z`."""
     if moment.tzinfo is None:
         raise ValueError("timestamps must be timezone-aware")
-    return moment.astimezone(UTC).strftime(_TIME_FORMAT)
+    utc = moment.astimezone(UTC)
+    # Not strftime: "%Y" does not pad years before 1000 on every platform, and readers require four digits.
+    return f"{utc.year:04d}-{utc.month:02d}-{utc.day:02d}T{utc.hour:02d}:{utc.minute:02d}:{utc.second:02d}Z"
 
 
 def parse_time(text: object) -> datetime:

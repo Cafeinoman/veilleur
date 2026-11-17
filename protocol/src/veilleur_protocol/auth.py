@@ -93,7 +93,7 @@ def verify_request(
     date: str | None,
     now: datetime,
 ) -> str:
-    """Check a request; return its `key_id`. The date is checked first, then the MAC in constant time."""
+    """Check a request; return its `key_id`. In the order of §8: the header (MAC included), the date, the MAC."""
     key_id, mac = parse_authorization(authorization)
     try:
         sent = parse_time(date)

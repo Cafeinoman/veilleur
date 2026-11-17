@@ -153,7 +153,7 @@ l'horloge du serveur au-delà du manifeste.
 
 | Membre | Type | Valeur |
 |---|---|---|
-| `protocol` | chaîne | `"1.0"` ; un lecteur accepte `1.<mineure>` et refuse toute autre version majeure |
+| `protocol` | chaîne | `"1.0"` ; un lecteur accepte `1.<mineure>` (`<mineure>` un nombre décimal sans zéro initial, de longueur quelconque) et refuse toute autre version majeure |
 | `uid` | chaîne | abonnement, égal à celui de l'enveloppe |
 | `seq` | entier | égal à celui de l'enveloppe |
 | `kind` | chaîne | `delta`, `state` ou `history`, égal à celui de l'enveloppe |
@@ -223,8 +223,11 @@ chaîne à signer = méthode "\n" chemin-et-requête "\n" X-Veilleur-Date "\n" h
 - `A` est la clé `veilleur-auth` (§4) de la portée de la requête : quand le chemin commence par
   `/v1/subscriptions/<uid>` suivi de `/`, de `?` ou de sa fin, la portée est cet abonnement (un `uid` mal formé à cet
   endroit est refusé) ; sinon, le jumelage.
-- Le serveur retrouve le secret par le `key_id`, refuse une date à plus de **5 minutes** de son horloge dans un sens
-  ou dans l'autre (`stale_date`), puis compare le MAC en temps constant.
+- Le serveur contrôle, dans cet ordre, et s'arrête au premier échec : un en-tête `Authorization` absent ou mal formé,
+  y compris un MAC qui n'est pas le base64url canonique de 32 octets (`bad_authorization`) ; un `X-Veilleur-Date`
+  absent ou mal formé (`bad_date`) ; une date à plus de **5 minutes** de son horloge dans un sens ou dans l'autre
+  (`stale_date`) ; puis il retrouve le secret par le `key_id` et compare le MAC en temps constant
+  (`bad_authorization`).
 
 La date borne le rejeu à une fenêtre de 5 minutes. Dans cette fenêtre, la plupart des rejeux sont sans effet (une
 lecture ; un `PUT` fondé sur une version désormais dépassée reçoit `409`), mais pas tous : voir le

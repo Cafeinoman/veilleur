@@ -131,10 +131,10 @@ def read_rotation(statement: bytes, signature: bytes) -> tuple[bytes, bytes]:
     try:
         document = strict(statement)
         assert isinstance(document, dict) and isinstance(document["protocol"], str)
-        assert re.fullmatch(r"1\.(0|[1-9][0-9]{0,5})", document["protocol"])
+        assert re.fullmatch(r"1\.(0|[1-9][0-9]*)", document["protocol"])
         old, new = b64u(document["old_key"]), b64u(document["new_key"])
         assert timestamp(document["issued_at"]) and len(old) == 32 and len(new) == 32
-    except (ValueError, KeyError, AssertionError) as exc:
+    except (ValueError, KeyError, TypeError, AssertionError) as exc:
         raise Refused("bad_rotation") from exc
     if not ed25519_ok(old, statement, signature):
         raise Refused("bad_rotation")
@@ -274,7 +274,7 @@ def open_package(case: JSON) -> JSON:
     if not isinstance(manifest, dict):
         raise Refused("bad_manifest")
     if not isinstance(manifest.get("protocol"), str) or not re.fullmatch(
-        r"1\.(0|[1-9][0-9]{0,5})", manifest["protocol"]
+        r"1\.(0|[1-9][0-9]*)", manifest["protocol"]
     ):
         raise Refused("unsupported_version")
     if (
@@ -392,6 +392,10 @@ def verify_request(case: JSON) -> None:
     match = re.fullmatch(r"Veilleur ([0-9a-f]{16}):([A-Za-z0-9_-]{43})", case["authorization"])
     if match is None:
         raise Refused("bad_authorization")
+    try:  # a MAC that is not canonical base64url makes the header malformed: checked before the date (§8)
+        sent_mac = b64u(match.group(2))
+    except ValueError as exc:
+        raise Refused("bad_authorization") from exc
     if not timestamp(case["date"]):
         raise Refused("bad_date")
     sent = datetime.strptime(case["date"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC)
@@ -403,10 +407,6 @@ def verify_request(case: JSON) -> None:
     mac = hmac.new(
         auth_key(bytes.fromhex(case["secret"]), case["path_and_query"]), message.encode(), hashlib.sha256
     ).digest()
-    try:
-        sent_mac = b64u(match.group(2))
-    except ValueError as exc:
-        raise Refused("bad_authorization") from exc
     if not hmac.compare_digest(mac, sent_mac):
         raise Refused("bad_authorization")
 

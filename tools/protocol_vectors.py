@@ -273,6 +273,13 @@ def packages() -> JSON:
             _package_case("delta", _content(2, Kind.DELTA), KEY_1, [KEY_1], 2),
             _package_case("state", _content(1, Kind.STATE, period_from=None, renderings={}), KEY_1, [KEY_1], None),
             _package_case("history", _content(5, Kind.HISTORY, items=b""), KEY_1, [KEY_1], 5),
+            _package_case(
+                "history from a year before 1000",
+                _content(6, Kind.HISTORY, period_from=datetime(999, 1, 1, tzinfo=UTC)),
+                KEY_1,
+                [KEY_1],
+                6,
+            ),
             _package_case("rotation adopted", _content(3, Kind.DELTA, rotation=rotation), KEY_2, [KEY_1], 3),
             _package_case("rotation already trusted", _content(3, Kind.DELTA, rotation=rotation), KEY_2, [KEY_2], 3),
         ],
@@ -360,6 +367,16 @@ def _gap_before_end(items: bytes) -> bytes:
     plain = _zip(_signed({"items.jsonl": items}))
     end = plain.rfind(b"PK\x05\x06")
     return seal(SECRET, Header(UID, 2, Kind.DELTA), plain[:end] + bytes(16) + plain[end:], nonce=_nonce("refusal gap"))
+
+
+def _rotation_with_int_key() -> dict[str, bytes]:
+    """A rotation statement signed by KEY_1 whose old_key is a number."""
+    statement = json.dumps(
+        {"protocol": "1.0", "old_key": 7, "new_key": _b64u(KEY_2.public_key), "issued_at": format_time(YESTERDAY)},
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    return {"rotation.json": statement, "rotation.sig": KEY_1.sign(statement)}
 
 
 def _patched(items: bytes, label: str, patch: Callable[[bytearray], None]) -> bytes:
@@ -572,6 +589,14 @@ def refusals() -> JSON:
             "bad_rotation",
         ),
         _refusal(
+            "rotation with a key that is not a string",
+            _sealed(
+                _signed({"items.jsonl": items, **_rotation_with_int_key()}, key=KEY_2),
+                "rot int",
+            ),
+            "bad_rotation",
+        ),
+        _refusal(
             "rotation to another key than the signer's",
             _sealed(_signed({"items.jsonl": items, **rot}, key=STRANGER), "rot other"),
             "bad_signature",
@@ -739,6 +764,19 @@ def refusals() -> JSON:
             signed.date,
             "2026-11-17T06:00:00Z",
             "bad_authorization",
+        ),
+        *(
+            (
+                f"non-canonical MAC and a {label} date",
+                "GET",
+                f"/v1/subscriptions/{UID}/state",
+                b"",
+                _non_canonical(signed.authorization),
+                date,
+                "2026-11-17T06:10:00Z",
+                "bad_authorization",
+            )
+            for label, date in (("late", signed.date), ("malformed", "2026-11-17 06:00:00"))
         ),
         (
             "non-canonical MAC",

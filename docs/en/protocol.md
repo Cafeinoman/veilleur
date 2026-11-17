@@ -153,7 +153,7 @@ clock beyond the manifest.
 
 | Member | Type | Value |
 |---|---|---|
-| `protocol` | string | `"1.0"`; a reader accepts `1.<minor>` and refuses any other major version |
+| `protocol` | string | `"1.0"`; a reader accepts `1.<minor>` (`<minor>` a decimal number without leading zero, of any length) and refuses any other major version |
 | `uid` | string | subscription, equal to the envelope's |
 | `seq` | integer | equal to the envelope's |
 | `kind` | string | `delta`, `state` or `history`, equal to the envelope's |
@@ -221,8 +221,11 @@ string to sign = method "\n" path-and-query "\n" X-Veilleur-Date "\n" hex(SHA-25
 - `A` is the `veilleur-auth` key (§4) of the request's scope: when the path starts with `/v1/subscriptions/<uid>`
   followed by `/`, `?` or its end, the scope is that subscription (a malformed `uid` there is refused); otherwise the
   pairing.
-- The server finds the secret from `key_id`, refuses a date more than **5 minutes** away from its clock in either
-  direction (`stale_date`), then compares the MAC in constant time.
+- The server checks, in this order, and stops at the first failure: an `Authorization` header that is absent or
+  malformed, including a MAC that is not the canonical base64url of 32 bytes (`bad_authorization`); an
+  `X-Veilleur-Date` that is absent or malformed (`bad_date`); a date more than **5 minutes** away from its clock in
+  either direction (`stale_date`); then it finds the secret from `key_id` and compares the MAC in constant time
+  (`bad_authorization`).
 
 The date bounds replay to a 5-minute window. Within it, most replays have no effect (a read; a `PUT` based on a
 version that is now outdated gets `409`), but some do: see the [threat model](threat-model.md), §4.
