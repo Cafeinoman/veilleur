@@ -14,15 +14,17 @@
 
 ## Questions en attente
 
-*(aucune)*
+1. **Découverte des abonnements d'équipe par l'outil de réception** (G2, cahier EF-10 et §7.4). Un abonnement d'équipe reçoit un `uid` tiré par le serveur, mais l'interface `/v1` n'offre aucun moyen de le découvrir : l'outil de réception ne connaît que les `uid` qu'il a créés. Aujourd'hui, l'administrateur lit l'`uid` dans `veilleur subscription list` et le transmet à part, ce qui est peu pratique. Ajouter une requête à §7.4 modifie le cahier : c'est votre arbitrage.
+   **Recommandation** : ajouter `GET /v1/subscriptions` → `200 {"subscriptions": [{"uid", "origin": "team"|"client", "name" (abonnements d'équipe), "version"}]}`, limité aux abonnements non supprimés du jumelage, authentifié avec la clé propre au jumelage (sel vide, comme `GET /v1/collectors`). Les paramètres n'y figurent pas (l'outil de réception connaît les siens ; ceux d'équipe restent côté serveur). À faire en G3 si vous l'acceptez.
+2. **Compléments apportés au cahier en G2, à confirmer.** Pour mettre en œuvre des exigences existantes, j'ai ajouté à EF-70 `collectors allow|deny|default` (EF-11 exige que l'administrateur autorise des collecteurs par jumelage, sans dire comment), `key rotate` (ES-05) et `serve` (EF-71) ; j'ai aligné la liste des tables du §7.2 sur le schéma réel et consigné au §10 les choix de G2 (pierres tombales, instantané de ce qui a été rapporté, document d'abonnement). Si l'un de ces choix ne vous convient pas, dites lequel ; sinon, cette question se retire d'elle-même.
 
 ## État
 
 | Lot | Objet | État |
 |---|---|---|
 | G0-R | Dépôt git, environnement, contrôles, création du dépôt GitHub | fait |
-| G1 | Protocole 1.0 et `veilleur-protocol` | fait, avec réserves (PR en attente) |
-| G2 | Cœur, stockage, administration, service HTTP | à faire |
+| G1 | Protocole 1.0 et `veilleur-protocol` | fait, avec réserves (étiquette `g1`) |
+| G2 | Cœur, stockage, administration, service HTTP | fait, avec réserves (PR à fusionner, puis étiquette `g2`) |
 | G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | à faire |
 | G4 | Rendus, récepteur de référence | à faire |
 | G5 | Déploiement NixOS et repli systemd | à faire |
@@ -115,13 +117,13 @@ Fini quand : vecteurs vérifiés par les deux implémentations ; tous les refus 
 Réserves à la livraison (7 passages du vérificateur ; le 8ᵉ, interrompu, n'a pas rendu de verdict) :
 - [ ] Les correctifs du 7ᵉ passage (`a48c755` : clés publiques d'ordre faible refusées, §6.1, §8 et §10.1 précisés, seconde implémentation alignée) n'ont pas été revus par un vérificateur indépendant. À faire lors d'une prochaine vérification, limitée au diff depuis `383b9ca`.
 - [ ] `SECURITY.md` (ES-13) : prévu en G6.
-- [ ] Ordre des contrôles du §8 face à un `key_id` inconnu : vérifiable seulement avec le service WSGI (G2, ci-dessous).
+- [x] Ordre des contrôles du §8 face à un `key_id` inconnu : vérifié en G2 par le service WSGI (`tests/server/test_api.py`).
 
 ## G2 — Cœur, stockage, administration, service (EF-01 à EF-14, EF-30 à EF-45, EF-60 à EF-72, §7)
 
-- [ ] Domaine : `Item`, `Subscription`, `Collection`, `Report`, `Pairing`, codes d'erreur stables.
-- [ ] Ports : `Collector`, `Filter`, `Renderer`, `Notifier`, `Store`, `Sealer`, `HttpClient`, horloge.
-- [ ] Services :
+- [x] Domaine : `Item`, `Subscription`, `Collection`, `Report`, `Pairing`, codes d'erreur stables (`core/domain`).
+- [x] Ports : `Collector`, `Filter`, `Renderer`, `Notifier`, `Store`, `Sealer`, `HttpClient`, horloge (`core/ports`).
+- [x] Services :
   - jumelage ;
   - abonnements (validation par schéma, versions) ;
   - collecte mutualisée ;
@@ -130,15 +132,29 @@ Réserves à la livraison (7 passages du vérificateur ; le 8ᵉ, interrompu, n'
   - purge à 90 jours ;
   - tour ;
   - tâches longues.
-- [ ] SQLite : WAL, migrations SQL numérotées, sauvegarde avant migration.
-- [ ] Ligne de commande d'administration (EF-70), entièrement traduite.
-- [ ] Service WSGI `/v1` (§7.4) et fil de travail ; tests qui appellent l'application directement. Repris de la vérification de G1 :
+- [x] SQLite : WAL, migrations SQL numérotées, sauvegarde avant migration.
+- [x] Ligne de commande d'administration (EF-70), entièrement traduite.
+- [x] Service WSGI `/v1` (§7.4) et fil de travail ; tests qui appellent l'application directement. Repris de la vérification de G1 :
   - router sur le chemin **brut**, celui que signe le client (portée de la clé d'authentification, protocole §8), sans normalisation préalable ;
   - `key_id` inconnu : contrôler l'en-tête, la date et la péremption **avant** la recherche du secret, sans renvoyer `bad_authorization` plus tôt (protocole §8) ;
   - versions d'abonnement qui continuent de croître après un `DELETE`, pour qu'un `DELETE` ou une création rejoués dans la fenêtre de 5 minutes n'aient pas d'effet (modèle de menace §4).
-- [ ] Abonnements d'équipe déclarés en TOML (EF-10) ; autorisations de collecteurs par jumelage (EF-11).
+- [x] Abonnements d'équipe déclarés en TOML (EF-10) ; autorisations de collecteurs par jumelage (EF-11).
+- [x] Spécification du protocole complétée (§9 : document d'abonnement, paquets d'un abonnement, codes d'erreur de l'API), en anglais et en français ; modèle de menace §4 mis à jour.
 
-Fini quand : un tour complet sur un collecteur factice, du jumelage à la récupération d'un paquet par l'API, sans réseau.
+Fini quand : un tour complet sur un collecteur factice, du jumelage à la récupération d'un paquet par l'API, sans réseau (`tests/server/test_cli_admin.py::test_end_to_end_without_network`).
+
+Réserves à la livraison (2 passages du vérificateur ; B1 corrigé avant le 2ᵉ, B2 corrigé après lui sur décision de l'utilisateur, sans 3ᵉ passage). Chaque écart a son test en `xfail` strict dans `tests/verif/test_g2_*.py` :
+- [ ] Le correctif de B2 (`0e30a66` : élément trop profond pour être haché écarté comme `bad_item`) n'a pas été revu par un vérificateur indépendant.
+- [ ] EF-05, autres arrêts du tour par un greffon qui viole son contrat : liste d'éléments paresseuse qui lève une exception (`_normalise` hors du `try`), `CollectorError` dont le code n'est pas une chaîne. Piste : un garde-fou autour de chaque collecte dans `run_round`.
+- [ ] Une déclaration d'équipe cassée (greffon absent) fait échouer `veilleur round` et `serve` avant toute collecte, au lieu de `collector_missing`.
+- [ ] EF-10 : `sync_team` peut dupliquer un abonnement d'équipe supprimé puis redéclaré dans la même seconde (pierre tombale qui masque la ligne vivante).
+- [ ] Protocole §7.4 : quand un filtre modifie les champs en place, `_current_view` garde l'empreinte stockée ; le `hash` publié ne correspond plus aux `fields`.
+- [ ] ES-05 : le service en marche ne suit pas un `key rotate` lancé par un autre processus ; deux rotations en moins de 90 jours : la seconde remplace la première déclaration.
+- [ ] EF-12 : un surrogate isolé dans les paramètres d'un `PUT` donne `500 internal_error` au lieu d'un 400.
+- [ ] EF-70, EF-80 : noms de valeur `LABEL`, `LIMIT`, `AFTER`, `LISTEN`, `PORT` non traduits dans l'aide française ; argument `collecteur` sans aide.
+- [ ] Hors spécification : un filtre qui renvoie une adresse invalide est compté `package_too_large` au lieu de `filter_failed` (`adapters/sealer.py`) ; `veilleur.db` en 0644 (0600 suggéré) ; requêtes non authentifiées non limitées en débit et corps lu avant l'authentification ; `history` sans plafond de jobs ; `export` après purge redondant ; `subscription show`/`export` par `uid` ambigus entre jumelages ; `GET` avec corps accepté ; une faute dans `pairings` d'une déclaration d'équipe supprime l'abonnement ; `1` et `1.0` donnent deux collectes distinctes (EF-04).
+
+Reste hors de G2, prévu plus loin : client HTTP réel (G3 ; G2 fournit le mode hors ligne), notificateurs `ntfy` et `webhook` et leur configuration (G3), rendus `markdown` et `html` (G4).
 
 ## G3 — Client HTTP, collecteurs, filtres, notificateurs (EF-02 à EF-06, EF-20, EF-52, ES-08)
 

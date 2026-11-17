@@ -59,11 +59,11 @@ These are known and documented; they follow from the design choices of the cahie
 - **Metadata in clear**: an envelope header shows the subscription `uid`, the package number and its kind; its size
   shows the order of magnitude of the content; `reports?after=N` lists numbers, sizes and hashes. The network adversary
   sees them only if it also breaks TLS; anyone holding a folder export sees them.
-- **Replay window**: a request captured despite TLS can be replayed for 5 minutes. Most replays change nothing (a
-  read; a `PUT` based on a version that is now outdated gets `409`), but not all: a `DELETE` replayed after the
-  subscription was created again, or a creation (`PUT` based on version 0) replayed after a `DELETE`, takes effect. The
-  server can narrow this (G2: versions that keep increasing across a deletion); it cannot close it without keeping the
-  MACs it has seen.
+- **Replay window**: a request captured despite TLS can be replayed for 5 minutes. Such a replay changes nothing: a
+  read; a `PUT` based on a version that is now outdated gets `409`; a `DELETE` or a creation (`PUT` based on version
+  0) replayed after a deletion meets a tombstone, since a deleted `uid` is never reused and versions keep increasing
+  across a deletion ([protocol.md §9.1](protocol.md#91-subscription-document)). What remains is what a delay can do:
+  an adversary who holds back a request delivers it up to 5 minutes later.
 - **Compromised outgoing key**: a receiving tool stops trusting the outgoing key once it has adopted the incoming one
   ([protocol.md §6.3](protocol.md#63-key-rotation)). Until then, a thief of the key could sign a rotation to their
   own key, but still could not make a package the receiving tool accepts without the pairing secret.

@@ -2,7 +2,7 @@
 
 *[Version française](../fr/design.md)*
 
-This document describes what Veilleur will be. The skeleton (milestone G0) and the protocol (G1: [specification](protocol.md), [threat model](threat-model.md), `veilleur-protocol` library) exist today (§9).
+This document describes what Veilleur will be. The skeleton (milestone G0), the protocol (G1: [specification](protocol.md), [threat model](threat-model.md), `veilleur-protocol` library) and the core with its storage, administration command line and HTTP service (G2) exist today (§9).
 
 ## 1. Purpose
 
@@ -53,7 +53,7 @@ Subscription parameters are encrypted in transit and readable by the server in i
 
 A package contains `manifest.json` (protocol version, subscription, number, kind, period, hash of every other file, status of the collections), `manifest.sig`, `items.jsonl` (JSON Lines, one item per line, sorted by key: `{key, change: new|changed|gone, hash, fields, fetched_at, url}`) and the requested renderings (`report.md`, `report.html`) in the subscription's language. Renderings are **optional** and **derived**: `items.jsonl` is authoritative.
 
-Kinds: `delta` (since the previous package), `state` (everything currently valid, for a receiver back after packages were purged), `history` (catch-up from a date, prepared in the background). Frequency per subscription (daily by default, weekly, every round); an empty report is not produced; a new subscription first receives a `state`, then `delta`s. Packages are numbered without gaps and kept 90 days; a purged package answers `410`, and the receiver then asks for a `state`.
+Kinds: `delta` (since the previous package), `state` (everything currently valid, for a receiver back after packages were purged), `history` (catch-up from a date, prepared in the background). Each subscription keeps what it last reported: a report compares the filtered current items of its collection with that, so changes accumulate until the report is due. Frequency per subscription (daily by default, weekly, every round); an empty report is not produced; a new subscription first receives a `state`, then `delta`s. Packages are numbered without gaps and kept 90 days; a purged package answers `410`, and the receiver then asks for a `state`.
 
 ## 4. Security
 
@@ -85,7 +85,7 @@ The receiving tool is out of scope. Veilleur provides:
 
 `PUT|DELETE /subscriptions/{uid}`, `GET /subscriptions/{uid}/reports?after=N`, `GET …/reports/{n}`, `GET …/state`, `GET …/history`, `GET /collectors` (collectors this pairing may use, with their schemas). A WSGI application listening on `127.0.0.1` behind the reverse proxy; long jobs answer `202` with `Retry-After` and run in a worker thread. Every request is authenticated. Error bodies: `{"code", "message"}`, without internal detail; `code` is a stable English identifier, `message` is translated. Statuses: `400`, `401`, `403` (revoked pairing or collector not allowed), `404`, `409`, `410`, `413`, `429`, `500`. Every response carries `Cache-Control: no-store`.
 
-The administration command line `veilleur` offers `info`, `config`, `pairing new|list|revoke`, `subscription list|show`, `collectors`, `round`, `sources`, `log`, `export` (delivery by folder), `notify --test` and `version`. The HTTP service (`veilleur serve`) and the periodic round (systemd timer) are two processes on the same SQLite database (WAL mode, numbered SQL migrations run at start-up after a backup).
+The administration command line `veilleur` offers `info`, `config`, `pairing new|list|revoke`, `subscription list|show`, `collectors` (with `allow`, `deny` and `default` to set what a pairing may use), `round`, `sources`, `log`, `export` (delivery by folder), `notify --test`, `key rotate` (server key rotation), `serve` and `version`. The HTTP service (`veilleur serve`) and the periodic round (systemd timer) are two processes on the same SQLite database (WAL mode, numbered SQL migrations run at start-up after a backup).
 
 ## 7. Installation
 

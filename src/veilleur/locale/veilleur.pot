@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Veilleur VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-17 01:57+0100\n"
+"POT-Creation-Date: 2026-11-17 22:21+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,11 +29,257 @@ msgstr ""
 msgid "%(prog)s: error: %(message)s\n"
 msgstr ""
 
+#, python-brace-format
+msgid ""
+"A label is 1 to {max} printable characters: a marker such as “desk 3”, "
+"never a name."
+msgstr ""
+
+msgid "A team subscription is managed by the administrator."
+msgstr ""
+
 msgid "Administration of the Veilleur watch server."
 msgstr ""
 
 #, python-brace-format
+msgid "Collector {name} is not allowed for this pairing."
+msgstr ""
+
+#, python-brace-format
+msgid "Collector: {collector}"
+msgstr ""
+
+#, python-brace-format
+msgid "Configuration file: {path}"
+msgstr ""
+
+msgid "Deleted."
+msgstr ""
+
+msgid "Done."
+msgstr ""
+
+#, python-brace-format
+msgid "Filters: {filters}"
+msgstr ""
+
+#, python-brace-format
+msgid "Frequency: {frequency}"
+msgstr ""
+
+msgid ""
+"Give this code to the receiving tool. It is shown only once and holds a "
+"secret:"
+msgstr ""
+
+msgid "Internal error."
+msgstr ""
+
+#, python-brace-format
+msgid "Invalid configuration: {member}."
+msgstr ""
+
+#, python-brace-format
+msgid "Invalid parameters at {path} (rule {keyword})."
+msgstr ""
+
+#, python-brace-format
+msgid "Invalid subscription document (member {member})."
+msgstr ""
+
+#, python-brace-format
+msgid "Language: {language}"
+msgstr ""
+
+#, python-brace-format
+msgid "Last round: {time}"
+msgstr ""
+
+#, python-brace-format
+msgid "Listening on: {host}:{port}"
+msgstr ""
+
+msgid "Missing or invalid authentication."
+msgstr ""
+
+msgid "Missing or malformed X-Veilleur-Date header."
+msgstr ""
+
+msgid "No notifier is configured."
+msgstr ""
+
+#, python-brace-format
+msgid "No pairing matches {reference}."
+msgstr ""
+
+#, python-brace-format
+msgid "No subscription matches {reference}."
+msgstr ""
+
+msgid "Nothing here."
+msgstr ""
+
+#, python-brace-format
+msgid "Origin: {origin}"
+msgstr ""
+
+#, python-brace-format
+msgid "Packages up to {seq} are purged: a state was written instead."
+msgstr ""
+
+#, python-brace-format
+msgid "Packages: last {last}, oldest kept {oldest}"
+msgstr ""
+
+#, python-brace-format
+msgid "Pairing {key_id} created ({label})."
+msgstr ""
+
+#, python-brace-format
+msgid "Pairing {key_id} revoked."
+msgstr ""
+
+#, python-brace-format
+msgid "Pairing: {key_id}"
+msgstr ""
+
+#, python-brace-format
+msgid "Pairings: {active} active, {revoked} revoked"
+msgstr ""
+
+#, python-brace-format
+msgid "Parameters: {params}"
+msgstr ""
+
+#, python-brace-format
+msgid "Public address: {url}"
+msgstr ""
+
+#, python-brace-format
+msgid "Renderings: {renderings}"
+msgstr ""
+
+#, python-brace-format
+msgid "Round finished: {collections} collections, {failed} failed."
+msgstr ""
+
+#, python-brace-format
+msgid "Server key: {key}"
+msgstr ""
+
+#, python-brace-format
+msgid "Several pairings match {reference}; use its key_id."
+msgstr ""
+
+#, python-brace-format
+msgid "State directory: {path}"
+msgstr ""
+
+#, python-brace-format
+msgid "Subscription {uid}"
+msgstr ""
+
+#, python-brace-format
+msgid "Subscriptions: {count}"
+msgstr ""
+
+#, python-brace-format
+msgid "Team subscription {name}: collector {collector}, pairings {pairings}"
+msgstr ""
+
+#, python-brace-format
+msgid "Test notification sent: {ok} of {total} notifiers."
+msgstr ""
+
+msgid "The body is not a sealed document."
+msgstr ""
+
+#, python-brace-format
+msgid "The request body is over {limit} bytes."
+msgstr ""
+
+msgid "The request date is more than 5 minutes away from the server's clock."
+msgstr ""
+
+msgid "The request is malformed."
+msgstr ""
+
+msgid "The sealed document belongs to another subscription."
+msgstr ""
+
+msgid "The sealed document could not be opened."
+msgstr ""
+
+msgid "The sealed document is not a subscription document."
+msgstr ""
+
+msgid "The sealed document is too large."
+msgstr ""
+
+msgid ""
+"The server key was replaced; packages carry the rotation statement for 90"
+" days."
+msgstr ""
+
+msgid "The subscription document is not a JSON object."
+msgstr ""
+
+#, python-brace-format
+msgid "The subscription has changed: its current version is {version}."
+msgstr ""
+
+msgid "This package is no longer kept; ask for a state."
+msgstr ""
+
+msgid "This pairing has been revoked."
+msgstr ""
+
+msgid "This subscription was deleted; create a new one."
+msgstr ""
+
+msgid "Too many requests; try again later."
+msgstr ""
+
+#, python-brace-format
+msgid "Unknown collector: {name}."
+msgstr ""
+
+#, python-brace-format
+msgid "Unknown filter: {name}."
+msgstr ""
+
+#, python-brace-format
+msgid "Unknown rendering: {name}."
+msgstr ""
+
+msgid "Unsupported protocol version."
+msgstr ""
+
+#, python-brace-format
+msgid "Veilleur {version}"
+msgstr ""
+
+#, python-brace-format
 msgid "Veilleur {version}, watch server under the EUPL-1.2 licence"
+msgstr ""
+
+#, python-brace-format
+msgid "Version: {version}"
+msgstr ""
+
+msgid "a marker such as “desk 3”, never a person's name"
+msgstr ""
+
+msgid "action"
+msgstr ""
+
+msgid "allow a collector to a pairing"
+msgstr ""
+
+msgid "allowed"
+msgstr ""
+
+msgid "allowed by default"
 msgstr ""
 
 #, python-format
@@ -48,7 +294,38 @@ msgstr ""
 msgid "can't open '%(filename)s': %(error)s"
 msgstr ""
 
+msgid "collection"
+msgstr ""
+
+msgid "collector"
+msgstr ""
+
 msgid "command"
+msgstr ""
+
+msgid "configuration file (TOML)"
+msgstr ""
+
+msgid "create a pairing and show its code, once"
+msgstr ""
+
+msgid "create, list and revoke pairings"
+msgstr ""
+
+msgid "created"
+msgstr ""
+
+msgid "deleted"
+msgstr ""
+
+msgid "deny a collector to a pairing"
+msgstr ""
+
+msgid "destination folder"
+msgstr ""
+
+#, python-brace-format
+msgid "error: {message}"
 msgstr ""
 
 #, python-format
@@ -66,8 +343,29 @@ msgstr ""
 msgid "expected one argument"
 msgstr ""
 
+msgid "file"
+msgstr ""
+
+msgid "folder"
+msgstr ""
+
+msgid "follows client addresses"
+msgstr ""
+
+msgid "frequency"
+msgstr ""
+
+msgid "go back to the default for a collector and a pairing"
+msgstr ""
+
 #, python-format
 msgid "ignored explicit argument %r"
+msgstr ""
+
+msgid "include deleted subscriptions"
+msgstr ""
+
+msgid "installed collectors and those allowed per pairing"
 msgstr ""
 
 #, python-format
@@ -78,24 +376,134 @@ msgstr ""
 msgid "invalid choice: %(value)r (choose from %(choices)s)"
 msgstr ""
 
+msgid "invalid parameters"
+msgstr ""
+
+msgid "key_id"
+msgstr ""
+
+msgid "key_id or label"
+msgstr ""
+
+msgid "label"
+msgstr ""
+
 msgid "language of messages (default: from the system)"
+msgstr ""
+
+msgid "last attempt"
+msgstr ""
+
+msgid "last success"
+msgstr ""
+
+msgid "list and show subscriptions"
+msgstr ""
+
+msgid "list the pairings"
+msgstr ""
+
+msgid "list the subscriptions"
+msgstr ""
+
+msgid "local address to listen on"
+msgstr ""
+
+msgid "manage the server's signing key"
+msgstr ""
+
+msgid "no"
 msgstr ""
 
 #, python-format
 msgid "not allowed with argument %s"
 msgstr ""
 
+msgid "number of entries"
+msgstr ""
+
+msgid "ok"
+msgstr ""
+
 #, python-format
 msgid "one of the arguments %s is required"
+msgstr ""
+
+msgid "only the packages after this number"
 msgstr ""
 
 msgid "options"
 msgstr ""
 
+msgid "origin"
+msgstr ""
+
+msgid "pairing"
+msgstr ""
+
+#, python-brace-format
+msgid "pairing {key_id} created"
+msgstr ""
+
+#, python-brace-format
+msgid "pairing {key_id} revoked"
+msgstr ""
+
+msgid "port to listen on"
+msgstr ""
+
 msgid "positional arguments"
 msgstr ""
 
+msgid "receiving tool"
+msgstr ""
+
+msgid "replace the server's key; paired tools follow without re-pairing"
+msgstr ""
+
+msgid "revoke a pairing"
+msgstr ""
+
+msgid "revoked"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"round: {collections} collections ({failed} failed), {reports} reports, "
+"{new_items} new items"
+msgstr ""
+
+msgid "run a round now and show its outcome"
+msgstr ""
+
+msgid "run the HTTP service"
+msgstr ""
+
+msgid "send a test notification"
+msgstr ""
+
+msgid "send notifications"
+msgstr ""
+
+msgid "server key replaced"
+msgstr ""
+
+msgid "show a subscription"
+msgstr ""
+
 msgid "show program's version number and exit"
+msgstr ""
+
+msgid "show the administration log"
+msgstr ""
+
+msgid "show the configuration in force"
+msgstr ""
+
+msgid "show the state of the collections"
+msgstr ""
+
+msgid "show the state of the server"
 msgstr ""
 
 msgid "show the version"
@@ -104,11 +512,60 @@ msgstr ""
 msgid "show this help message and exit"
 msgstr ""
 
+msgid "show what this pairing may use"
+msgstr ""
+
+msgid "some items were invalid"
+msgstr ""
+
+msgid "state"
+msgstr ""
+
+msgid "state directory (database, keys)"
+msgstr ""
+
 msgid "subcommands"
+msgstr ""
+
+#, python-brace-format
+msgid "subscription {uid} created by pairing {key_id}"
+msgstr ""
+
+#, python-brace-format
+msgid "subscription {uid} of pairing {key_id} deleted"
+msgstr ""
+
+#, python-brace-format
+msgid "subscription {uid} of pairing {key_id} updated (version {version})"
+msgstr ""
+
+#, python-brace-format
+msgid "team subscription {name}: no pairing matches {reference}"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"team subscriptions: {created} created, {updated} updated, {deleted} "
+"deleted"
+msgstr ""
+
+msgid "the collector failed"
+msgstr ""
+
+msgid "the collector is not installed"
 msgstr ""
 
 #, python-format
 msgid "the following arguments are required: %s"
+msgstr ""
+
+msgid "the network is unavailable"
+msgstr ""
+
+msgid "uid"
+msgstr ""
+
+msgid "uid of the subscription"
 msgstr ""
 
 #, python-format
@@ -125,4 +582,37 @@ msgstr ""
 
 msgid "usage: "
 msgstr ""
+
+msgid "version"
+msgstr ""
+
+msgid "write the packages of a subscription into a folder"
+msgstr ""
+
+msgid "yes"
+msgstr ""
+
+#, python-brace-format
+msgid "{count} new item"
+msgid_plural "{count} new items"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} package written"
+msgid_plural "{count} packages written"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} report produced"
+msgid_plural "{count} reports produced"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} source failing for more than two days"
+msgid_plural "{count} sources failing for more than two days"
+msgstr[0] ""
+msgstr[1] ""
 

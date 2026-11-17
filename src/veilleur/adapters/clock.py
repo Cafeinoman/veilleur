@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: EUPL-1.2
+"""System clock."""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+
+
+class SystemClock:
+    def now(self) -> datetime:
+        return datetime.now(UTC).replace(microsecond=0)

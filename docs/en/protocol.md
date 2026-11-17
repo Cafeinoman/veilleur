@@ -206,7 +206,7 @@ detail (stack traces, addresses of the server).
 The body of `PUT /v1/subscriptions/{uid}` is an envelope of kind `subscription`, sealed with the subscription key.
 Its `seq` is the version the change is based on: `0` to create the subscription, otherwise the version returned by
 the previous `PUT`. The plaintext is a JSON object whose members (collector, parameters, filters, frequency,
-language, renderings) are defined with the HTTP API. The whole envelope is the request body, so it is at most
+language, renderings) are defined with the HTTP API (§9.1). The whole envelope is the request body, so it is at most
 1 000 000 bytes (§9), and the plaintext at most 999 930 bytes.
 
 ## 8. Request authentication
@@ -233,19 +233,19 @@ string to sign = method "\n" path-and-query "\n" X-Veilleur-Date "\n" hex(SHA-25
   either direction (`stale_date`); then it finds the secret from `key_id` and compares the MAC in constant time
   (`bad_authorization`).
 
-The date bounds replay to a 5-minute window. Within it, most replays have no effect (a read; a `PUT` based on a
-version that is now outdated gets `409`), but some do: see the [threat model](threat-model.md), §4.
+The date bounds replay to a 5-minute window. Within it, a replay has no effect: a read; a `PUT` based on a version
+that is now outdated gets `409`; a deleted `uid` is never reused (§9.1). See the [threat model](threat-model.md), §4.
 
 ## 9. HTTP interface `/v1`
 
 All requests are authenticated (§8). Every response carries `Cache-Control: no-store`. Error responses have a JSON
-body `{"code", "message"}`: `code` is a stable English identifier, `message` a translated text without internal
-detail.
+body `{"code", "message"}`: `code` is a stable English identifier (§9.3), `message` a translated text without
+internal detail, in the language of `Accept-Language` (`en` or `fr`) or else the server's.
 
 | Request | Response |
 |---|---|
-| `GET /v1/collectors` | collectors this pairing may use, with the JSON schema of their parameters |
-| `PUT /v1/subscriptions/{uid}` | sealed subscription document (§7.6); `200 {"version"}`; `409` if based on an outdated version |
+| `GET /v1/collectors` | `200 {"collectors": [{"name", "schema"}]}`: collectors this pairing may use, with the JSON schema of their parameters |
+| `PUT /v1/subscriptions/{uid}` | sealed subscription document (§7.6, §9.1); `200 {"version"}`; `409` if based on an outdated version |
 | `DELETE /v1/subscriptions/{uid}` | `204` |
 | `GET /v1/subscriptions/{uid}/reports?after=N` | `200 {"packages": [{"seq", "size", "sha256"}], "oldest", "last"}`, in clear, without content |
 | `GET /v1/subscriptions/{uid}/reports/{n}` | `200` package (`application/octet-stream`); `410` if purged (packages are kept 90 days) |
@@ -254,6 +254,61 @@ detail.
 
 Statuses: `400`, `401` (authentication), `403` (revoked pairing, or collector not allowed for this pairing), `404`,
 `409`, `410`, `413` (body over 1 000 000 bytes), `429`, `500`. After a `410`, the receiving tool asks for a `state`.
+
+The server routes on the path exactly as signed (§8), without decoding or normalising it: `N` and `n` are decimal
+numbers without leading zero, a query not listed here is refused (`400`), and anything else is `404`. Each pairing
+has its own `uid` space: a subscription of another pairing is answered `404`, as one that does not exist.
+
+### 9.1 Subscription document
+
+| Member | Type | Value |
+|---|---|---|
+| `collector` | string | name of a collector this pairing may use (`GET /v1/collectors`) |
+| `params` | object, optional | the collector's parameters, valid against its schema; default `{}` |
+| `filters` | array, optional | at most 16 objects `{"name", "params"}`: filters applied in order; default `[]` |
+| `frequency` | string, optional | `every_round`, `daily` (default) or `weekly` |
+| `language` | string, optional | language of the renderings: `en` (default) or `fr` |
+| `renderings` | array, optional | at most 8 distinct names of renderers (for example `markdown`); default `[]` |
+
+Unknown members are ignored. The first `PUT` (base version `0`) creates the subscription with version `1`; each
+later `PUT` must be based on the current version and returns the next one. `DELETE` also increases the version and
+leaves a tombstone: a deleted `uid` is never reused (`PUT` answers `409` `subscription_deleted`, `DELETE` answers
+`204` again, without effect), so that a replayed creation or deletion changes nothing (threat model §4). A receiving
+tool that wants a subscription back draws a new `uid`.
+
+### 9.2 Packages of a subscription
+
+The first package of a new subscription is a `state` (§7.3), made as soon as its first collection succeeds, even
+with no item; until then `reports` lists nothing (`"last": 0`) and `state` answers `202`. Then a `delta` is made
+when the subscription's report is due (every round, after about one day, or after about one week) and something
+changed; an empty `delta` is never made. `oldest` is the oldest number still kept (or `null`), `last` the last number
+made (`0` if none).
+
+A `state` on request describes what the receiving tool holds after package `last` and carries that number. A
+`history` lists the items first reported (`new`), changed (`changed`) or gone (`gone`) since 00:00 UTC on the given
+date, within the 90 days the server keeps; its `period.from` is that date.
+
+### 9.3 Error codes of the interface
+
+Besides the codes of §11 (`bad_authorization`, `bad_date`, `stale_date` with `401`; the codes of a refused
+subscription envelope with `400`, `too_large` with `413`):
+
+| Code | Status | Meaning |
+|---|---|---|
+| `bad_request` | 400 | malformed request (query, number, date, `Content-Length`) |
+| `invalid_subscription` | 400 | a member of the subscription document has the wrong type or value |
+| `invalid_params` | 400 | parameters do not satisfy the schema of their collector or filter |
+| `unknown_collector`, `unknown_filter`, `unknown_renderer` | 400 | not installed on this server |
+| `revoked` | 403 | the pairing is revoked |
+| `collector_not_allowed` | 403 | collector not allowed for this pairing |
+| `team_subscription` | 403 | a team subscription is managed by the administrator, not through the interface |
+| `not_found` | 404 | no such resource |
+| `version_conflict` | 409 | `PUT` based on an outdated version |
+| `subscription_deleted` | 409 | the `uid` belongs to a deleted subscription |
+| `purged` | 410 | the package is no longer kept |
+| `body_too_large` | 413 | body over 1 000 000 bytes |
+| `rate_limited` | 429 | too many requests from this pairing |
+| `internal_error` | 500 | failure of the server, without detail |
 
 ## 10. Reader
 
