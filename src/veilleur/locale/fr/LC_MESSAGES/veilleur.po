@@ -29,12 +29,268 @@ msgstr "%(heading)s :"
 msgid "%(prog)s: error: %(message)s\n"
 msgstr "%(prog)s : erreur : %(message)s\n"
 
+#, python-brace-format
+msgid ""
+"A label is 1 to {max} printable characters: a marker such as “desk 3”, "
+"never a name."
+msgstr ""
+"Un libellé compte de 1 à {max} caractères imprimables : un repère comme «"
+" poste 3 », jamais un nom."
+
+msgid "A team subscription is managed by the administrator."
+msgstr "Un abonnement d'équipe est géré par l'administrateur."
+
 msgid "Administration of the Veilleur watch server."
 msgstr "Administration du serveur de veille Veilleur."
 
 #, python-brace-format
+msgid "Collector {name} is not allowed for this pairing."
+msgstr "Le collecteur {name} n'est pas autorisé pour ce jumelage."
+
+#, python-brace-format
+msgid "Collector: {collector}"
+msgstr "Collecteur : {collector}"
+
+#, python-brace-format
+msgid "Configuration file: {path}"
+msgstr "Fichier de configuration : {path}"
+
+msgid "Deleted."
+msgstr "Supprimé."
+
+msgid "Done."
+msgstr "Fait."
+
+#, python-brace-format
+msgid "Filters: {filters}"
+msgstr "Filtres : {filters}"
+
+#, python-brace-format
+msgid "Frequency: {frequency}"
+msgstr "Périodicité : {frequency}"
+
+msgid ""
+"Give this code to the receiving tool. It is shown only once and holds a "
+"secret:"
+msgstr ""
+"Remettez ce code à l'outil de réception. Il n'est montré qu'une fois et "
+"contient un secret :"
+
+msgid "Internal error."
+msgstr "Erreur interne."
+
+#, python-brace-format
+msgid "Invalid configuration: {member}."
+msgstr "Configuration invalide : {member}."
+
+#, python-brace-format
+msgid "Invalid parameters at {path} (rule {keyword})."
+msgstr "Paramètres invalides en {path} (règle {keyword})."
+
+#, python-brace-format
+msgid "Invalid subscription document (member {member})."
+msgstr "Document d'abonnement invalide (membre {member})."
+
+#, python-brace-format
+msgid "Language: {language}"
+msgstr "Langue : {language}"
+
+#, python-brace-format
+msgid "Last round: {time}"
+msgstr "Dernier tour : {time}"
+
+#, python-brace-format
+msgid "Listening on: {host}:{port}"
+msgstr "Écoute sur : {host}:{port}"
+
+msgid "Missing or invalid authentication."
+msgstr "Authentification absente ou invalide."
+
+msgid "Missing or malformed X-Veilleur-Date header."
+msgstr "En-tête X-Veilleur-Date absent ou mal formé."
+
+msgid "No notifier is configured."
+msgstr "Aucun notificateur n'est configuré."
+
+#, python-brace-format
+msgid "No pairing matches {reference}."
+msgstr "Aucun jumelage ne correspond à {reference}."
+
+#, python-brace-format
+msgid "No subscription matches {reference}."
+msgstr "Aucun abonnement ne correspond à {reference}."
+
+msgid "Nothing here."
+msgstr "Rien ici."
+
+#, python-brace-format
+msgid "Origin: {origin}"
+msgstr "Origine : {origin}"
+
+#, python-brace-format
+msgid "Packages up to {seq} are purged: a state was written instead."
+msgstr ""
+"Les paquets jusqu'au n° {seq} sont purgés : un état a été écrit à leur "
+"place."
+
+#, python-brace-format
+msgid "Packages: last {last}, oldest kept {oldest}"
+msgstr "Paquets : dernier {last}, plus ancien conservé {oldest}"
+
+#, python-brace-format
+msgid "Pairing {key_id} created ({label})."
+msgstr "Jumelage {key_id} créé ({label})."
+
+#, python-brace-format
+msgid "Pairing {key_id} revoked."
+msgstr "Jumelage {key_id} révoqué."
+
+#, python-brace-format
+msgid "Pairing: {key_id}"
+msgstr "Jumelage : {key_id}"
+
+#, python-brace-format
+msgid "Pairings: {active} active, {revoked} revoked"
+msgstr "Jumelages actifs : {active}, révoqués : {revoked}"
+
+#, python-brace-format
+msgid "Parameters: {params}"
+msgstr "Paramètres : {params}"
+
+#, python-brace-format
+msgid "Public address: {url}"
+msgstr "Adresse publique : {url}"
+
+#, python-brace-format
+msgid "Renderings: {renderings}"
+msgstr "Rendus : {renderings}"
+
+#, python-brace-format
+msgid "Round finished: {collections} collections, {failed} failed."
+msgstr "Tour terminé : {collections} collectes, {failed} en échec."
+
+#, python-brace-format
+msgid "Server key: {key}"
+msgstr "Clé du serveur : {key}"
+
+#, python-brace-format
+msgid "Several pairings match {reference}; use its key_id."
+msgstr "Plusieurs jumelages correspondent à {reference} ; indiquez son key_id."
+
+#, python-brace-format
+msgid "State directory: {path}"
+msgstr "Dossier d'état : {path}"
+
+#, python-brace-format
+msgid "Subscription {uid}"
+msgstr "Abonnement {uid}"
+
+#, python-brace-format
+msgid "Subscriptions: {count}"
+msgstr "Abonnements : {count}"
+
+#, python-brace-format
+msgid "Team subscription {name}: collector {collector}, pairings {pairings}"
+msgstr "Abonnement d'équipe {name} : collecteur {collector}, jumelages {pairings}"
+
+#, python-brace-format
+msgid "Test notification sent: {ok} of {total} notifiers."
+msgstr "Notification d'essai envoyée : {ok} notificateurs sur {total}."
+
+msgid "The body is not a sealed document."
+msgstr "Le corps n'est pas un document scellé."
+
+#, python-brace-format
+msgid "The request body is over {limit} bytes."
+msgstr "Le corps de la requête dépasse {limit} octets."
+
+msgid "The request date is more than 5 minutes away from the server's clock."
+msgstr ""
+"La date de la requête s'écarte de plus de 5 minutes de l'horloge du "
+"serveur."
+
+msgid "The request is malformed."
+msgstr "La requête est mal formée."
+
+msgid "The sealed document belongs to another subscription."
+msgstr "Le document scellé appartient à un autre abonnement."
+
+msgid "The sealed document could not be opened."
+msgstr "Le document scellé n'a pas pu être ouvert."
+
+msgid "The sealed document is not a subscription document."
+msgstr "Le document scellé n'est pas un document d'abonnement."
+
+msgid "The sealed document is too large."
+msgstr "Le document scellé est trop gros."
+
+msgid ""
+"The server key was replaced; packages carry the rotation statement for 90"
+" days."
+msgstr ""
+"La clé du serveur a été remplacée ; les paquets portent la déclaration de"
+" rotation pendant 90 jours."
+
+msgid "The subscription document is not a JSON object."
+msgstr "Le document d'abonnement n'est pas un objet JSON."
+
+#, python-brace-format
+msgid "The subscription has changed: its current version is {version}."
+msgstr "L'abonnement a changé : sa version actuelle est {version}."
+
+msgid "This package is no longer kept; ask for a state."
+msgstr "Ce paquet n'est plus conservé ; demandez un état."
+
+msgid "This pairing has been revoked."
+msgstr "Ce jumelage a été révoqué."
+
+msgid "This subscription was deleted; create a new one."
+msgstr "Cet abonnement a été supprimé ; créez-en un nouveau."
+
+msgid "Too many requests; try again later."
+msgstr "Trop de requêtes ; réessayez plus tard."
+
+#, python-brace-format
+msgid "Unknown collector: {name}."
+msgstr "Collecteur inconnu : {name}."
+
+#, python-brace-format
+msgid "Unknown filter: {name}."
+msgstr "Filtre inconnu : {name}."
+
+#, python-brace-format
+msgid "Unknown rendering: {name}."
+msgstr "Rendu inconnu : {name}."
+
+msgid "Unsupported protocol version."
+msgstr "Version du protocole non prise en charge."
+
+#, python-brace-format
+msgid "Veilleur {version}"
+msgstr "Veilleur {version}"
+
+#, python-brace-format
 msgid "Veilleur {version}, watch server under the EUPL-1.2 licence"
 msgstr "Veilleur {version}, serveur de veille sous licence EUPL-1.2"
+
+#, python-brace-format
+msgid "Version: {version}"
+msgstr "Version : {version}"
+
+msgid "a marker such as “desk 3”, never a person's name"
+msgstr "un repère comme « poste 3 », jamais le nom d'une personne"
+
+msgid "action"
+msgstr "action"
+
+msgid "allow a collector to a pairing"
+msgstr "autorise un collecteur pour un jumelage"
+
+msgid "allowed"
+msgstr "autorisé"
+
+msgid "allowed by default"
+msgstr "autorisé par défaut"
 
 #, python-format
 msgid "ambiguous option: %(option)s could match %(matches)s"
@@ -48,8 +304,39 @@ msgstr "argument %(argument_name)s : %(message)s"
 msgid "can't open '%(filename)s': %(error)s"
 msgstr "impossible d'ouvrir « %(filename)s » : %(error)s"
 
+msgid "collection"
+msgstr "collecte"
+
+msgid "collector"
+msgstr "collecteur"
+
 msgid "command"
 msgstr "commande"
+
+msgid "configuration file (TOML)"
+msgstr "fichier de configuration (TOML)"
+
+msgid "create a pairing and show its code, once"
+msgstr "crée un jumelage et affiche son code, une seule fois"
+
+msgid "create, list and revoke pairings"
+msgstr "crée, liste et révoque les jumelages"
+
+msgid "created"
+msgstr "créé"
+
+msgid "deleted"
+msgstr "supprimé"
+
+msgid "deny a collector to a pairing"
+msgstr "refuse un collecteur à un jumelage"
+
+msgid "destination folder"
+msgstr "dossier de destination"
+
+#, python-brace-format
+msgid "error: {message}"
+msgstr "erreur : {message}"
 
 #, python-format
 msgid "expected %s argument"
@@ -66,9 +353,30 @@ msgstr "au plus un argument attendu"
 msgid "expected one argument"
 msgstr "un argument attendu"
 
+msgid "file"
+msgstr "fichier"
+
+msgid "folder"
+msgstr "dossier"
+
+msgid "follows client addresses"
+msgstr "suit les adresses du client"
+
+msgid "frequency"
+msgstr "périodicité"
+
+msgid "go back to the default for a collector and a pairing"
+msgstr "revient au réglage par défaut pour un collecteur et un jumelage"
+
 #, python-format
 msgid "ignored explicit argument %r"
 msgstr "argument explicite %r ignoré"
+
+msgid "include deleted subscriptions"
+msgstr "inclut les abonnements supprimés"
+
+msgid "installed collectors and those allowed per pairing"
+msgstr "collecteurs installés et autorisés par jumelage"
 
 #, python-format
 msgid "invalid %(type)s value: %(value)r"
@@ -78,25 +386,139 @@ msgstr "valeur %(type)s invalide : %(value)r"
 msgid "invalid choice: %(value)r (choose from %(choices)s)"
 msgstr "choix invalide : %(value)r (choisir parmi %(choices)s)"
 
+msgid "invalid parameters"
+msgstr "paramètres invalides"
+
+msgid "key_id"
+msgstr "key_id"
+
+msgid "key_id or label"
+msgstr "key_id ou libellé"
+
+msgid "label"
+msgstr "libellé"
+
 msgid "language of messages (default: from the system)"
 msgstr "langue des messages (par défaut : celle du système)"
+
+msgid "last attempt"
+msgstr "dernier essai"
+
+msgid "last success"
+msgstr "dernière réussite"
+
+msgid "list and show subscriptions"
+msgstr "liste et affiche les abonnements"
+
+msgid "list the pairings"
+msgstr "liste les jumelages"
+
+msgid "list the subscriptions"
+msgstr "liste les abonnements"
+
+msgid "local address to listen on"
+msgstr "adresse locale d'écoute"
+
+msgid "manage the server's signing key"
+msgstr "gère la clé de signature du serveur"
+
+msgid "no"
+msgstr "non"
 
 #, python-format
 msgid "not allowed with argument %s"
 msgstr "interdit avec l'argument %s"
 
+msgid "number of entries"
+msgstr "nombre d'entrées"
+
+msgid "ok"
+msgstr "ok"
+
 #, python-format
 msgid "one of the arguments %s is required"
 msgstr "l'un des arguments %s est requis"
 
+msgid "only the packages after this number"
+msgstr "seulement les paquets après ce numéro"
+
 msgid "options"
 msgstr "options"
+
+msgid "origin"
+msgstr "origine"
+
+msgid "pairing"
+msgstr "jumelage"
+
+#, python-brace-format
+msgid "pairing {key_id} created"
+msgstr "jumelage {key_id} créé"
+
+#, python-brace-format
+msgid "pairing {key_id} revoked"
+msgstr "jumelage {key_id} révoqué"
+
+msgid "port to listen on"
+msgstr "port d'écoute"
 
 msgid "positional arguments"
 msgstr "arguments positionnels"
 
+msgid "receiving tool"
+msgstr "outil de réception"
+
+msgid "replace the server's key; paired tools follow without re-pairing"
+msgstr ""
+"remplace la clé du serveur ; les outils jumelés suivent sans nouveau "
+"jumelage"
+
+msgid "revoke a pairing"
+msgstr "révoque un jumelage"
+
+msgid "revoked"
+msgstr "révoqué"
+
+#, python-brace-format
+msgid ""
+"round: {collections} collections ({failed} failed), {reports} reports, "
+"{new_items} new items"
+msgstr ""
+"tour : {collections} collectes ({failed} en échec), {reports} rapports, "
+"{new_items} éléments nouveaux"
+
+msgid "run a round now and show its outcome"
+msgstr "lance un tour maintenant et en affiche le bilan"
+
+msgid "run the HTTP service"
+msgstr "lance le service HTTP"
+
+msgid "send a test notification"
+msgstr "envoie une notification d'essai"
+
+msgid "send notifications"
+msgstr "envoie des notifications"
+
+msgid "server key replaced"
+msgstr "clé du serveur remplacée"
+
+msgid "show a subscription"
+msgstr "affiche un abonnement"
+
 msgid "show program's version number and exit"
 msgstr "affiche la version du programme et quitte"
+
+msgid "show the administration log"
+msgstr "affiche le journal d'administration"
+
+msgid "show the configuration in force"
+msgstr "affiche la configuration en vigueur"
+
+msgid "show the state of the collections"
+msgstr "affiche l'état des collectes"
+
+msgid "show the state of the server"
+msgstr "affiche l'état du serveur"
 
 msgid "show the version"
 msgstr "affiche la version"
@@ -104,12 +526,63 @@ msgstr "affiche la version"
 msgid "show this help message and exit"
 msgstr "affiche cette aide et quitte"
 
+msgid "show what this pairing may use"
+msgstr "affiche ce que ce jumelage peut utiliser"
+
+msgid "some items were invalid"
+msgstr "des éléments étaient invalides"
+
+msgid "state"
+msgstr "état"
+
+msgid "state directory (database, keys)"
+msgstr "dossier d'état (base, clés)"
+
 msgid "subcommands"
 msgstr "sous-commandes"
+
+#, python-brace-format
+msgid "subscription {uid} created by pairing {key_id}"
+msgstr "abonnement {uid} créé par le jumelage {key_id}"
+
+#, python-brace-format
+msgid "subscription {uid} of pairing {key_id} deleted"
+msgstr "abonnement {uid} du jumelage {key_id} supprimé"
+
+#, python-brace-format
+msgid "subscription {uid} of pairing {key_id} updated (version {version})"
+msgstr "abonnement {uid} du jumelage {key_id} modifié (version {version})"
+
+#, python-brace-format
+msgid "team subscription {name}: no pairing matches {reference}"
+msgstr "abonnement d'équipe {name} : aucun jumelage ne correspond à {reference}"
+
+#, python-brace-format
+msgid ""
+"team subscriptions: {created} created, {updated} updated, {deleted} "
+"deleted"
+msgstr ""
+"abonnements d'équipe : {created} créés, {updated} modifiés, {deleted} "
+"supprimés"
+
+msgid "the collector failed"
+msgstr "le collecteur a échoué"
+
+msgid "the collector is not installed"
+msgstr "le collecteur n'est pas installé"
 
 #, python-format
 msgid "the following arguments are required: %s"
 msgstr "arguments requis manquants : %s"
+
+msgid "the network is unavailable"
+msgstr "le réseau est indisponible"
+
+msgid "uid"
+msgstr "uid"
+
+msgid "uid of the subscription"
+msgstr "uid de l'abonnement"
 
 #, python-format
 msgid "unexpected option string: %s"
@@ -125,4 +598,37 @@ msgstr "arguments non reconnus : %s"
 
 msgid "usage: "
 msgstr "utilisation : "
+
+msgid "version"
+msgstr "version"
+
+msgid "write the packages of a subscription into a folder"
+msgstr "écrit les paquets d'un abonnement dans un dossier"
+
+msgid "yes"
+msgstr "oui"
+
+#, python-brace-format
+msgid "{count} new item"
+msgid_plural "{count} new items"
+msgstr[0] "{count} élément nouveau"
+msgstr[1] "{count} éléments nouveaux"
+
+#, python-brace-format
+msgid "{count} package written"
+msgid_plural "{count} packages written"
+msgstr[0] "{count} paquet écrit"
+msgstr[1] "{count} paquets écrits"
+
+#, python-brace-format
+msgid "{count} report produced"
+msgid_plural "{count} reports produced"
+msgstr[0] "{count} rapport produit"
+msgstr[1] "{count} rapports produits"
+
+#, python-brace-format
+msgid "{count} source failing for more than two days"
+msgid_plural "{count} sources failing for more than two days"
+msgstr[0] "{count} source en panne depuis plus de deux jours"
+msgstr[1] "{count} sources en panne depuis plus de deux jours"
 

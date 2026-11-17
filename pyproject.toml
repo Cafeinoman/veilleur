@@ -68,13 +68,14 @@ root_packages = ["veilleur", "veilleur_protocol"]
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
-name = "The core depends on no adapter, application, storage, network or translation"
+name = "The core depends on no adapter, application, storage, network, translation or cryptography"
 type = "forbidden"
 source_modules = ["veilleur.core"]
 forbidden_modules = [
     "veilleur.adapters",
     "veilleur.apps",
     "veilleur.i18n",
+    "veilleur_protocol",
     "sqlite3",
     "socket",
     "http",
