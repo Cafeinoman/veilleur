@@ -2,7 +2,7 @@
 
 *[English version](../en/design.md)*
 
-Ce document décrit ce que sera Veilleur. Seul le squelette existe aujourd'hui (jalon G0, §9).
+Ce document décrit ce que sera Veilleur. Le squelette (jalon G0) et le protocole (G1 : [spécification](protocol.md), [modèle de menace](threat-model.md), bibliothèque `veilleur-protocol`) existent aujourd'hui (§9).
 
 ## 1. Objet
 
@@ -60,8 +60,8 @@ Genres : `delta` (depuis le paquet précédent), `state` (tout ce qui est en vig
 | Sujet | Conception |
 |---|---|
 | Jumelage | secret aléatoire de 32 octets par jumelage, `key_id` aléatoire, clé publique Ed25519 du serveur ; remis une fois par un code de jumelage `VEIL1:<JSON en base64url>` ; son libellé est un repère (« poste 3 »), jamais un nom de personne ; un jumelage révoqué reçoit `403` |
-| Clés | HKDF-SHA256 à partir du secret de jumelage, sel par abonnement, une étiquette `info` par usage : un paquet ne peut pas passer pour celui d'un autre abonnement |
-| Enveloppe | `en-tête (magie, version) ‖ nonce de 24 octets ‖ XChaCha20-Poly1305(zip en clair)` ; données associées = en-tête + `uid` + numéro + genre (ni rejeu, ni substitution) |
+| Clés | HKDF-SHA256 à partir du secret de jumelage, sel par abonnement, une étiquette `info` par usage : un paquet ne peut pas passer pour celui d'un autre abonnement ; les requêtes qui ne nomment aucun abonnement utilisent une clé d'authentification propre au jumelage |
+| Enveloppe | `en-tête (magie, version, uid, numéro, genre) ‖ nonce de 24 octets ‖ XChaCha20-Poly1305(zip en clair)` ; données associées = l'en-tête (ni rejeu, ni substitution) ; l'en-tête est en clair pour qu'un paquet dans un dossier dise ce qu'il est |
 | Signature | Ed25519 pur (RFC 8032) sur les octets exacts de `manifest.json`, qui porte le SHA-256 de chaque autre fichier ; vérifiée à l'intérieur de l'enveloppe, avant toute lecture des données |
 | Requêtes | `Authorization: Veilleur <key_id>:<HMAC-SHA256(méthode, chemin et requête, horodatage, SHA-256 du corps)>`, `X-Veilleur-Date`, tolérance de 5 minutes |
 | Rotation de la clé du serveur | la clé sortante signe la clé entrante ; la déclaration voyage dans chaque paquet pendant 90 jours |

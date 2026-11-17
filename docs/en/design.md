@@ -2,7 +2,7 @@
 
 *[Version française](../fr/design.md)*
 
-This document describes what Veilleur will be. Only the skeleton exists today (milestone G0, §9).
+This document describes what Veilleur will be. The skeleton (milestone G0) and the protocol (G1: [specification](protocol.md), [threat model](threat-model.md), `veilleur-protocol` library) exist today (§9).
 
 ## 1. Purpose
 
@@ -60,8 +60,8 @@ Kinds: `delta` (since the previous package), `state` (everything currently valid
 | Topic | Design |
 |---|---|
 | Pairing | 32-byte random secret per pairing, random `key_id`, server Ed25519 public key; given once as a pairing code `VEIL1:<base64url JSON>`; its label is a marker ("desk 3"), never a person's name; a revoked pairing receives `403` |
-| Keys | HKDF-SHA256 from the pairing secret, salted per subscription, one `info` label per use: a package cannot pass for another subscription's |
-| Envelope | `header (magic, version) ‖ 24-byte nonce ‖ XChaCha20-Poly1305(plain zip)`; associated data = header + `uid` + number + kind (no replay, no substitution) |
+| Keys | HKDF-SHA256 from the pairing secret, salted per subscription, one `info` label per use: a package cannot pass for another subscription's; requests that name no subscription use a pairing-wide authentication key |
+| Envelope | `header (magic, version, uid, number, kind) ‖ 24-byte nonce ‖ XChaCha20-Poly1305(plain zip)`; associated data = the header (no replay, no substitution); the header is in clear so that a package in a folder says what it is |
 | Signature | pure Ed25519 (RFC 8032) over the exact bytes of `manifest.json`, which holds the SHA-256 of every other file; checked inside the envelope, before reading any data |
 | Requests | `Authorization: Veilleur <key_id>:<HMAC-SHA256(method, path and query, timestamp, SHA-256 of the body)>`, `X-Veilleur-Date`, 5-minute tolerance |
 | Server key rotation | the outgoing key signs the incoming key; the statement travels in every package for 90 days |

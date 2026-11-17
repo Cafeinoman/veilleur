@@ -21,7 +21,7 @@ Requires [uv](https://docs.astral.sh/uv/) and Python 3.12 or later.
 ```bash
 uv sync
 uv run pytest
-uv run ruff check src tests
+uv run ruff check src tests tools protocol
 uv run mypy
 uv run lint-imports
 uv run veilleur --lang fr version
