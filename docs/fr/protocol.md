@@ -207,7 +207,7 @@ contient jamais de détail interne (traces d'exécution, adresses du serveur).
 Le corps de `PUT /v1/subscriptions/{uid}` est une enveloppe de genre `subscription`, scellée avec la clé
 d'abonnement. Son `seq` est la version sur laquelle se fonde la modification : `0` pour créer l'abonnement, sinon la
 version renvoyée par le `PUT` précédent. Le clair est un objet JSON dont les membres (collecteur, paramètres, filtres,
-périodicité, langue, rendus) sont définis avec l'interface HTTP. L'enveloppe entière forme le corps de la requête :
+périodicité, langue, rendus) sont définis avec l'interface HTTP (§9.1). L'enveloppe entière forme le corps de la requête :
 elle fait donc au plus 1 000 000 octets (§9), et le clair au plus 999 930 octets.
 
 ## 8. Authentification des requêtes
@@ -236,20 +236,20 @@ chaîne à signer = méthode "\n" chemin-et-requête "\n" X-Veilleur-Date "\n" h
   (`stale_date`) ; puis il retrouve le secret par le `key_id` et compare le MAC en temps constant
   (`bad_authorization`).
 
-La date borne le rejeu à une fenêtre de 5 minutes. Dans cette fenêtre, la plupart des rejeux sont sans effet (une
-lecture ; un `PUT` fondé sur une version désormais dépassée reçoit `409`), mais pas tous : voir le
+La date borne le rejeu à une fenêtre de 5 minutes. Dans cette fenêtre, un rejeu est sans effet : une lecture ; un
+`PUT` fondé sur une version désormais dépassée reçoit `409` ; un `uid` supprimé n'est jamais réutilisé (§9.1). Voir le
 [modèle de menace](threat-model.md), §4.
 
 ## 9. Interface HTTP `/v1`
 
 Toutes les requêtes sont authentifiées (§8). Chaque réponse porte `Cache-Control: no-store`. Les réponses d'erreur
-ont un corps JSON `{"code", "message"}` : `code` est un identifiant anglais stable, `message` un texte traduit sans
-détail interne.
+ont un corps JSON `{"code", "message"}` : `code` est un identifiant anglais stable (§9.3), `message` un texte traduit
+sans détail interne, dans la langue d'`Accept-Language` (`en` ou `fr`), sinon celle du serveur.
 
 | Requête | Réponse |
 |---|---|
-| `GET /v1/collectors` | collecteurs permis à ce jumelage, avec le schéma JSON de leurs paramètres |
-| `PUT /v1/subscriptions/{uid}` | document d'abonnement scellé (§7.6) ; `200 {"version"}` ; `409` si fondé sur une version dépassée |
+| `GET /v1/collectors` | `200 {"collectors": [{"name", "schema"}]}` : collecteurs permis à ce jumelage, avec le schéma JSON de leurs paramètres |
+| `PUT /v1/subscriptions/{uid}` | document d'abonnement scellé (§7.6, §9.1) ; `200 {"version"}` ; `409` si fondé sur une version dépassée |
 | `DELETE /v1/subscriptions/{uid}` | `204` |
 | `GET /v1/subscriptions/{uid}/reports?after=N` | `200 {"packages": [{"seq", "size", "sha256"}], "oldest", "last"}`, en clair, sans contenu |
 | `GET /v1/subscriptions/{uid}/reports/{n}` | `200` paquet (`application/octet-stream`) ; `410` si purgé (les paquets sont gardés 90 jours) |
@@ -258,6 +258,62 @@ détail interne.
 
 États : `400`, `401` (authentification), `403` (jumelage révoqué, ou collecteur non autorisé pour ce jumelage), `404`,
 `409`, `410`, `413` (corps de plus de 1 000 000 octets), `429`, `500`. Après un `410`, l'outil de réception demande un `state`.
+
+Le serveur aiguille sur le chemin exactement tel que signé (§8), sans le décoder ni le normaliser : `N` et `n` sont
+des nombres décimaux sans zéro initial, une requête (partie après `?`) non prévue ici est refusée (`400`), et tout le
+reste reçoit `404`. Chaque jumelage a son propre espace d'`uid` : l'abonnement d'un autre jumelage reçoit `404`, comme
+un abonnement qui n'existe pas.
+
+### 9.1 Document d'abonnement
+
+| Membre | Type | Valeur |
+|---|---|---|
+| `collector` | chaîne | nom d'un collecteur que ce jumelage peut utiliser (`GET /v1/collectors`) |
+| `params` | objet, facultatif | les paramètres du collecteur, valides selon son schéma ; par défaut `{}` |
+| `filters` | tableau, facultatif | au plus 16 objets `{"name", "params"}` : filtres appliqués dans l'ordre ; par défaut `[]` |
+| `frequency` | chaîne, facultative | `every_round`, `daily` (par défaut) ou `weekly` |
+| `language` | chaîne, facultative | langue des rendus : `en` (par défaut) ou `fr` |
+| `renderings` | tableau, facultatif | au plus 8 noms distincts de rendus (par exemple `markdown`) ; par défaut `[]` |
+
+Les membres inconnus sont ignorés. Le premier `PUT` (version de base `0`) crée l'abonnement en version `1` ; chaque
+`PUT` suivant doit se fonder sur la version courante et renvoie la suivante. `DELETE` augmente aussi la version et
+laisse une pierre tombale : un `uid` supprimé n'est jamais réutilisé (`PUT` reçoit `409` `subscription_deleted`,
+`DELETE` reçoit de nouveau `204`, sans effet), de sorte qu'une création ou une suppression rejouée ne change rien
+(modèle de menace §4). Un outil de réception qui veut retrouver un abonnement tire un nouvel `uid`.
+
+### 9.2 Paquets d'un abonnement
+
+Le premier paquet d'un abonnement neuf est un `state` (§7.3), produit dès que sa première collecte réussit, même sans
+élément ; jusque-là, `reports` ne liste rien (`"last": 0`) et `state` répond `202`. Ensuite, un `delta` est produit
+quand le rapport de l'abonnement est dû (à chaque tour, après un jour environ, ou après une semaine environ) et que
+quelque chose a changé ; un `delta` vide n'est jamais produit. `oldest` est le plus ancien numéro encore gardé (ou
+`null`), `last` le dernier numéro produit (`0` s'il n'y en a pas).
+
+Un `state` demandé décrit ce que détient l'outil de réception après le paquet `last`, et porte ce numéro. Un
+`history` liste les éléments rapportés pour la première fois (`new`), modifiés (`changed`) ou disparus (`gone`)
+depuis 00:00 UTC à la date donnée, dans la limite des 90 jours que le serveur garde ; son `period.from` est cette date.
+
+### 9.3 Codes d'erreur de l'interface
+
+En plus des codes du §11 (`bad_authorization`, `bad_date`, `stale_date` avec `401` ; les codes d'une enveloppe
+d'abonnement refusée avec `400`, `too_large` avec `413`) :
+
+| Code | État | Signification |
+|---|---|---|
+| `bad_request` | 400 | requête mal formée (partie requête, numéro, date, `Content-Length`) |
+| `invalid_subscription` | 400 | un membre du document d'abonnement a un type ou une valeur incorrects |
+| `invalid_params` | 400 | les paramètres ne respectent pas le schéma de leur collecteur ou filtre |
+| `unknown_collector`, `unknown_filter`, `unknown_renderer` | 400 | non installé sur ce serveur |
+| `revoked` | 403 | le jumelage est révoqué |
+| `collector_not_allowed` | 403 | collecteur non autorisé pour ce jumelage |
+| `team_subscription` | 403 | un abonnement d'équipe est géré par l'administrateur, pas par l'interface |
+| `not_found` | 404 | ressource inexistante |
+| `version_conflict` | 409 | `PUT` fondé sur une version dépassée |
+| `subscription_deleted` | 409 | l'`uid` appartient à un abonnement supprimé |
+| `purged` | 410 | le paquet n'est plus gardé |
+| `body_too_large` | 413 | corps de plus de 1 000 000 octets |
+| `rate_limited` | 429 | trop de requêtes de ce jumelage |
+| `internal_error` | 500 | défaillance du serveur, sans détail |
 
 ## 10. Lecteur
 

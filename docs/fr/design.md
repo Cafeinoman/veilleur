@@ -2,7 +2,7 @@
 
 *[English version](../en/design.md)*
 
-Ce document décrit ce que sera Veilleur. Le squelette (jalon G0) et le protocole (G1 : [spécification](protocol.md), [modèle de menace](threat-model.md), bibliothèque `veilleur-protocol`) existent aujourd'hui (§9).
+Ce document décrit ce que sera Veilleur. Le squelette (jalon G0), le protocole (G1 : [spécification](protocol.md), [modèle de menace](threat-model.md), bibliothèque `veilleur-protocol`) et le cœur avec son stockage, sa ligne de commande d'administration et son service HTTP (G2) existent aujourd'hui (§9).
 
 ## 1. Objet
 
@@ -53,7 +53,7 @@ Principe de confidentialité : *le serveur connaît ce qu'il collecte, jamais ce
 
 Un paquet contient `manifest.json` (version du protocole, abonnement, numéro, genre, période, empreinte de chaque autre fichier, état des collectes), `manifest.sig`, `items.jsonl` (JSON Lines, un élément par ligne, trié par clé : `{key, change: new|changed|gone, hash, fields, fetched_at, url}`) et les rendus demandés (`report.md`, `report.html`) dans la langue de l'abonnement. Les rendus sont **facultatifs** et **dérivés** : `items.jsonl` fait foi.
 
-Genres : `delta` (depuis le paquet précédent), `state` (tout ce qui est en vigueur, pour un récepteur revenu après la purge des paquets), `history` (rattrapage depuis une date, préparé en tâche de fond). Périodicité par abonnement (quotidienne par défaut, hebdomadaire, à chaque tour) ; un rapport vide n'est pas produit ; un abonnement neuf reçoit d'abord un `state`, puis des `delta`. Les paquets sont numérotés sans trou et gardés 90 jours ; un paquet purgé répond `410`, et le récepteur demande alors un `state`.
+Genres : `delta` (depuis le paquet précédent), `state` (tout ce qui est en vigueur, pour un récepteur revenu après la purge des paquets), `history` (rattrapage depuis une date, préparé en tâche de fond). Chaque abonnement garde ce qu'il a rapporté en dernier : un rapport compare à cela les éléments courants, filtrés, de sa collecte, de sorte que les changements s'accumulent jusqu'à ce que le rapport soit dû. Périodicité par abonnement (quotidienne par défaut, hebdomadaire, à chaque tour) ; un rapport vide n'est pas produit ; un abonnement neuf reçoit d'abord un `state`, puis des `delta`. Les paquets sont numérotés sans trou et gardés 90 jours ; un paquet purgé répond `410`, et le récepteur demande alors un `state`.
 
 ## 4. Sécurité
 
@@ -85,7 +85,7 @@ L'outil de réception est hors périmètre. Veilleur fournit :
 
 `PUT|DELETE /subscriptions/{uid}`, `GET /subscriptions/{uid}/reports?after=N`, `GET …/reports/{n}`, `GET …/state`, `GET …/history`, `GET /collectors` (collecteurs permis à ce jumelage, avec leurs schémas). Une application WSGI à l'écoute de `127.0.0.1` derrière le mandataire ; les tâches longues répondent `202` avec `Retry-After` et tournent dans un fil de travail. Toute requête est authentifiée. Corps d'erreur : `{"code", "message"}`, sans détail interne ; `code` est un identifiant anglais stable, `message` est traduit. Statuts : `400`, `401`, `403` (jumelage révoqué ou collecteur non autorisé), `404`, `409`, `410`, `413`, `429`, `500`. Toute réponse porte `Cache-Control: no-store`.
 
-La ligne de commande d'administration `veilleur` offre `info`, `config`, `pairing new|list|revoke`, `subscription list|show`, `collectors`, `round`, `sources`, `log`, `export` (livraison par dossier), `notify --test` et `version`. Le service HTTP (`veilleur serve`) et le tour périodique (minuterie systemd) sont deux processus sur la même base SQLite (mode WAL, migrations SQL numérotées appliquées à l'ouverture après une sauvegarde).
+La ligne de commande d'administration `veilleur` offre `info`, `config`, `pairing new|list|revoke`, `subscription list|show`, `collectors` (avec `allow`, `deny` et `default` pour régler ce qu'un jumelage peut utiliser), `round`, `sources`, `log`, `export` (livraison par dossier), `notify --test`, `key rotate` (rotation de la clé du serveur), `serve` et `version`. Le service HTTP (`veilleur serve`) et le tour périodique (minuterie systemd) sont deux processus sur la même base SQLite (mode WAL, migrations SQL numérotées appliquées à l'ouverture après une sauvegarde).
 
 ## 7. Installation
 

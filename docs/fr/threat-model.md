@@ -60,11 +60,12 @@ Connus et documentés, ils découlent des choix du cahier des charges.
 - **Métadonnées en clair** : l'en-tête d'une enveloppe montre l'`uid` de l'abonnement, le numéro du paquet et son
   genre ; sa taille donne l'ordre de grandeur du contenu ; `reports?after=N` liste numéros, tailles et empreintes.
   L'adversaire réseau ne les voit que s'il casse aussi TLS ; quiconque détient un dossier exporté les voit.
-- **Fenêtre de rejeu** : une requête capturée malgré TLS peut être rejouée pendant 5 minutes. La plupart des rejeux ne
-  changent rien (une lecture ; un `PUT` fondé sur une version désormais dépassée reçoit `409`), mais pas tous : un
-  `DELETE` rejoué après que l'abonnement a été recréé, ou une création (`PUT` fondé sur la version 0) rejouée après un
-  `DELETE`, prend effet. Le serveur peut réduire ce risque (G2 : des versions qui continuent de croître après une
-  suppression) ; il ne peut le supprimer qu'en gardant les MAC déjà vus.
+- **Fenêtre de rejeu** : une requête capturée malgré TLS peut être rejouée pendant 5 minutes. Un tel rejeu ne change
+  rien : une lecture ; un `PUT` fondé sur une version désormais dépassée reçoit `409` ; un `DELETE` ou une création
+  (`PUT` fondé sur la version 0) rejoués après une suppression trouvent une pierre tombale, car un `uid` supprimé n'est
+  jamais réutilisé et les versions continuent de croître après une suppression
+  ([protocol.md §9.1](protocol.md#91-document-dabonnement)). Reste ce que permet un retard : un adversaire qui retient
+  une requête peut la délivrer jusqu'à 5 minutes plus tard.
 - **Clé sortante compromise** : un outil de réception cesse de faire confiance à la clé sortante dès qu'il a adopté la
   clé entrante ([protocol.md §6.3](protocol.md#63-rotation-de-clé)). D'ici là, le voleur de la clé pourrait signer
   une rotation vers sa propre clé, mais ne pourrait toujours pas fabriquer un paquet que l'outil de réception accepte
