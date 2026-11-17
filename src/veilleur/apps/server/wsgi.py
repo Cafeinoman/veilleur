@@ -23,7 +23,7 @@ from typing import Any
 
 from veilleur.core.domain import errors
 from veilleur.core.domain.errors import VeilleurError
-from veilleur.core.domain.model import JobStatus, Pairing
+from veilleur.core.domain.model import JobStatus, Origin, Pairing
 from veilleur.core.ports.sealer import SealError
 from veilleur.core.services import jobs, reports, subscriptions
 from veilleur.core.services.context import Core
@@ -242,6 +242,10 @@ class Api:
             if method != "GET" or query:
                 raise VeilleurError(errors.NOT_FOUND if method != "GET" else errors.BAD_REQUEST)
             return self._collectors(pairing)
+        if path == "/v1/subscriptions":
+            if method != "GET" or query:
+                raise VeilleurError(errors.NOT_FOUND if method != "GET" else errors.BAD_REQUEST)
+            return self._subscriptions(pairing)
         match = _SUBSCRIPTION.fullmatch(path)
         if match is None:
             raise VeilleurError(errors.NOT_FOUND)
@@ -281,6 +285,19 @@ class Api:
             {"name": c.name, "schema": c.schema} for c in subscriptions.allowed_collectors(self.core, pairing.key_id)
         ]
         return _json(200, {"collectors": listed})
+
+    def _subscriptions(self, pairing: Pairing) -> Response:
+        """Live subscriptions of this pairing, so that a receiving tool learns the uids of its team subscriptions."""
+        listed: list[dict[str, Any]] = []
+        for s in self.core.store.list_subscriptions():
+            if s.key_id != pairing.key_id:
+                continue
+            entry: dict[str, Any] = {"uid": s.uid, "origin": s.origin.value, "version": s.version}
+            if s.origin is Origin.TEAM:
+                entry["name"] = s.team_name
+            listed.append(entry)
+        listed.sort(key=lambda entry: entry["uid"])
+        return _json(200, {"subscriptions": listed})
 
     def _put(self, pairing: Pairing, uid: str, body: bytes) -> Response:
         try:

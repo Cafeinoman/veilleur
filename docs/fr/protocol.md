@@ -249,6 +249,7 @@ sans détail interne, dans la langue d'`Accept-Language` (`en` ou `fr`), sinon c
 | Requête | Réponse |
 |---|---|
 | `GET /v1/collectors` | `200 {"collectors": [{"name", "schema"}]}` : collecteurs permis à ce jumelage, avec le schéma JSON de leurs paramètres |
+| `GET /v1/subscriptions` | `200 {"subscriptions": [{"uid", "origin", "name", "version"}]}` : abonnements vivants (non supprimés) de ce jumelage, triés par `uid` ; `origin` vaut `"team"` (déclaré par l'administrateur, avec son `name`) ou `"client"` (créé par l'outil de réception, sans `name`) ; les paramètres n'y figurent jamais |
 | `PUT /v1/subscriptions/{uid}` | document d'abonnement scellé (§7.6, §9.1) ; `200 {"version"}` ; `409` si fondé sur une version dépassée |
 | `DELETE /v1/subscriptions/{uid}` | `204` |
 | `GET /v1/subscriptions/{uid}/reports?after=N` | `200 {"packages": [{"seq", "size", "sha256"}], "oldest", "last"}`, en clair, sans contenu |

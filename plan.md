@@ -14,9 +14,7 @@
 
 ## Questions en attente
 
-1. **Découverte des abonnements d'équipe par l'outil de réception** (G2, cahier EF-10 et §7.4). Un abonnement d'équipe reçoit un `uid` tiré par le serveur, mais l'interface `/v1` n'offre aucun moyen de le découvrir : l'outil de réception ne connaît que les `uid` qu'il a créés. Aujourd'hui, l'administrateur lit l'`uid` dans `veilleur subscription list` et le transmet à part, ce qui est peu pratique. Ajouter une requête à §7.4 modifie le cahier : c'est votre arbitrage.
-   **Recommandation** : ajouter `GET /v1/subscriptions` → `200 {"subscriptions": [{"uid", "origin": "team"|"client", "name" (abonnements d'équipe), "version"}]}`, limité aux abonnements non supprimés du jumelage, authentifié avec la clé propre au jumelage (sel vide, comme `GET /v1/collectors`). Les paramètres n'y figurent pas (l'outil de réception connaît les siens ; ceux d'équipe restent côté serveur). À faire en G3 si vous l'acceptez.
-2. **Compléments apportés au cahier en G2, à confirmer.** Pour mettre en œuvre des exigences existantes, j'ai ajouté à EF-70 `collectors allow|deny|default` (EF-11 exige que l'administrateur autorise des collecteurs par jumelage, sans dire comment), `key rotate` (ES-05) et `serve` (EF-71) ; j'ai aligné la liste des tables du §7.2 sur le schéma réel et consigné au §10 les choix de G2 (pierres tombales, instantané de ce qui a été rapporté, document d'abonnement). Si l'un de ces choix ne vous convient pas, dites lequel ; sinon, cette question se retire d'elle-même.
+Aucune.
 
 ## État
 
@@ -25,7 +23,7 @@
 | G0-R | Dépôt git, environnement, contrôles, création du dépôt GitHub | fait |
 | G1 | Protocole 1.0 et `veilleur-protocol` | fait, avec réserves (étiquette `g1`) |
 | G2 | Cœur, stockage, administration, service HTTP | fait, avec réserves (PR à fusionner, puis étiquette `g2`) |
-| G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | à faire |
+| G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | en cours (branche `claude/g3-collectors`) |
 | G4 | Rendus, récepteur de référence | à faire |
 | G5 | Déploiement NixOS et repli systemd | à faire |
 | G6 | Publication 0.1.0 | à faire |

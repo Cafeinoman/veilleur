@@ -12,8 +12,9 @@ from typing import Any
 import pytest
 
 from veilleur.apps.server.wsgi import MAX_BODY, Api, RateLimiter, request_language
-from veilleur.core.domain.model import Pairing
+from veilleur.core.domain.model import Pairing, SubscriptionSpec
 from veilleur.core.services import jobs, pairing, round
+from veilleur.core.services.subscriptions import TeamSubscription, sync_team
 from veilleur_protocol import Kind, open_package, seal_subscription, sign_request
 
 from .fakes import World
@@ -368,3 +369,25 @@ def test_internal_errors_show_no_detail(client: Client, monkeypatch: pytest.Monk
     reply = client.call("GET", "/v1/collectors")
     assert _error(reply) == (500, "internal_error")
     assert b"secret" not in reply.body
+
+
+def test_subscription_listing(client: Client) -> None:
+    """GET /v1/subscriptions: the live subscriptions of this pairing only, team ones with their name."""
+    core = client.world.app.core
+    assert client.call("GET", "/v1/subscriptions").json() == {"subscriptions": []}
+    assert client.put(DOC).code == 200
+    other = _client(client.world, "desk 4")
+    assert other.put(DOC, uid="f" * 32).code == 200
+    spec = SubscriptionSpec("fake", {"topic": "team"})
+    sync_team(core, [TeamSubscription("news", spec, (client.pairing.key_id,))])
+    listed = client.call("GET", "/v1/subscriptions").json()["subscriptions"]
+    assert len(listed) == 2
+    mine = next(s for s in listed if s["uid"] == UID)
+    assert mine == {"uid": UID, "origin": "client", "version": 1}
+    team = next(s for s in listed if s["uid"] != UID)
+    assert team["origin"] == "team" and team["name"] == "news" and team["version"] == 1
+    assert "params" not in team
+    assert client.call("DELETE", f"/v1/subscriptions/{UID}").code == 204
+    assert [s["uid"] for s in client.call("GET", "/v1/subscriptions").json()["subscriptions"]] == [team["uid"]]
+    assert _error(client.call("GET", "/v1/subscriptions?x=1")) == (400, "bad_request")
+    assert _error(client.call("POST", "/v1/subscriptions")) == (404, "not_found")
