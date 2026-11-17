@@ -58,8 +58,13 @@ def strict(data: bytes) -> Any:
     def constant(name: str) -> Any:
         raise ValueError(name)
 
+    def finite(text: str) -> float:
+        if float(text) in (float("inf"), float("-inf")):
+            raise ValueError(text)
+        return float(text)
+
     try:
-        return json.loads(data.decode("utf-8"), object_pairs_hook=unique, parse_constant=constant)
+        return json.loads(data.decode("utf-8"), object_pairs_hook=unique, parse_constant=constant, parse_float=finite)
     except RecursionError as exc:
         raise ValueError("nesting") from exc
 
@@ -192,7 +197,16 @@ def open_package(case: JSON) -> JSON:
         at = info.header_offset
         if plain[at : at + 4] != b"PK\x03\x04" or at + 30 > len(plain):
             raise Refused("bad_archive")
-        name_length, extra_length = struct.unpack("<HH", plain[at + 26 : at + 30])
+        flags, method = struct.unpack("<HH", plain[at + 6 : at + 10])
+        crc, compressed, size, name_length, extra_length = struct.unpack("<IIIHH", plain[at + 14 : at + 30])
+        if (flags, method, crc, compressed, size) != (
+            info.flag_bits,
+            info.compress_type,
+            info.CRC,
+            info.compress_size,
+            info.file_size,
+        ):
+            raise Refused("bad_archive")
         if plain[at + 30 : at + 30 + name_length] != name.encode():
             raise Refused("bad_archive")
         start = at + 30 + name_length + extra_length
@@ -340,7 +354,7 @@ def decode_pairing(code: str) -> JSON:
         secret, sign_key = b64u(document["secret"]), b64u(document["sign_key"])
         assert len(secret) == 32 and len(sign_key) == 32
         ntfy = document.get("ntfy")
-        if ntfy is not None:
+        if "ntfy" in document:
             assert isinstance(ntfy, dict) and str(ntfy["url"]).startswith("https://") and ntfy["topic"]
             ntfy = {"url": ntfy["url"], "topic": ntfy["topic"], "token": ntfy.get("token")}
     except (AssertionError, ValueError, KeyError, TypeError) as exc:

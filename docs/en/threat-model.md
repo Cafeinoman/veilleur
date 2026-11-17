@@ -39,11 +39,11 @@ Principle (cahier ES-01): *the server knows what it collects, never what receive
 | Withholding packages | numbers have no gaps; the receiving tool notices a missing one (`reports?after=N`) |
 | Malicious archive (path traversal, zip bomb, too many files) | the reader checks names, count and declared sizes before decompressing, never decompresses beyond the declared size, writes nothing to disk ([protocol.md §10](protocol.md#10-reader)); fuzzed in the tests |
 | Request by an unpaired client | HMAC on method, path and query, date and body hash; constant-time comparison; `401` |
-| Request replay | 5-minute date tolerance; requests are idempotent |
+| Request replay | 5-minute date tolerance; versioned writes (see §4 for what remains) |
 | A member reaching another subscription | authentication key derived for the subscription named in the path; a pairing only sees its own subscriptions; `403` for a revoked pairing |
 | SSRF through a member's subscription | collectors that follow a client-given address are refused unless the administrator allows them for that pairing; the HTTP client refuses loopback, private, link-local, CGNAT, multicast and reserved addresses after DNS resolution and at each redirection; caps on size, time and redirections; outbound firewall of the container as a second barrier |
 | Hostile source content | size, time and content-type caps in the HTTP client; a failing source does not stop the round; source errors are reported as stable codes, without internal detail |
-| Theft of the server key | rotation: the outgoing key signs the incoming one, receiving tools follow without re-pairing |
+| Theft of the server key | rotation: the outgoing key signs the incoming one, receiving tools follow without re-pairing and stop trusting the outgoing key |
 | Leaks through logs | no body, authentication header, secret, subscription parameter or member IP in the logs; the reverse proxy keeps no access log |
 | Leaks through notifications | notifications carry counts only, never content |
 | Oversized requests | bodies over 1 MB refused by the application (`413`) |
@@ -59,10 +59,14 @@ These are known and documented; they follow from the design choices of the cahie
 - **Metadata in clear**: an envelope header shows the subscription `uid`, the package number and its kind; its size
   shows the order of magnitude of the content; `reports?after=N` lists numbers, sizes and hashes. The network adversary
   sees them only if it also breaks TLS; anyone holding a folder export sees them.
-- **Replay window**: a captured request can be replayed for 5 minutes; requests are idempotent, so this only repeats
-  a read or a write of the same version.
-- **Compromised outgoing key**: a thief of an old signing key could sign a rotation to their own key, but still could
-  not make a package the receiving tool accepts without the pairing secret.
+- **Replay window**: a request captured despite TLS can be replayed for 5 minutes. Most replays change nothing (a
+  read; a `PUT` based on a version that is now outdated gets `409`), but not all: a `DELETE` replayed after the
+  subscription was created again, or a creation (`PUT` based on version 0) replayed after a `DELETE`, takes effect. The
+  server can narrow this (G2: versions that keep increasing across a deletion); it cannot close it without keeping the
+  MACs it has seen.
+- **Compromised outgoing key**: a receiving tool stops trusting the outgoing key once it has adopted the incoming one
+  ([protocol.md §6.3](protocol.md#63-key-rotation)). Until then, a thief of the key could sign a rotation to their
+  own key, but still could not make a package the receiving tool accepts without the pairing secret.
 - **Server compromise**: the server holds the pairing secrets and the signing key, hence everything. Hardening (dedicated
   user, read-only system, no capability, system call filtering, container) reduces this risk without removing it.
 - **Denial of service**: rate limiting (`429`) and quotas protect the server from one pairing, not from a determined

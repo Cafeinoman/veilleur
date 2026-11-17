@@ -126,7 +126,9 @@ Fini quand : vecteurs vérifiés par les deux implémentations ; tous les refus 
   - tâches longues.
 - [ ] SQLite : WAL, migrations SQL numérotées, sauvegarde avant migration.
 - [ ] Ligne de commande d'administration (EF-70), entièrement traduite.
-- [ ] Service WSGI `/v1` (§7.4) et fil de travail ; tests qui appellent l'application directement.
+- [ ] Service WSGI `/v1` (§7.4) et fil de travail ; tests qui appellent l'application directement. Repris de la vérification de G1 :
+  - router sur le chemin **brut**, celui que signe le client (portée de la clé d'authentification, protocole §8), sans normalisation préalable ;
+  - versions d'abonnement qui continuent de croître après un `DELETE`, pour qu'un `DELETE` ou une création rejoués dans la fenêtre de 5 minutes n'aient pas d'effet (modèle de menace §4).
 - [ ] Abonnements d'équipe déclarés en TOML (EF-10) ; autorisations de collecteurs par jumelage (EF-11).
 
 Fini quand : un tour complet sur un collecteur factice, du jumelage à la récupération d'un paquet par l'API, sans réseau.

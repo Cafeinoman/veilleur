@@ -381,6 +381,16 @@ def _longer_than_declared(items: bytes) -> bytes:
     return seal(SECRET, Header(UID, 2, Kind.DELTA), bytes(plain), nonce=_nonce("refusal longer"))
 
 
+def _local_crc_changed(items: bytes) -> bytes:
+    """A valid archive, except that the local header of `items.jsonl` declares another CRC than the directory."""
+    plain = bytearray(_zip(_signed({"items.jsonl": items})))
+    at = plain.find(b"PK\x03\x04")
+    while plain[at + 30 : at + 41] != b"items.jsonl":
+        at = plain.find(b"PK\x03\x04", at + 4)
+    plain[at + 14] ^= 0xFF
+    return bytes(plain)
+
+
 def _non_canonical(authorization: str) -> str:
     """Same MAC, but the unused low bits of its last base64url character set."""
     alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
@@ -589,6 +599,21 @@ def refusals() -> JSON:
             "bad_manifest",
         ),
         _refusal("file longer than declared", _longer_than_declared(items), "bad_archive"),
+        _refusal(
+            "local header differs from the central directory",
+            seal(SECRET, Header(UID, 2, Kind.DELTA), _local_crc_changed(items), nonce=_nonce("refusal local")),
+            "bad_archive",
+        ),
+        _refusal(
+            "change of the wrong type",
+            _sealed(_signed({"items.jsonl": items.replace(b'"change":"gone"', b'"change":["gone"]')}), "change"),
+            "bad_items",
+        ),
+        _refusal(
+            "number overflowing to infinity",
+            _sealed(_signed({"items.jsonl": items.replace(b'"tags":["a","b"]', b'"tags":1e400')}), "inf"),
+            "bad_items",
+        ),
     ]
     cases_requests = []
     signed = sign_request(SECRET, KEY_ID, "GET", f"/v1/subscriptions/{UID}/state", b"", NOW)
@@ -764,6 +789,33 @@ def refusals() -> JSON:
                 {
                     "v": 1,
                     "server": "https://veille.example.org?",
+                    "key_id": KEY_ID,
+                    "secret": _b64u(SECRET),
+                    "sign_key": _b64u(KEY_1.public_key),
+                }
+            ),
+        ),
+        (
+            "ntfy null",
+            "VEIL1:"
+            + _b64(
+                {
+                    "v": 1,
+                    "server": "folder:",
+                    "key_id": KEY_ID,
+                    "secret": _b64u(SECRET),
+                    "sign_key": _b64u(KEY_1.public_key),
+                    "ntfy": None,
+                }
+            ),
+        ),
+        (
+            "colon without a port",
+            "VEIL1:"
+            + _b64(
+                {
+                    "v": 1,
+                    "server": "https://veille.example.org:",
                     "key_id": KEY_ID,
                     "secret": _b64u(SECRET),
                     "sign_key": _b64u(KEY_1.public_key),

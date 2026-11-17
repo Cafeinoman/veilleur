@@ -253,3 +253,103 @@ def test_the_reader_only_ever_raises_protocol_errors(key: SigningKey) -> None:
         except ProtocolError:
             pass
     assert accepted < 1500
+
+
+_JSON_NOISE = [
+    b"null",
+    b"true",
+    b"[]",
+    b"{}",
+    b'""',
+    b"-0",
+    b"1e400",
+    b"NaN",
+    b'"\\ud800"',
+    b"[[[[",
+    b"9" * 5000,
+    b'"x"',
+]
+
+
+def _mutate_json(text: bytes, generator: random.Random) -> bytes:
+    """Replace a value, a character or a member name of a JSON text, keeping it mostly JSON."""
+    choice = generator.random()
+    if choice < 0.5:
+        positions = [i for i, c in enumerate(text) if c in b":,["]
+        at = generator.choice(positions) + 1
+        end = at
+        while end < len(text) and text[end] not in b",}]":
+            end += 1
+        return text[:at] + generator.choice(_JSON_NOISE) + text[end:]
+    if choice < 0.8:
+        at = generator.randrange(len(text))
+        return text[:at] + bytes([generator.randrange(32, 127)]) + text[at + 1 :]
+    return text.replace(b'"', b'"_', 1)
+
+
+def test_signed_content_only_ever_raises_protocol_errors(key: SigningKey) -> None:
+    """Random damage to a manifest and items that are correctly signed, so that steps 8 to 10 are reached (ES-13)."""
+    generator = random.Random(20261118)
+    refused: set[str] = set()
+    for _ in range(800):
+        items = ITEMS
+        if generator.random() < 0.6:
+            lines = items.splitlines(keepends=True)
+            index = generator.randrange(len(lines))
+            lines[index] = _mutate_json(lines[index][:-1], generator) + b"\n"
+            items = b"".join(lines)
+        manifest = manifest_bytes(content(), {"items.jsonl": items})
+        if generator.random() < 0.6:
+            manifest = _mutate_json(manifest, generator)
+        entries = [("manifest.json", manifest), ("manifest.sig", key.sign(manifest)), ("items.jsonl", items)]
+        try:
+            open_package(_sealed(entries), secret=SECRET, uid=UID, trusted_keys=[key.public_key])
+        except ProtocolError as error:
+            refused.add(error.code)
+    assert {"bad_manifest", "bad_items"} <= refused
+
+
+def _end_record(archive: bytes) -> int:
+    return archive.rfind(b"PK\x05\x06")
+
+
+def test_the_number_of_files_is_read_before_the_directory(key: SigningKey) -> None:
+    archive = bytearray(_zip(_signed(key, {"items.jsonl": ITEMS})))
+    end = _end_record(bytes(archive))
+    struct.pack_into("<HH", archive, end + 8, 40, 40)
+    assert _code(seal(SECRET, Header(UID, 1, Kind.DELTA), bytes(archive)), key) == "too_many_files"
+    struct.pack_into("<HH", archive, end + 8, 2, 2)
+    assert _code(seal(SECRET, Header(UID, 1, Kind.DELTA), bytes(archive)), key) == "bad_archive"
+
+
+@pytest.mark.parametrize(
+    ("offset", "fmt", "value"),
+    [
+        (8, "<H", 0x0008),  # general purpose flags: data descriptor
+        (8, "<H", 0x0001),  # encrypted
+        (10, "<H", 12),  # bzip2
+        (16, "<I", 0),  # CRC differs from the local header
+    ],
+)
+def test_entries_the_reader_does_not_support(key: SigningKey, offset: int, fmt: str, value: int) -> None:
+    archive = bytearray(_zip(_signed(key, {"items.jsonl": ITEMS})))
+    central = archive.find(b"PK\x01\x02")
+    struct.pack_into(fmt, archive, central + offset, value)
+    assert _code(seal(SECRET, Header(UID, 1, Kind.DELTA), bytes(archive)), key) == "bad_archive"
+
+
+def test_zip64_markers_are_refused(key: SigningKey) -> None:
+    archive = bytearray(_zip(_signed(key, {"items.jsonl": ITEMS})))
+    central = archive.find(b"PK\x01\x02")
+    struct.pack_into("<I", archive, central + 42, 0xFFFFFFFF)  # local header offset
+    assert _code(seal(SECRET, Header(UID, 1, Kind.DELTA), bytes(archive)), key) == "bad_archive"
+
+
+def test_an_archive_without_end_record_or_with_a_comment(key: SigningKey) -> None:
+    archive = _zip(_signed(key, {"items.jsonl": ITEMS}))
+    assert _code(seal(SECRET, Header(UID, 1, Kind.DELTA), archive[:-22]), key) == "bad_archive"
+    commented = bytearray(archive)
+    struct.pack_into("<H", commented, _end_record(archive) + 20, 4)
+    sealed = seal(SECRET, Header(UID, 1, Kind.DELTA), bytes(commented) + b"PK\x05\x06")
+    opened = open_package(sealed, secret=SECRET, uid=UID, trusted_keys=[key.public_key])
+    assert [i.key for i in opened.items] == ["a", "b"]

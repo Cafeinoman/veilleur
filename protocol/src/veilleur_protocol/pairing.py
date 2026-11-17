@@ -75,6 +75,7 @@ def _https_origin(url: object) -> bool:
         and parts.path in ("", "/")
         and "?" not in url
         and "#" not in url
+        and not parts.netloc.endswith(":")
     )
 
 
@@ -122,7 +123,7 @@ def decode_pairing_code(text: str) -> PairingCode:
     if not isinstance(document, dict) or type(document.get("v")) is not int or document["v"] != 1:
         raise ProtocolError(BAD_PAIRING_CODE, "not a version 1 pairing code")
     ntfy = document.get("ntfy")
-    if ntfy is not None and not isinstance(ntfy, dict):
+    if "ntfy" in document and not isinstance(ntfy, dict):
         raise ProtocolError(BAD_PAIRING_CODE, "ntfy is an object")
     try:
         return PairingCode(
@@ -130,7 +131,7 @@ def decode_pairing_code(text: str) -> PairingCode:
             key_id=document.get("key_id"),  # type: ignore[arg-type]
             secret=b64u_decode(document.get("secret")),  # type: ignore[arg-type]
             sign_key=b64u_decode(document.get("sign_key")),  # type: ignore[arg-type]
-            ntfy=None if ntfy is None else Ntfy(ntfy.get("url"), ntfy.get("topic"), ntfy.get("token")),  # type: ignore[arg-type]
+            ntfy=None if ntfy is None else Ntfy(ntfy.get("url"), ntfy.get("topic"), ntfy.get("token")),
         )
     except ProtocolError as exc:
         raise ProtocolError(BAD_PAIRING_CODE, exc.detail) from exc

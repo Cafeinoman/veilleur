@@ -119,14 +119,18 @@ When the server replaces its key, the outgoing key signs a statement naming the 
 
 `rotation.sig` holds the signature of `rotation.json` by `old_key`. The server puts both files in every package for
 90 days after the rotation. A reader that trusts `old_key` and finds the manifest signed by `new_key` adopts
-`new_key` (§10, step 7). A receiving tool that missed the whole 90-day window must be paired again.
+`new_key` (§10, step 7). Once it has adopted `new_key`, the receiving tool MUST stop trusting `old_key`: a rotation
+is how the server recovers from the theft of its key, so the stolen key must not keep signing. A receiving tool that
+missed the whole 90-day window must be paired again.
 
 ## 7. Packages
 
 ### 7.1 Archive
 
 The plaintext of a package envelope is a zip archive (APPNOTE), compression method 0 (stored) or 8 (deflate),
-without encryption, without directories. It contains only these files, each at most once, at the root:
+without encryption, without directories, on a single disk, without Zip64 and without data descriptors (general purpose
+flags limited to bits 1, 2 and 11); every local header carries the same flags, method, CRC, sizes and name as the
+central directory. It contains only these files, each at most once, at the root:
 
 | File | Required | Content |
 |---|---|---|
@@ -261,17 +265,23 @@ these checks in this order and stop at the first failure, with the given code:
 3. `uid` other than expected: `uid_mismatch`; kind not expected: `kind_mismatch`; number other than expected (when one
    is expected): `seq_mismatch`;
 4. decryption with the key of the envelope's kind fails: `decryption_failed`;
-5. archive, from its central directory, entry by entry:
-   - not a readable zip archive: `bad_archive`;
-   - more files than the limit: `too_many_files`;
-   - a name not allowed by §7.1: `unexpected_file`;
-   - a name seen twice, an encrypted entry, a compression method other than 0 or 8: `bad_archive`;
-   - a declared size over its limit: `file_too_large`;
+5. archive:
+   - no end of central directory record (the last one whose comment ends the archive), several disks, or a central
+     directory out of the archive: `bad_archive`;
+   - the record announces more entries than the limit: `too_many_files`, before parsing the directory;
+   - then the central directory, entry by entry:
+     - a truncated or malformed entry: `bad_archive`;
+     - a name not allowed by §7.1 (or not ASCII): `unexpected_file`;
+     - a name seen twice, other general purpose flags than §7.1 allows (encryption, data descriptor…), a compression
+       method other than 0 or 8, a Zip64 marker (`0xFFFFFFFF` as size or offset): `bad_archive`;
+     - a declared size over its limit: `file_too_large`;
+   - entries that do not fill the central directory exactly: `bad_archive`;
    - then the sum of declared sizes over its limit: `too_large`;
    - then a required file absent, or only one of `rotation.json` / `rotation.sig`: `missing_file`;
 6. read `manifest.json`, `manifest.sig`, and `rotation.json` / `rotation.sig` if present: the entry's whole compressed
    data (its compressed size, from the local header on) must decompress to exactly the declared size and CRC, never
-   yielding more than the declared size; a local header that does not match the central directory, data out of the
+   yielding more than the declared size; a local header whose flags, method, CRC, sizes or name differ from the
+   central directory, data out of the
    archive, corrupt data, data going on beyond the declared size, a size or a CRC differing from the declared ones are
    `bad_archive`;
 7. signature:

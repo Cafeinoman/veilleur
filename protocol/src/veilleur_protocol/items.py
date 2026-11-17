@@ -70,7 +70,7 @@ def _item(line: bytes, number: int) -> Item:
     fields, url = document.get("fields"), document.get("url", ...)
     if not isinstance(key, str) or not key:
         raise ProtocolError(BAD_ITEMS, f"line {number}: key")
-    if change not in {c.value for c in Change}:
+    if not isinstance(change, str) or change not in {c.value for c in Change}:
         raise ProtocolError(BAD_ITEMS, f"line {number}: change")
     if not isinstance(digest, str) or not _HASH.fullmatch(digest):
         raise ProtocolError(BAD_ITEMS, f"line {number}: hash")

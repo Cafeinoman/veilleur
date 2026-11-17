@@ -119,15 +119,18 @@ Quand le serveur remplace sa clé, la clé sortante signe une déclaration qui n
 
 `rotation.sig` contient la signature de `rotation.json` par `old_key`. Le serveur joint les deux fichiers à chaque
 paquet pendant 90 jours après la rotation. Un lecteur qui fait confiance à `old_key` et trouve le manifeste signé par
-`new_key` adopte `new_key` (§10, étape 7). Un outil de réception qui a manqué toute la fenêtre de 90 jours doit être
-jumelé de nouveau.
+`new_key` adopte `new_key` (§10, étape 7). Une fois `new_key` adoptée, l'outil de réception DOIT cesser de faire
+confiance à `old_key` : la rotation est le moyen pour le serveur de se remettre du vol de sa clé, la clé volée ne doit
+donc plus pouvoir signer. Un outil de réception qui a manqué toute la fenêtre de 90 jours doit être jumelé de nouveau.
 
 ## 7. Paquets
 
 ### 7.1 Archive
 
 Le clair d'une enveloppe de paquet est une archive zip (APPNOTE), méthode de compression 0 (stockée) ou 8 (deflate),
-sans chiffrement, sans dossier. Elle ne contient que ces fichiers, chacun une fois au plus, à la racine :
+sans chiffrement, sans dossier, sur un seul disque, sans Zip64 et sans descripteur de données (indicateurs généraux
+limités aux bits 1, 2 et 11) ; chaque en-tête local porte les mêmes indicateurs, méthode, CRC, tailles et nom que le
+répertoire central. Elle ne contient que ces fichiers, chacun une fois au plus, à la racine :
 
 | Fichier | Obligatoire | Contenu |
 |---|---|---|
@@ -264,18 +267,24 @@ DOIT faire ces contrôles dans cet ordre et s'arrêter au premier échec, avec l
 3. `uid` autre que celui attendu : `uid_mismatch` ; genre non attendu : `kind_mismatch` ; numéro autre que celui
    attendu (s'il y en a un) : `seq_mismatch` ;
 4. le déchiffrement avec la clé du genre de l'enveloppe échoue : `decryption_failed` ;
-5. archive, d'après son répertoire central, entrée par entrée :
-   - archive zip illisible : `bad_archive` ;
-   - plus de fichiers que la limite : `too_many_files` ;
-   - un nom non permis par le §7.1 : `unexpected_file` ;
-   - un nom vu deux fois, une entrée chiffrée, une méthode de compression autre que 0 ou 8 : `bad_archive` ;
-   - une taille déclarée au-delà de sa limite : `file_too_large` ;
+5. archive :
+   - pas d'enregistrement de fin du répertoire central (le dernier dont le commentaire termine l'archive), plusieurs
+     disques, ou un répertoire central hors de l'archive : `bad_archive` ;
+   - l'enregistrement annonce plus d'entrées que la limite : `too_many_files`, avant d'analyser le répertoire ;
+   - puis le répertoire central, entrée par entrée :
+     - une entrée tronquée ou mal formée : `bad_archive` ;
+     - un nom non permis par le §7.1 (ou non ASCII) : `unexpected_file` ;
+     - un nom vu deux fois, d'autres indicateurs généraux que ceux permis par le §7.1 (chiffrement, descripteur de
+       données…), une méthode de compression autre que 0 ou 8, un marqueur Zip64 (`0xFFFFFFFF` comme taille ou
+       position) : `bad_archive` ;
+     - une taille déclarée au-delà de sa limite : `file_too_large` ;
+   - des entrées qui ne remplissent pas exactement le répertoire central : `bad_archive` ;
    - puis la somme des tailles déclarées au-delà de sa limite : `too_large` ;
    - puis un fichier obligatoire absent, ou un seul de `rotation.json` / `rotation.sig` : `missing_file` ;
 6. lire `manifest.json`, `manifest.sig`, et `rotation.json` / `rotation.sig` s'ils sont présents : la totalité des
    données compressées de l'entrée (sa taille compressée, à partir de l'en-tête local) doit se décompresser en
-   exactement la taille et le CRC déclarés, sans jamais rendre plus que la taille déclarée ; un en-tête local qui ne
-   correspond pas au répertoire central, des données hors de l'archive, des données corrompues, des données qui se
+   exactement la taille et le CRC déclarés, sans jamais rendre plus que la taille déclarée ; un en-tête local dont les
+   indicateurs, la méthode, le CRC, les tailles ou le nom diffèrent du répertoire central, des données hors de l'archive, des données corrompues, des données qui se
    prolongent au-delà de la taille déclarée, une taille ou un CRC différents de ceux déclarés donnent `bad_archive` ;
 7. signature :
    - si une déclaration de rotation est présente, elle doit être bien formée et signée par son `old_key` :
