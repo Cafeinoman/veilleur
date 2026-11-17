@@ -12,12 +12,15 @@ import hashlib
 import io
 import json
 import re
+import struct
 import zipfile
+import zlib
 from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
+from . import strict_json
 from .encoding import b64u_decode, b64u_encode, format_time, parse_time
 from .envelope import PACKAGE_KINDS, Header, Kind, open_envelope, seal
 from .errors import (
@@ -48,6 +51,7 @@ _RENDERING = re.compile(r"report\.[a-z0-9]{1,16}")
 _PROTOCOL = re.compile(r"1\.(0|[1-9][0-9]{0,5})")
 _SHA256 = re.compile(r"[0-9a-f]{64}")
 _ZIP_TIME = (1980, 1, 1, 0, 0, 0)
+_LOCAL_HEADER = struct.Struct("<4s22xHH")  # signature, then file name and extra field lengths at offsets 26 and 28
 MAX_MANIFEST = 1024 * 1024
 MAX_ROTATION = 4096
 MiB = 1024 * 1024
@@ -112,13 +116,14 @@ def make_rotation(old: SigningKey, new_key: bytes, issued_at: datetime) -> Rotat
 def verify_rotation(statement: bytes, signature: bytes) -> Rotation:
     """Parse a rotation statement and check its signature by the key it names as outgoing."""
     try:
-        document = json.loads(statement.decode("utf-8"))
-        if not isinstance(document, dict) or not _PROTOCOL.fullmatch(str(document.get("protocol"))):
-            raise ValueError("protocol")
+        document = strict_json.loads(statement)
+        protocol = document.get("protocol") if isinstance(document, dict) else None
+        if not isinstance(protocol, str) or not _PROTOCOL.fullmatch(protocol):
+            raise ValueError("protocol is a string 1.<minor>")
         old_key = b64u_decode(document["old_key"])
         new_key = b64u_decode(document["new_key"])
         issued_at = parse_time(document["issued_at"])
-    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError, ValueError, KeyError, ProtocolError) as exc:
+    except (ValueError, KeyError, ProtocolError) as exc:  # strict_json.InvalidJson is a ValueError
         raise ProtocolError(BAD_ROTATION, "malformed rotation statement") from exc
     if len(old_key) != PUBLIC_KEY_BYTES or len(new_key) != PUBLIC_KEY_BYTES:
         raise ProtocolError(BAD_ROTATION, "keys are 32 bytes")
@@ -223,10 +228,11 @@ class OpenedPackage:
     receiving tool should then add `rotation.new_key` to its trusted keys."""
 
 
-def _archive(plain: bytes, limits: Limits) -> tuple[zipfile.ZipFile, dict[str, zipfile.ZipInfo]]:
+def _archive(plain: bytes, limits: Limits) -> dict[str, zipfile.ZipInfo]:
+    """Entries of the archive's central directory, checked against §7.1 and the limits."""
     try:
-        archive = zipfile.ZipFile(io.BytesIO(plain))
-        infos = archive.infolist()
+        with zipfile.ZipFile(io.BytesIO(plain)) as archive:
+            infos = archive.infolist()
     except Exception as exc:  # zipfile raises many kinds of errors on hostile input.
         raise ProtocolError(BAD_ARCHIVE, "not a readable zip archive") from exc
     if len(infos) > limits.max_files:
@@ -252,18 +258,40 @@ def _archive(plain: bytes, limits: Limits) -> tuple[zipfile.ZipFile, dict[str, z
             raise ProtocolError(MISSING_FILE, f"{name} missing")
     if (ROTATION in entries) != (ROTATION_SIG in entries):
         raise ProtocolError(MISSING_FILE, "rotation.json and rotation.sig go together")
-    return archive, entries
+    return entries
 
 
-def _read(archive: zipfile.ZipFile, info: zipfile.ZipInfo) -> bytes:
-    """Decompress one file, never more than its declared size (already checked against the limits)."""
-    try:
-        with archive.open(info) as stream:
-            data = stream.read(info.file_size + 1)
-    except Exception as exc:  # corrupt data, bad CRC, truncated stream...
-        raise ProtocolError(BAD_ARCHIVE, f"{info.filename}: unreadable") from exc
-    if len(data) != info.file_size:
-        raise ProtocolError(BAD_ARCHIVE, f"{info.filename}: size differs from the declared one")
+def _read(plain: bytes, info: zipfile.ZipInfo) -> bytes:
+    """Decompress one file, never more than its declared size (already checked against the limits).
+
+    Done here rather than by `zipfile`, which stops at the declared size without noticing that the data goes on: the
+    whole compressed data must decompress to exactly the declared size and CRC.
+    """
+    name = info.filename
+    start = info.header_offset
+    if start < 0 or start + _LOCAL_HEADER.size > len(plain):
+        raise ProtocolError(BAD_ARCHIVE, f"{name}: local header out of the archive")
+    signature, name_length, extra_length = _LOCAL_HEADER.unpack_from(plain, start)
+    begin = start + _LOCAL_HEADER.size
+    if signature != b"PK\x03\x04" or plain[begin : begin + name_length] != name.encode("ascii"):
+        raise ProtocolError(BAD_ARCHIVE, f"{name}: local header differs from the central directory")
+    begin += name_length + extra_length
+    end = begin + info.compress_size
+    if end > len(plain):
+        raise ProtocolError(BAD_ARCHIVE, f"{name}: data out of the archive")
+    raw = plain[begin:end]
+    if info.compress_type == zipfile.ZIP_STORED:
+        data = raw
+    else:
+        inflater = zlib.decompressobj(-zlib.MAX_WBITS)
+        try:
+            data = inflater.decompress(raw, info.file_size + 1)
+        except zlib.error as exc:
+            raise ProtocolError(BAD_ARCHIVE, f"{name}: corrupt data") from exc
+        if not inflater.eof or inflater.unconsumed_tail or inflater.unused_data:
+            raise ProtocolError(BAD_ARCHIVE, f"{name}: size differs from the declared one")
+    if len(data) != info.file_size or zlib.crc32(data) != info.CRC:
+        raise ProtocolError(BAD_ARCHIVE, f"{name}: size or CRC differs from the declared one")
     return data
 
 
@@ -285,8 +313,8 @@ def _signer(
 
 def _manifest(data: bytes, header: Header, names: Collection[str]) -> dict[str, Any]:
     try:
-        manifest = json.loads(data.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
+        manifest = strict_json.loads(data)
+    except strict_json.InvalidJson as exc:
         raise ProtocolError(BAD_MANIFEST, "not UTF-8 JSON") from exc
     if not isinstance(manifest, dict):
         raise ProtocolError(BAD_MANIFEST, "not an object")
@@ -343,21 +371,20 @@ def open_package(
     """
     allowed = frozenset(kinds) & PACKAGE_KINDS
     header, plain = open_envelope(secret, data, uid=uid, kinds=allowed, seq=seq, max_size=limits.max_package)
-    archive, entries = _archive(plain, limits)
-    with archive:
-        manifest_data = _read(archive, entries[MANIFEST])
-        signature = _read(archive, entries[MANIFEST_SIG])
-        rotation = None
-        if ROTATION in entries:
-            rotation = (_read(archive, entries[ROTATION]), _read(archive, entries[ROTATION_SIG]))
-        signer, adopted = _signer(manifest_data, signature, trusted_keys, rotation)
-        manifest = _manifest(manifest_data, header, entries.keys())
-        contents: dict[str, bytes] = {}
-        for name, digest in manifest["files"].items():
-            content = _read(archive, entries[name])
-            if hashlib.sha256(content).hexdigest() != digest:
-                raise ProtocolError(HASH_MISMATCH, f"{name} does not match the manifest")
-            contents[name] = content
+    entries = _archive(plain, limits)
+    manifest_data = _read(plain, entries[MANIFEST])
+    signature = _read(plain, entries[MANIFEST_SIG])
+    rotation = None
+    if ROTATION in entries:
+        rotation = (_read(plain, entries[ROTATION]), _read(plain, entries[ROTATION_SIG]))
+    signer, adopted = _signer(manifest_data, signature, trusted_keys, rotation)
+    manifest = _manifest(manifest_data, header, entries.keys())
+    contents: dict[str, bytes] = {}
+    for name, digest in manifest["files"].items():
+        content = _read(plain, entries[name])
+        if hashlib.sha256(content).hexdigest() != digest:
+            raise ProtocolError(HASH_MISMATCH, f"{name} does not match the manifest")
+        contents[name] = content
     items = parse_items(contents.pop(ITEMS))
     contents.pop(ROTATION, None)
     contents.pop(ROTATION_SIG, None)

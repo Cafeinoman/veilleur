@@ -20,6 +20,7 @@ import re
 import struct
 import sys
 import zipfile
+import zlib
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -31,7 +32,7 @@ DEFAULT_VECTORS = Path(__file__).resolve().parent.parent / "protocol" / "vectors
 JSON = dict[str, Any]
 KINDS = {1: "delta", 2: "state", 3: "history", 16: "subscription"}
 NAME = re.compile(r"(manifest\.json|manifest\.sig|items\.jsonl|rotation\.json|rotation\.sig|report\.[a-z0-9]{1,16})")
-TIME = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
+TIME = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z")
 
 
 class Refused(Exception):
@@ -44,6 +45,23 @@ def hkdf(secret: bytes, salt: bytes, info: bytes) -> bytes:
     """RFC 5869 with SHA-256, 32 bytes of output (a single block)."""
     prk = hmac.new(salt or bytes(32), secret, hashlib.sha256).digest()
     return hmac.new(prk, info + b"\x01", hashlib.sha256).digest()
+
+
+def strict(data: bytes) -> Any:
+    """RFC 8259 JSON: unique member names, no NaN or Infinity; anything else raises ValueError."""
+
+    def unique(pairs: list[tuple[str, Any]]) -> JSON:
+        if len({name for name, _ in pairs}) != len(pairs):
+            raise ValueError("duplicate member name")
+        return dict(pairs)
+
+    def constant(name: str) -> Any:
+        raise ValueError(name)
+
+    try:
+        return json.loads(data.decode("utf-8"), object_pairs_hook=unique, parse_constant=constant)
+    except RecursionError as exc:
+        raise ValueError("nesting") from exc
 
 
 def b64u(text: str) -> bytes:
@@ -107,8 +125,9 @@ def open_envelope(
 
 def read_rotation(statement: bytes, signature: bytes) -> tuple[bytes, bytes]:
     try:
-        document = json.loads(statement)
-        assert isinstance(document, dict) and re.fullmatch(r"1\.(0|[1-9][0-9]{0,5})", str(document["protocol"]))
+        document = strict(statement)
+        assert isinstance(document, dict) and isinstance(document["protocol"], str)
+        assert re.fullmatch(r"1\.(0|[1-9][0-9]{0,5})", document["protocol"])
         old, new = b64u(document["old_key"]), b64u(document["new_key"])
         assert timestamp(document["issued_at"]) and len(old) == 32 and len(new) == 32
     except (ValueError, KeyError, AssertionError) as exc:
@@ -136,8 +155,7 @@ def open_package(case: JSON) -> JSON:
         limits["max_package"],
     )
     try:
-        archive = zipfile.ZipFile(io.BytesIO(plain))
-        infos = archive.infolist()
+        infos = zipfile.ZipFile(io.BytesIO(plain)).infolist()
     except Exception as exc:
         raise Refused("bad_archive") from exc
     if len(infos) > limits["max_files"]:
@@ -169,11 +187,29 @@ def open_package(case: JSON) -> JSON:
         raise Refused("missing_file")
 
     def read(name: str) -> bytes:
-        try:
-            data = archive.read(name)
-        except Exception as exc:
-            raise Refused("bad_archive") from exc
-        if len(data) != entries[name].file_size:
+        """Raw data from the local header, inflated in full: exactly the declared size and CRC."""
+        info = entries[name]
+        at = info.header_offset
+        if plain[at : at + 4] != b"PK\x03\x04" or at + 30 > len(plain):
+            raise Refused("bad_archive")
+        name_length, extra_length = struct.unpack("<HH", plain[at + 26 : at + 30])
+        if plain[at + 30 : at + 30 + name_length] != name.encode():
+            raise Refused("bad_archive")
+        start = at + 30 + name_length + extra_length
+        raw = plain[start : start + info.compress_size]
+        if len(raw) != info.compress_size:
+            raise Refused("bad_archive")
+        if info.compress_type == 0:
+            data = raw
+        else:
+            inflater = zlib.decompressobj(-15)
+            try:
+                data = inflater.decompress(raw, info.file_size + 1)
+            except zlib.error as exc:
+                raise Refused("bad_archive") from exc
+            if not inflater.eof or inflater.unused_data or inflater.unconsumed_tail:
+                raise Refused("bad_archive")
+        if len(data) != info.file_size or zlib.crc32(data) != info.CRC:
             raise Refused("bad_archive")
         return data
 
@@ -186,7 +222,7 @@ def open_package(case: JSON) -> JSON:
             raise Refused("bad_signature")
         signer = adopted = rotation[1]
     try:
-        manifest = json.loads(manifest_bytes)
+        manifest = strict(manifest_bytes)
     except ValueError as exc:
         raise Refused("bad_manifest") from exc
     if not isinstance(manifest, dict):
@@ -243,7 +279,7 @@ def check_items(data: bytes) -> list[JSON]:
     items: list[JSON] = []
     for line in data.split(b"\n")[:-1] if data else []:
         try:
-            item = json.loads(line.decode("utf-8"))
+            item = strict(line)
         except ValueError as exc:
             raise Refused("bad_items") from exc
         ok = (
@@ -285,15 +321,19 @@ def verify_request(case: JSON) -> None:
     mac = hmac.new(
         auth_key(bytes.fromhex(case["secret"]), case["path_and_query"]), message.encode(), hashlib.sha256
     ).digest()
-    if not hmac.compare_digest(mac, b64u(match.group(2))):
+    try:
+        sent_mac = b64u(match.group(2))
+    except ValueError as exc:
+        raise Refused("bad_authorization") from exc
+    if not hmac.compare_digest(mac, sent_mac):
         raise Refused("bad_authorization")
 
 
 def decode_pairing(code: str) -> JSON:
     try:
         assert code.startswith("VEIL1:")
-        document = json.loads(b64u(code[6:]))
-        assert isinstance(document, dict) and document.get("v") == 1
+        document = strict(b64u(code[6:]))
+        assert isinstance(document, dict) and type(document.get("v")) is int and document["v"] == 1
         server = document["server"]
         assert server == "folder:" or re.fullmatch(r"https://[A-Za-z0-9.-]+(:[0-9]{1,5})?/?", server)
         assert re.fullmatch(r"[0-9a-f]{16}", document["key_id"])
@@ -354,7 +394,7 @@ def check(vectors: Path) -> list[str]:
             bytes.fromhex(case["secret"]), bytes.fromhex(case["envelope"]), case["uid"], ["subscription"], None, 1 << 20
         )
         expect(
-            number == case["base_version"] and json.loads(plain) == case["document"],
+            number == case["base_version"] and strict(plain) == case["document"],
             f"subscriptions: version {case['base_version']}",
         )
     for case in load("packages.json")["cases"]:

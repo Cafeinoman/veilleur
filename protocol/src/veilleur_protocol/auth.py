@@ -77,7 +77,10 @@ def parse_authorization(header: str | None) -> tuple[str, bytes]:
     match = _AUTHORIZATION.fullmatch(header or "")
     if match is None:
         raise ProtocolError(BAD_AUTHORIZATION, "expected 'Veilleur <key_id>:<mac>'")
-    return match.group(1), b64u_decode(match.group(2))
+    try:
+        return match.group(1), b64u_decode(match.group(2))
+    except ProtocolError as exc:
+        raise ProtocolError(BAD_AUTHORIZATION, "MAC is not canonical base64url") from exc
 
 
 def verify_request(

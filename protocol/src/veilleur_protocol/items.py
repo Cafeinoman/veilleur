@@ -12,6 +12,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
+from . import strict_json
 from .encoding import format_time, parse_time
 from .errors import BAD_ITEMS, ProtocolError
 
@@ -60,8 +61,8 @@ def encode_items(items: Iterable[Item]) -> bytes:
 
 def _item(line: bytes, number: int) -> Item:
     try:
-        document = json.loads(line.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
+        document = strict_json.loads(line)
+    except strict_json.InvalidJson as exc:
         raise ProtocolError(BAD_ITEMS, f"line {number}: not UTF-8 JSON") from exc
     if not isinstance(document, dict):
         raise ProtocolError(BAD_ITEMS, f"line {number}: not an object")

@@ -29,7 +29,7 @@ Les mots DOIT, NE DOIT PAS, DEVRAIT et PEUT s'entendent au sens de la RFC 2119.
 | `key_id` | identifiant de jumelage : 8 octets aléatoires, soit 16 chiffres hexadécimaux |
 | `uid` | identifiant d'abonnement : 16 octets aléatoires, soit 32 chiffres hexadécimaux ; choisi par qui crée l'abonnement (le serveur ou l'outil de réception) |
 | horodatage | UTC, à la seconde, exactement `AAAA-MM-JJTHH:MM:SSZ` (par exemple `2026-11-17T06:00:00Z`) |
-| JSON | RFC 8259, UTF-8, sans indicateur d'ordre des octets. Les noms de membres d'un objet sont uniques. |
+| JSON | RFC 8259, UTF-8, sans indicateur d'ordre des octets. Un lecteur DOIT refuser un objet dont un nom de membre est en double et les valeurs non JSON `NaN`, `Infinity` et `-Infinity` ; il PEUT refuser un nombre qu'il ne sait pas représenter. Chaque refus prend le code de ce qui est lu (`bad_pairing_code`, `bad_rotation`, `bad_manifest`, `bad_items`, `bad_subscription`). |
 
 Les écrivains produisent du JSON compact (sans blanc superflu), aux membres triés. Les lecteurs NE DOIVENT PAS en
 dépendre : signatures et empreintes portent sur des octets exacts, jamais sur une resérialisation.
@@ -43,7 +43,7 @@ VEIL1:<base64url(objet JSON)>
 | Membre | Type | Valeur |
 |---|---|---|
 | `v` | entier | `1` |
-| `server` | chaîne | origine du serveur, `https://hôte[:port]` (sans identifiants, chemin, requête ni fragment ; un seul `/` final est toléré), ou `folder:` pour une livraison par dossier seulement |
+| `server` | chaîne | origine du serveur, `https://hôte[:port]` (sans identifiants, chemin, requête ni fragment, pas même un `?` ou un `#` vides ; un seul `/` final est toléré), ou `folder:` pour une livraison par dossier seulement |
 | `key_id` | chaîne | `key_id` du jumelage |
 | `secret` | chaîne | base64url du secret de jumelage de 32 octets |
 | `sign_key` | chaîne | base64url de la clé publique Ed25519 du serveur, 32 octets |
@@ -272,8 +272,11 @@ DOIT faire ces contrôles dans cet ordre et s'arrêter au premier échec, avec l
    - une taille déclarée au-delà de sa limite : `file_too_large` ;
    - puis la somme des tailles déclarées au-delà de sa limite : `too_large` ;
    - puis un fichier obligatoire absent, ou un seul de `rotation.json` / `rotation.sig` : `missing_file` ;
-6. lire `manifest.json`, `manifest.sig`, et `rotation.json` / `rotation.sig` s'ils sont présents ; la décompression ne
-   rend jamais plus que la taille déclarée, et une taille ou un CRC différents de ceux déclarés donnent `bad_archive` ;
+6. lire `manifest.json`, `manifest.sig`, et `rotation.json` / `rotation.sig` s'ils sont présents : la totalité des
+   données compressées de l'entrée (sa taille compressée, à partir de l'en-tête local) doit se décompresser en
+   exactement la taille et le CRC déclarés, sans jamais rendre plus que la taille déclarée ; un en-tête local qui ne
+   correspond pas au répertoire central, des données hors de l'archive, des données corrompues, des données qui se
+   prolongent au-delà de la taille déclarée, une taille ou un CRC différents de ceux déclarés donnent `bad_archive` ;
 7. signature :
    - si une déclaration de rotation est présente, elle doit être bien formée et signée par son `old_key` :
      `bad_rotation` ;

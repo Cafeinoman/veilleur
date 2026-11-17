@@ -17,7 +17,7 @@ UID_BYTES = 16
 _B64U = re.compile(r"[A-Za-z0-9_-]*")
 _KEY_ID = re.compile(rf"[0-9a-f]{{{2 * KEY_ID_BYTES}}}")
 _UID = re.compile(rf"[0-9a-f]{{{2 * UID_BYTES}}}")
-_TIME = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
+_TIME = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z")  # ASCII digits only
 _TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 

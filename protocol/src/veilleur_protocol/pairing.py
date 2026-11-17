@@ -4,10 +4,11 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import urlsplit
 
+from . import strict_json
 from .encoding import b64u_decode, b64u_encode, is_key_id
 from .errors import BAD_PAIRING_CODE, ProtocolError
 from .keys import SECRET_BYTES
@@ -24,7 +25,7 @@ class Ntfy:
 
     url: str
     topic: str
-    token: str | None = None
+    token: str | None = field(default=None, repr=False)
 
 
 @dataclass(frozen=True)
@@ -72,8 +73,8 @@ def _https_origin(url: object) -> bool:
         and bool(parts.hostname)
         and parts.username is None
         and parts.path in ("", "/")
-        and not parts.query
-        and not parts.fragment
+        and "?" not in url
+        and "#" not in url
     )
 
 
@@ -115,10 +116,10 @@ def decode_pairing_code(text: str) -> PairingCode:
     if not text.startswith(PREFIX):
         raise ProtocolError(BAD_PAIRING_CODE, f"does not start with {PREFIX}")
     try:
-        document = json.loads(b64u_decode(text[len(PREFIX) :]).decode("utf-8"))
-    except (ProtocolError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        document = strict_json.loads(b64u_decode(text[len(PREFIX) :]))
+    except (ProtocolError, strict_json.InvalidJson) as exc:
         raise ProtocolError(BAD_PAIRING_CODE, "not base64url JSON") from exc
-    if not isinstance(document, dict) or document.get("v") != 1:
+    if not isinstance(document, dict) or type(document.get("v")) is not int or document["v"] != 1:
         raise ProtocolError(BAD_PAIRING_CODE, "not a version 1 pairing code")
     ntfy = document.get("ntfy")
     if ntfy is not None and not isinstance(ntfy, dict):

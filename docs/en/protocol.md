@@ -29,7 +29,7 @@ The key words MUST, MUST NOT, SHOULD and MAY are to be read as in RFC 2119.
 | `key_id` | pairing identifier: 8 random bytes, as 16 hex digits |
 | `uid` | subscription identifier: 16 random bytes, as 32 hex digits; chosen by whoever creates the subscription (the server or the receiving tool) |
 | timestamp | UTC, to the second, exactly `YYYY-MM-DDTHH:MM:SSZ` (for example `2026-11-17T06:00:00Z`) |
-| JSON | RFC 8259, UTF-8, no byte order mark. Objects have unique member names. |
+| JSON | RFC 8259, UTF-8, no byte order mark. A reader MUST refuse an object with a duplicate member name and the non-JSON values `NaN`, `Infinity` and `-Infinity`; it MAY refuse a number it cannot represent. Each refusal takes the code of what is being read (`bad_pairing_code`, `bad_rotation`, `bad_manifest`, `bad_items`, `bad_subscription`). |
 
 Writers produce compact JSON (no insignificant white space) with sorted member names. Readers MUST NOT depend on
 either: signatures and hashes are computed over exact bytes, never over a re-serialisation.
@@ -43,7 +43,7 @@ VEIL1:<base64url(JSON object)>
 | Member | Type | Value |
 |---|---|---|
 | `v` | integer | `1` |
-| `server` | string | origin of the server, `https://host[:port]` (no user information, path, query or fragment; a single trailing `/` is tolerated), or `folder:` when packages are delivered by folder only |
+| `server` | string | origin of the server, `https://host[:port]` (no user information, path, query or fragment, not even an empty `?` or `#`; a single trailing `/` is tolerated), or `folder:` when packages are delivered by folder only |
 | `key_id` | string | `key_id` of the pairing |
 | `secret` | string | base64url of the 32-byte pairing secret |
 | `sign_key` | string | base64url of the server's 32-byte Ed25519 public key |
@@ -269,8 +269,11 @@ these checks in this order and stop at the first failure, with the given code:
    - a declared size over its limit: `file_too_large`;
    - then the sum of declared sizes over its limit: `too_large`;
    - then a required file absent, or only one of `rotation.json` / `rotation.sig`: `missing_file`;
-6. read `manifest.json`, `manifest.sig`, and `rotation.json` / `rotation.sig` if present; decompressing never yields
-   more than the declared size, and a size or CRC differing from the declared one is `bad_archive`;
+6. read `manifest.json`, `manifest.sig`, and `rotation.json` / `rotation.sig` if present: the entry's whole compressed
+   data (its compressed size, from the local header on) must decompress to exactly the declared size and CRC, never
+   yielding more than the declared size; a local header that does not match the central directory, data out of the
+   archive, corrupt data, data going on beyond the declared size, a size or a CRC differing from the declared ones are
+   `bad_archive`;
 7. signature:
    - if a rotation statement is present, it must be well-formed and signed by its `old_key`: `bad_rotation`;
    - the manifest is accepted if signed by a trusted key;

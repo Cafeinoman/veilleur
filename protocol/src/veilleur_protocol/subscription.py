@@ -11,6 +11,7 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
+from . import strict_json
 from .envelope import Header, Kind, open_envelope, seal
 from .errors import BAD_SUBSCRIPTION, ProtocolError
 
@@ -31,8 +32,8 @@ def open_subscription(secret: bytes, uid: str, body: bytes) -> tuple[int, dict[s
         secret, body, uid=uid, kinds=frozenset({Kind.SUBSCRIPTION}), max_size=MAX_SUBSCRIPTION
     )
     try:
-        document = json.loads(plain.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
+        document = strict_json.loads(plain)
+    except strict_json.InvalidJson as exc:
         raise ProtocolError(BAD_SUBSCRIPTION, "not UTF-8 JSON") from exc
     if not isinstance(document, dict):
         raise ProtocolError(BAD_SUBSCRIPTION, "not an object")

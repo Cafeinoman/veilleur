@@ -17,6 +17,7 @@ import json
 import sys
 import warnings
 import zipfile
+import zlib
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -345,6 +346,47 @@ def _manifest(**changes: Any) -> JSON:
     return document
 
 
+def _manifest_text(items: bytes) -> bytes:
+    return manifest_bytes(_content(2, Kind.DELTA), {"items.jsonl": items})
+
+
+def _signed_manifest(manifest: bytes, items: bytes) -> list[tuple[str, bytes]]:
+    return [("manifest.json", manifest), ("manifest.sig", KEY_1.sign(manifest)), ("items.jsonl", items)]
+
+
+def _longer_than_declared(items: bytes) -> bytes:
+    """`report.txt` holds 5000 bytes, but its headers declare the first 100 (size and CRC), as the manifest does."""
+    real, declared = b"x" * 5000, b"x" * 100
+    files = {"items.jsonl": items, "report.txt": declared}
+    manifest = manifest_bytes(_content(2, Kind.DELTA), files)
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        for name, data in (*_signed_manifest(manifest, items), ("report.txt", real)):
+            info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o600 << 16
+            archive.writestr(info, data)
+    plain = bytearray(buffer.getvalue())
+    for signature, crc_at, size_at, name_length_at, name_at in (
+        (b"PK\x03\x04", 14, 22, 26, 30),
+        (b"PK\x01\x02", 16, 24, 28, 46),
+    ):
+        start = 0
+        while (start := plain.find(signature, start)) != -1:
+            length = int.from_bytes(plain[start + name_length_at : start + name_length_at + 2], "little")
+            if plain[start + name_at : start + name_at + length] == b"report.txt":
+                plain[start + crc_at : start + crc_at + 4] = zlib.crc32(declared).to_bytes(4, "little")
+                plain[start + size_at : start + size_at + 4] = len(declared).to_bytes(4, "little")
+            start += 4
+    return seal(SECRET, Header(UID, 2, Kind.DELTA), bytes(plain), nonce=_nonce("refusal longer"))
+
+
+def _non_canonical(authorization: str) -> str:
+    """Same MAC, but the unused low bits of its last base64url character set."""
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+    return authorization[:-1] + alphabet[alphabet.index(authorization[-1]) | 1]
+
+
 def refusals() -> JSON:
     good = seal_package(
         SECRET, KEY_1, _content(2, Kind.DELTA), compression=zipfile.ZIP_STORED, nonce=_nonce("refusal base")
@@ -536,6 +578,17 @@ def refusals() -> JSON:
             _sealed(_signed({"items.jsonl": b"".join(reversed(items.splitlines(keepends=True)))}), "unsorted"),
             "bad_items",
         ),
+        _refusal(
+            "NaN in an item",
+            _sealed(_signed({"items.jsonl": items.replace(b'"tags":["a","b"]', b'"tags":NaN')}), "nan"),
+            "bad_items",
+        ),
+        _refusal(
+            "duplicate member in the manifest",
+            _sealed(_signed_manifest(_manifest_text(items)[:-1] + b',"seq":2}', items), "duplicate member"),
+            "bad_manifest",
+        ),
+        _refusal("file longer than declared", _longer_than_declared(items), "bad_archive"),
     ]
     cases_requests = []
     signed = sign_request(SECRET, KEY_ID, "GET", f"/v1/subscriptions/{UID}/state", b"", NOW)
@@ -610,6 +663,16 @@ def refusals() -> JSON:
             "2026-11-17T06:00:00Z",
             "bad_authorization",
         ),
+        (
+            "non-canonical MAC",
+            "GET",
+            f"/v1/subscriptions/{UID}/state",
+            b"",
+            _non_canonical(signed.authorization),
+            signed.date,
+            "2026-11-17T06:00:00Z",
+            "bad_authorization",
+        ),
     ):
         try:
             verify_request(
@@ -679,6 +742,42 @@ def refusals() -> JSON:
                     "secret": _b64u(SECRET),
                     "sign_key": _b64u(KEY_1.public_key),
                 }
+            ),
+        ),
+        (
+            "version as a boolean",
+            "VEIL1:"
+            + _b64(
+                {
+                    "v": True,
+                    "server": "folder:",
+                    "key_id": KEY_ID,
+                    "secret": _b64u(SECRET),
+                    "sign_key": _b64u(KEY_1.public_key),
+                }
+            ),
+        ),
+        (
+            "server with an empty query",
+            "VEIL1:"
+            + _b64(
+                {
+                    "v": 1,
+                    "server": "https://veille.example.org?",
+                    "key_id": KEY_ID,
+                    "secret": _b64u(SECRET),
+                    "sign_key": _b64u(KEY_1.public_key),
+                }
+            ),
+        ),
+        (
+            "duplicate member",
+            "VEIL1:"
+            + _b64u(
+                (
+                    f'{{"v":1,"server":"folder:","key_id":"{KEY_ID}","secret":"{_b64u(bytes(32))}",'
+                    f'"secret":"{_b64u(SECRET)}","sign_key":"{_b64u(KEY_1.public_key)}"}}'
+                ).encode()
             ),
         ),
     ):
