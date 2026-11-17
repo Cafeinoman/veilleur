@@ -18,6 +18,10 @@ msgstr ""
 "Generated-By: Babel 2.18.0\n"
 
 #, python-format
+msgid " (default: %(default)s)"
+msgstr " (par défaut : %(default)s)"
+
+#, python-format
 msgid "%(heading)s:"
 msgstr "%(heading)s :"
 
@@ -40,11 +44,31 @@ msgstr "option ambiguë : %(option)s peut désigner %(matches)s"
 msgid "argument %(argument_name)s: %(message)s"
 msgstr "argument %(argument_name)s : %(message)s"
 
+#, python-format
+msgid "can't open '%(filename)s': %(error)s"
+msgstr "impossible d'ouvrir « %(filename)s » : %(error)s"
+
 msgid "command"
 msgstr "commande"
 
+#, python-format
+msgid "expected %s argument"
+msgid_plural "expected %s arguments"
+msgstr[0] "%s argument attendu"
+msgstr[1] "%s arguments attendus"
+
+msgid "expected at least one argument"
+msgstr "au moins un argument attendu"
+
+msgid "expected at most one argument"
+msgstr "au plus un argument attendu"
+
 msgid "expected one argument"
 msgstr "un argument attendu"
+
+#, python-format
+msgid "ignored explicit argument %r"
+msgstr "argument explicite %r ignoré"
 
 #, python-format
 msgid "invalid %(type)s value: %(value)r"
@@ -71,6 +95,9 @@ msgstr "options"
 msgid "positional arguments"
 msgstr "arguments positionnels"
 
+msgid "show program's version number and exit"
+msgstr "affiche la version du programme et quitte"
+
 msgid "show the version"
 msgstr "affiche la version"
 
@@ -83,6 +110,14 @@ msgstr "sous-commandes"
 #, python-format
 msgid "the following arguments are required: %s"
 msgstr "arguments requis manquants : %s"
+
+#, python-format
+msgid "unexpected option string: %s"
+msgstr "option inattendue : %s"
+
+#, python-format
+msgid "unknown parser %(parser_name)r (choices: %(choices)s)"
+msgstr "sous-commande inconnue %(parser_name)r (choix : %(choices)s)"
 
 #, python-format
 msgid "unrecognized arguments: %s"

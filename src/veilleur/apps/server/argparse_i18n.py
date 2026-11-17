@@ -36,7 +36,20 @@ ARGPARSE_MESSAGES = (
     N_("invalid choice: %(value)r (choose from %(choices)s)"),
     N_("invalid %(type)s value: %(value)r"),
     N_("not allowed with argument %s"),
+    N_("ignored explicit argument %r"),
+    N_("expected at least one argument"),
+    N_("expected at most one argument"),
+    N_("unexpected option string: %s"),
+    N_("unknown parser %(parser_name)r (choices: %(choices)s)"),
+    N_("can't open '%(filename)s': %(error)s"),
+    N_("show program's version number and exit"),
+    N_(" (default: %(default)s)"),
 )
+
+
+def _plural_messages() -> None:  # pragma: no cover - never called, read by the extractor only
+    """Plural texts of `argparse`, listed for extraction (there is no plural form of `N_`)."""
+    i18n.ngettext("expected %s argument", "expected %s arguments", 1)
 
 
 def install() -> None:
