@@ -180,6 +180,12 @@ def build_archive(
     """The plain archive (before sealing). `ZIP_STORED` makes it reproducible, for test vectors."""
     if content.kind not in PACKAGE_KINDS:
         raise ValueError("a package is a delta, a state or a history")
+    if type(content.seq) is not int:
+        raise ValueError("seq is an integer, not a boolean")
+    try:
+        parse_items(content.items)
+    except ProtocolError as exc:
+        raise ValueError(f"items.jsonl would be refused: {exc.detail}") from exc
     files: dict[str, bytes] = {ITEMS: content.items}
     if content.rotation is not None:
         files[ROTATION] = content.rotation.statement

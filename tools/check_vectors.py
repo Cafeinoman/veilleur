@@ -14,17 +14,15 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
-import io
 import ipaddress
 import json
 import re
 import struct
 import sys
-import zipfile
 import zlib
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 from nacl import bindings
 from nacl.exceptions import BadSignatureError, CryptoError
@@ -143,6 +141,17 @@ def read_rotation(statement: bytes, signature: bytes) -> tuple[bytes, bytes]:
     return old, new
 
 
+class Central(NamedTuple):
+    """What the central directory declares for one entry."""
+
+    flags: int
+    method: int
+    crc: int
+    compressed: int
+    size: int
+    offset: int
+
+
 def open_package(case: JSON) -> JSON:
     limits = case.get("limits") or {
         "max_package": 64 << 20,
@@ -160,32 +169,40 @@ def open_package(case: JSON) -> JSON:
         case["seq"],
         limits["max_package"],
     )
-    # zipfile tolerates bytes between the central directory and its end record; §10.2 step 5 does not.
+    # The central directory is walked by hand: zipfile counts entries from the directory size rather than from the
+    # end record, truncates names at NUL, and tolerates bytes between the directory and its end record (§10.2 step 5).
     end = plain.rfind(b"PK\x05\x06")
     while end >= 0 and end + 22 + int.from_bytes(plain[end + 20 : end + 22], "little") != len(plain):
         end = plain.rfind(b"PK\x05\x06", 0, end)
     if end < 0 or end + 22 > len(plain):
         raise Refused("bad_archive")
-    cd_size, cd_offset = (
-        int.from_bytes(plain[end + 12 : end + 16], "little"),
-        int.from_bytes(plain[end + 16 : end + 20], "little"),
-    )
-    if cd_offset + cd_size != end:
+    disk, cd_disk, on_disk, count, cd_size, cd_offset = struct.unpack("<HHHHII", plain[end + 4 : end + 20])
+    if disk or cd_disk or on_disk != count or cd_offset + cd_size != end:
         raise Refused("bad_archive")
-    try:
-        infos = zipfile.ZipFile(io.BytesIO(plain)).infolist()
-    except Exception as exc:
-        raise Refused("bad_archive") from exc
-    if len(infos) > limits["max_files"]:
+    if count > limits["max_files"]:
         raise Refused("too_many_files")
-    entries: dict[str, zipfile.ZipInfo] = {}
+    entries: dict[str, Central] = {}
     total = 0
-    for info in infos:
-        if not NAME.fullmatch(info.filename):
-            raise Refused("unexpected_file")
-        if info.filename in entries:
+    at = cd_offset
+    for _ in range(count):
+        if at + 46 > end or plain[at : at + 4] != b"PK\x01\x02":
             raise Refused("bad_archive")
-        if info.flag_bits & 1 or info.compress_type not in (0, 8):
+        flags, method = struct.unpack("<HH", plain[at + 8 : at + 12])
+        crc, compressed, size, name_length, extra_length, comment_length, start_disk = struct.unpack(
+            "<IIIHHHH", plain[at + 16 : at + 36]
+        )
+        (offset,) = struct.unpack("<I", plain[at + 42 : at + 46])
+        raw_name = plain[at + 46 : at + 46 + name_length]
+        at += 46 + name_length + extra_length + comment_length
+        if at > end:
+            raise Refused("bad_archive")
+        name = raw_name.decode("latin-1")
+        if not raw_name.isascii() or not NAME.fullmatch(name):
+            raise Refused("unexpected_file")
+        allowed_flags = 0x0002 | 0x0004 | 0x0800
+        if name in entries or flags & ~allowed_flags or method not in (0, 8) or start_disk:
+            raise Refused("bad_archive")
+        if 0xFFFFFFFF in (compressed, size, offset):
             raise Refused("bad_archive")
         cap = {
             "manifest.sig": 64,
@@ -193,10 +210,12 @@ def open_package(case: JSON) -> JSON:
             "rotation.json": 4096,
             "manifest.json": min(1 << 20, limits["max_file"]),
         }
-        if info.file_size > cap.get(info.filename, limits["max_file"]):
+        if size > cap.get(name, limits["max_file"]):
             raise Refused("file_too_large")
-        total += info.file_size
-        entries[info.filename] = info
+        total += size
+        entries[name] = Central(flags, method, crc, compressed, size, offset)
+    if at != end:
+        raise Refused("bad_archive")
     if total > limits["max_total"]:
         raise Refused("too_large")
     if any(n not in entries for n in ("manifest.json", "manifest.sig", "items.jsonl")):
@@ -207,36 +226,36 @@ def open_package(case: JSON) -> JSON:
     def read(name: str) -> bytes:
         """Raw data from the local header, inflated in full: exactly the declared size and CRC."""
         info = entries[name]
-        at = info.header_offset
+        at = info.offset
         if plain[at : at + 4] != b"PK\x03\x04" or at + 30 > len(plain):
             raise Refused("bad_archive")
         flags, method = struct.unpack("<HH", plain[at + 6 : at + 10])
         crc, compressed, size, name_length, extra_length = struct.unpack("<IIIHH", plain[at + 14 : at + 30])
         if (flags, method, crc, compressed, size) != (
-            info.flag_bits,
-            info.compress_type,
-            info.CRC,
-            info.compress_size,
-            info.file_size,
+            info.flags,
+            info.method,
+            info.crc,
+            info.compressed,
+            info.size,
         ):
             raise Refused("bad_archive")
         if plain[at + 30 : at + 30 + name_length] != name.encode():
             raise Refused("bad_archive")
         start = at + 30 + name_length + extra_length
-        raw = plain[start : start + info.compress_size]
-        if len(raw) != info.compress_size:
+        raw = plain[start : start + info.compressed]
+        if len(raw) != info.compressed:
             raise Refused("bad_archive")
-        if info.compress_type == 0:
+        if info.method == 0:
             data = raw
         else:
             inflater = zlib.decompressobj(-15)
             try:
-                data = inflater.decompress(raw, info.file_size + 1)
+                data = inflater.decompress(raw, info.size + 1)
             except zlib.error as exc:
                 raise Refused("bad_archive") from exc
             if not inflater.eof or inflater.unused_data or inflater.unconsumed_tail:
                 raise Refused("bad_archive")
-        if len(data) != info.file_size or zlib.crc32(data) != info.CRC:
+        if len(data) != info.size or zlib.crc32(data) != info.crc:
             raise Refused("bad_archive")
         return data
 
@@ -345,6 +364,8 @@ def origin_ok(server: str) -> bool:
         return False
     try:
         if host.startswith("["):
+            if "%" in host:  # a zone identifier names an interface of the reader, not a server
+                return False
             ipaddress.ip_address(host[1:-1])
             return ":" in host
         if re.fullmatch(r"[0-9.]+", host):

@@ -362,6 +362,30 @@ def _gap_before_end(items: bytes) -> bytes:
     return seal(SECRET, Header(UID, 2, Kind.DELTA), plain[:end] + bytes(16) + plain[end:], nonce=_nonce("refusal gap"))
 
 
+def _patched(items: bytes, label: str, patch: Callable[[bytearray], None]) -> bytes:
+    """A valid archive, changed in place by `patch`."""
+    plain = bytearray(_zip(_signed({"items.jsonl": items})))
+    patch(plain)
+    return seal(SECRET, Header(UID, 2, Kind.DELTA), bytes(plain), nonce=_nonce("refusal " + label))
+
+
+def _set_central_flag(plain: bytearray) -> None:
+    """Sets the data descriptor flag (bit 3) on the first central directory entry."""
+    at = plain.find(b"PK\x01\x02")
+    plain[at + 8] |= 0x08
+
+
+def _count(delta: int) -> Callable[[bytearray], None]:
+    """Changes the number of entries the end record announces (on this disk and in total)."""
+
+    def patch(plain: bytearray) -> None:
+        end = plain.rfind(b"PK\x05\x06")
+        count = int.from_bytes(plain[end + 10 : end + 12], "little") + delta
+        plain[end + 8 : end + 12] = count.to_bytes(2, "little") * 2
+
+    return patch
+
+
 def _longer_than_declared(items: bytes) -> bytes:
     """`report.txt` holds 5000 bytes, but its headers declare the first 100 (size and CRC), as the manifest does."""
     real, declared = b"x" * 5000, b"x" * 100
@@ -613,6 +637,10 @@ def refusals() -> JSON:
             "bad_archive",
         ),
         _refusal("bytes between the central directory and its end record", _gap_before_end(items), "bad_archive"),
+        _refusal("data descriptor flag", _patched(items, "flag", _set_central_flag), "bad_archive"),
+        _refusal("end record announces fewer entries", _patched(items, "fewer", _count(-1)), "bad_archive"),
+        _refusal("end record announces more entries", _patched(items, "more", _count(+1)), "bad_archive"),
+        _refusal("end record announces too many entries", _patched(items, "too many", _count(+30)), "too_many_files"),
         _refusal(
             "period without from",
             _sealed(_signed({"items.jsonl": items}, _manifest(period={"to": format_time(NOW)})), "period"),
@@ -854,6 +882,7 @@ def refusals() -> JSON:
                 "https://<veille>.example.org",
                 "https://veille.example.org%2Fx",
                 "https://010.0.0.1",
+                "https://[fe80::1%eth0]",
             )
         ),
         *(

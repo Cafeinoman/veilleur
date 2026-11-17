@@ -69,7 +69,7 @@ class Header:
     kind: Kind
 
     def encode(self) -> bytes:
-        if not 0 <= self.seq <= MAX_SEQ:
+        if type(self.seq) is not int or not 0 <= self.seq <= MAX_SEQ:  # bool is an int, but not a number here
             raise ValueError("seq is between 0 and 2**63 - 1")
         return _HEADER.pack(MAGIC, VERSION, uid_bytes(self.uid), self.seq, self.kind.code)
 
