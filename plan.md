@@ -20,7 +20,7 @@
 | Lot | Objet | État |
 |---|---|---|
 | G0-R | Dépôt git, environnement, contrôles, création du dépôt GitHub | fait |
-| G1 | Protocole 1.0 et `veilleur-protocol` | à faire |
+| G1 | Protocole 1.0 et `veilleur-protocol` | fait |
 | G2 | Cœur, stockage, administration, service HTTP | à faire |
 | G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | à faire |
 | G4 | Rendus, récepteur de référence | à faire |
@@ -58,7 +58,7 @@ Le squelette (G0) est en place : licence, traduction, CI, documentation bilingue
   Si `uv.lock` ne correspond plus à `pyproject.toml`, comprendre pourquoi avant de le régénérer.
 - [x] **3. Contrôles.** Tous doivent passer :
   ```bash
-  uv run pytest && uv run ruff check src tests tools && uv run mypy && uv run lint-imports
+  uv run pytest && uv run ruff check src tests tools protocol && uv run mypy && uv run lint-imports
   uv run veilleur --lang fr --help
   uv run veilleur --lang fr version && uv run veilleur --lang en version
   ```
@@ -94,7 +94,7 @@ Fini quand : dépôt public avec la seule identité `François Delalleau <Cafein
 
 ## G1 — Protocole 1.0 (cahier ES-02 à ES-07, ES-13, §7.3)
 
-- [ ] Spécification `docs/en/protocol.md` (normative) et `docs/fr/protocol.md` (informative) :
+- [x] Spécification `docs/en/protocol.md` (normative) et `docs/fr/protocol.md` (informative) :
   - code de jumelage `VEIL1:` ;
   - dérivation des clés (étiquettes `info` : `veilleur-report`, `veilleur-subscription`, `veilleur-auth`) ;
   - enveloppe (magie, version, nonce, données associées) ;
@@ -103,11 +103,11 @@ Fini quand : dépôt public avec la seule identité `François Delalleau <Cafein
   - déclaration de rotation de clé ;
   - limites du lecteur ;
   - genres de paquets et fichiers qu'ils contiennent.
-- [ ] Paquet `protocol/` (`veilleur-protocol`), dépendance unique `pycryptodomex`, dans un espace de travail uv avec le serveur.
-- [ ] Vecteurs de test (`protocol/vectors/*.json`) : secrets, `uid`, clés dérivées, paquets scellés, requêtes signées, rotation.
-- [ ] Seconde implémentation, indépendante, de la vérification des vecteurs : un script court, avec une autre bibliothèque cryptographique si possible, exécuté dans la CI.
-- [ ] Tests des refus : paquet altéré, autre abonnement, autre numéro, signature fausse, archive piégée (chemins, trop de fichiers, trop gros), horodatage hors tolérance.
-- [ ] Modèle de menace `docs/{en,fr}/threat-model.md`.
+- [x] Paquet `protocol/` (`veilleur-protocol`), dépendance unique `pycryptodomex`, dans un espace de travail uv avec le serveur.
+- [x] Vecteurs de test (`protocol/vectors/*.json`) : secrets, `uid`, clés dérivées, paquets scellés, requêtes signées, rotation.
+- [x] Seconde implémentation, indépendante, de la vérification des vecteurs : un script court, avec une autre bibliothèque cryptographique si possible, exécuté dans la CI. Fait avec libsodium (PyNaCl, dépendance de développement) : `tools/check_vectors.py`.
+- [x] Tests des refus : paquet altéré, autre abonnement, autre numéro, signature fausse, archive piégée (chemins, trop de fichiers, trop gros), horodatage hors tolérance.
+- [x] Modèle de menace `docs/{en,fr}/threat-model.md`.
 
 Fini quand : vecteurs vérifiés par les deux implémentations ; tous les refus testés.
 
