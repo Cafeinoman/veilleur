@@ -1,0 +1,49 @@
+{
+ "description": "Authorization: Veilleur <key_id>:<base64url(HMAC-SHA256(A, string to sign))>",
+ "cases": [
+  {
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "key_id": "0123456789abcdef",
+   "method": "GET",
+   "path_and_query": "/v1/collectors",
+   "body": "",
+   "date": "2026-11-17T06:00:00Z",
+   "scope": null,
+   "string_to_sign": "GET\n/v1/collectors\n2026-11-17T06:00:00Z\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "authorization": "Veilleur 0123456789abcdef:L3QSpy2JMbg0jpsCruP9XePpmPsrzjHDpWTSJuXbd8M"
+  },
+  {
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "key_id": "0123456789abcdef",
+   "method": "GET",
+   "path_and_query": "/v1/subscriptions/00112233445566778899aabbccddeeff/reports?after=3",
+   "body": "",
+   "date": "2026-11-17T06:00:00Z",
+   "scope": "00112233445566778899aabbccddeeff",
+   "string_to_sign": "GET\n/v1/subscriptions/00112233445566778899aabbccddeeff/reports?after=3\n2026-11-17T06:00:00Z\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "authorization": "Veilleur 0123456789abcdef:fLRynQw91vrvB6GMBXTOdA93KP1RaIKiwPOa9DrkguQ"
+  },
+  {
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "key_id": "0123456789abcdef",
+   "method": "PUT",
+   "path_and_query": "/v1/subscriptions/00112233445566778899aabbccddeeff",
+   "body": "5645494c0100112233445566778899aabbccddeeff000000000000000010bb4f0e9390a9bd74d02ea245c59856671316a81525f939a914658b6c745fa322563310512ee6e078a8e315bbe23343d52ba60b0ab8cdc9340bcad7",
+   "date": "2026-11-17T06:00:00Z",
+   "scope": "00112233445566778899aabbccddeeff",
+   "string_to_sign": "PUT\n/v1/subscriptions/00112233445566778899aabbccddeeff\n2026-11-17T06:00:00Z\nfd4d2c38f13da9110bf8218e727bcecc30e72fc72a07e2582a7a96a9e8f11812",
+   "authorization": "Veilleur 0123456789abcdef:nhAPCKK5Wi5BMhiYxJub8nEu8OYotmHOTVp7bQ3yW6o"
+  },
+  {
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "key_id": "0123456789abcdef",
+   "method": "DELETE",
+   "path_and_query": "/v1/subscriptions/ffeeddccbbaa99887766554433221100",
+   "body": "",
+   "date": "2026-11-17T06:00:00Z",
+   "scope": "ffeeddccbbaa99887766554433221100",
+   "string_to_sign": "DELETE\n/v1/subscriptions/ffeeddccbbaa99887766554433221100\n2026-11-17T06:00:00Z\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "authorization": "Veilleur 0123456789abcdef:l4F7-9T_Jt2JSfIvkRBFgwAleYKtP3S-So_8oJZNqpI"
+  }
+ ]
+}

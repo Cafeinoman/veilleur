@@ -1,0 +1,65 @@
+{
+ "description": "HKDF-SHA256(secret, salt = uid bytes or empty, info) -> 32 bytes",
+ "cases": [
+  {
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "uid": "00112233445566778899aabbccddeeff",
+   "info": "veilleur-report",
+   "key": "d745739bc4a38f3c66c31def94670bd6dce3f9ecf69c0e47ad4b7480efa9d2a9"
+  },
+  {
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "uid": "00112233445566778899aabbccddeeff",
+   "info": "veilleur-subscription",
+   "key": "a2c98531b9aafd432b5bd83f9d17fcd7b918489e92f596c8b0659c46003763b1"
+  },
+  {
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "uid": "00112233445566778899aabbccddeeff",
+   "info": "veilleur-auth",
+   "key": "06592f144c2cd99173e718c8f875281b0fc30b00d1ad00fe8ca1597eaa881808"
+  },
+  {
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "uid": "ffeeddccbbaa99887766554433221100",
+   "info": "veilleur-report",
+   "key": "a6d450ba1daed551656447916f915bdaba6b707f93fa1d57d0a1cb6386963aae"
+  },
+  {
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "uid": "ffeeddccbbaa99887766554433221100",
+   "info": "veilleur-subscription",
+   "key": "604fa27fca8be1a0d23f9fd1845442546712c4602bfd1b5e9dee2ff1c90d4ac6"
+  },
+  {
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "uid": "ffeeddccbbaa99887766554433221100",
+   "info": "veilleur-auth",
+   "key": "8052807035bac7240d163953721cc17f9a4ce4d4cba40a0c38b448a7269066ed"
+  },
+  {
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "uid": null,
+   "info": "veilleur-auth",
+   "key": "6a3ef8f8556637c3081840e855287791242573c67fd70d1c5122e3705345d066"
+  },
+  {
+   "secret": "b919c604a205b470d7fca338bf5b508f2f03717754bf70a5eb8d1728bcf8de7f",
+   "uid": "00112233445566778899aabbccddeeff",
+   "info": "veilleur-report",
+   "key": "8d7ff20f08ac1a842d5599f1590df90be102aed80746f8822b51f0a594183b7a"
+  },
+  {
+   "secret": "b919c604a205b470d7fca338bf5b508f2f03717754bf70a5eb8d1728bcf8de7f",
+   "uid": "00112233445566778899aabbccddeeff",
+   "info": "veilleur-subscription",
+   "key": "ad44456643de49c76ff7e29d39e5262ceb3a7f472903ec6f4b93a33a2fef8a0d"
+  },
+  {
+   "secret": "b919c604a205b470d7fca338bf5b508f2f03717754bf70a5eb8d1728bcf8de7f",
+   "uid": "00112233445566778899aabbccddeeff",
+   "info": "veilleur-auth",
+   "key": "2c2a369e0d68a3013b9b7893e40a7b2445dd50cf999b781e15364cf136595416"
+  }
+ ]
+}

@@ -1,0 +1,25 @@
+{
+ "description": "VEIL1: + base64url(UTF-8 JSON)",
+ "cases": [
+  {
+   "code": "VEIL1:eyJ2IjoxLCJzZXJ2ZXIiOiJodHRwczovL3ZlaWxsZS5leGFtcGxlLm9yZyIsImtleV9pZCI6IjAxMjM0NTY3ODlhYmNkZWYiLCJzZWNyZXQiOiJwR3NtLWg2Zk1RY3k2dHhfOXh4NUNIVXoya0FDWVBJOHNoeS1RcnJHbUdNIiwic2lnbl9rZXkiOiJZUXlQVG81d0pVZ3ZKQjgyZUhLTjdEZVNyZkRlcWhmd1FaTmpKcjVIMUk4IiwibnRmeSI6eyJ1cmwiOiJodHRwczovL250ZnkuZXhhbXBsZS5vcmciLCJ0b3BpYyI6InZlaWxsZXVyLTAxMjMiLCJ0b2tlbiI6InRrX2V4YW1wbGUifX0",
+   "server": "https://veille.example.org",
+   "key_id": "0123456789abcdef",
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "sign_key": "610c8f4e8e7025482f241f3678728dec3792adf0deaa17f041936326be47d48f",
+   "ntfy": {
+    "url": "https://ntfy.example.org",
+    "topic": "veilleur-0123",
+    "token": "tk_example"
+   }
+  },
+  {
+   "code": "VEIL1:eyJ2IjoxLCJzZXJ2ZXIiOiJmb2xkZXI6Iiwia2V5X2lkIjoiZmVkY2JhOTg3NjU0MzIxMCIsInNlY3JldCI6InVSbkdCS0lGdEhEWF9LTTR2MXRRank4RGNYZFV2M0NsNjQwWEtMejQzbjgiLCJzaWduX2tleSI6InVZOHpOSW10eUN0TmYxRFJXcFVORkhHVklCWmpaYy1XTEQwOHQ0UkxrcHMifQ",
+   "server": "folder:",
+   "key_id": "fedcba9876543210",
+   "secret": "b919c604a205b470d7fca338bf5b508f2f03717754bf70a5eb8d1728bcf8de7f",
+   "sign_key": "b98f333489adc82b4d7f50d15a950d14719520166365cf962c3d3cb7844b929b",
+   "ntfy": null
+  }
+ ]
+}
