@@ -96,11 +96,23 @@ class RoundCounts:
     failing_sources: int
 
 
+@dataclass(frozen=True)
+class NotificationTarget:
+    """Who a notification is for: a pairing, through its random topic (the one in its pairing code)."""
+
+    key_id: str
+    topic: str
+
+
 class Notifier(Protocol):
+    """Tells a pairing that a round produced reports for it (EF-52)."""
+
     @property
     def name(self) -> str: ...
 
-    def notify(self, counts: RoundCounts) -> None: ...
+    def notify(self, target: NotificationTarget, counts: RoundCounts) -> None:
+        """Send `counts` for `target`. Raise on failure; the round goes on."""
+        ...
 
 
 @dataclass(frozen=True)

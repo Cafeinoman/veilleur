@@ -194,8 +194,8 @@ msgid "Team subscription {name}: collector {collector}, pairings {pairings}"
 msgstr "Abonnement d'équipe {name} : collecteur {collector}, jumelages {pairings}"
 
 #, python-brace-format
-msgid "Test notification sent: {ok} of {total} notifiers."
-msgstr "Notification d'essai envoyée : {ok} notificateurs sur {total}."
+msgid "Test notification: {ok} of {total} sendings succeeded."
+msgstr "Notification d'essai : {ok} envois réussis sur {total}."
 
 msgid "The body is not a sealed document."
 msgstr "Le corps n'est pas un document scellé."
@@ -442,6 +442,9 @@ msgstr "l'un des arguments %s est requis"
 msgid "only the packages after this number"
 msgstr "seulement les paquets après ce numéro"
 
+msgid "only to this pairing (key_id or label)"
+msgstr "seulement à ce jumelage (key_id ou libellé)"
+
 msgid "options"
 msgstr "options"
 
@@ -613,6 +616,12 @@ msgid "{count} new item"
 msgid_plural "{count} new items"
 msgstr[0] "{count} élément nouveau"
 msgstr[1] "{count} éléments nouveaux"
+
+#, python-brace-format
+msgid "{count} new report"
+msgid_plural "{count} new reports"
+msgstr[0] "{count} nouveau rapport"
+msgstr[1] "{count} nouveaux rapports"
 
 #, python-brace-format
 msgid "{count} package written"

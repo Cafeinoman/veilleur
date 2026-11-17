@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Veilleur VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-17 22:21+0100\n"
+"POT-Creation-Date: 2026-11-18 00:32+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -188,7 +188,7 @@ msgid "Team subscription {name}: collector {collector}, pairings {pairings}"
 msgstr ""
 
 #, python-brace-format
-msgid "Test notification sent: {ok} of {total} notifiers."
+msgid "Test notification: {ok} of {total} sendings succeeded."
 msgstr ""
 
 msgid "The body is not a sealed document."
@@ -432,6 +432,9 @@ msgstr ""
 msgid "only the packages after this number"
 msgstr ""
 
+msgid "only to this pairing (key_id or label)"
+msgstr ""
+
 msgid "options"
 msgstr ""
 
@@ -595,6 +598,12 @@ msgstr ""
 #, python-brace-format
 msgid "{count} new item"
 msgid_plural "{count} new items"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} new report"
+msgid_plural "{count} new reports"
 msgstr[0] ""
 msgstr[1] ""
 

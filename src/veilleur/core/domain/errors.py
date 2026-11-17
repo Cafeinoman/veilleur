@@ -39,6 +39,20 @@ COLLECTOR_FAILED = "collector_failed"
 COLLECTOR_MISSING = "collector_missing"
 BAD_ITEM = "bad_item"
 NETWORK_UNAVAILABLE = "network_unavailable"
+# Collections through the HTTP client (cahier ES-08) and the provided collectors; `http_<status>` for an HTTP error.
+BAD_URL = "bad_url"
+ADDRESS_REFUSED = "address_refused"
+DNS_FAILED = "dns_failed"
+NETWORK_ERROR = "network_error"
+TIMEOUT = "timeout"
+TOO_MANY_REDIRECTS = "too_many_redirects"
+RESPONSE_TOO_LARGE = "response_too_large"
+UNEXPECTED_CONTENT_TYPE = "unexpected_content_type"
+BAD_RESPONSE = "bad_response"
+ROBOTS_DISALLOWED = "robots_disallowed"
+ROBOTS_UNAVAILABLE = "robots_unavailable"
+HOST_QUOTA_EXCEEDED = "host_quota_exceeded"
+SELECTOR_NO_MATCH = "selector_no_match"
 
 CODES = frozenset(
     {
@@ -68,6 +82,19 @@ CODES = frozenset(
         COLLECTOR_MISSING,
         BAD_ITEM,
         NETWORK_UNAVAILABLE,
+        BAD_URL,
+        ADDRESS_REFUSED,
+        DNS_FAILED,
+        NETWORK_ERROR,
+        TIMEOUT,
+        TOO_MANY_REDIRECTS,
+        RESPONSE_TOO_LARGE,
+        UNEXPECTED_CONTENT_TYPE,
+        BAD_RESPONSE,
+        ROBOTS_DISALLOWED,
+        ROBOTS_UNAVAILABLE,
+        HOST_QUOTA_EXCEEDED,
+        SELECTOR_NO_MATCH,
     }
 )
 

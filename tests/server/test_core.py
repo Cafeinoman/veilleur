@@ -292,12 +292,15 @@ def test_failing_sources_are_counted_after_two_days(world: World) -> None:
 
 
 def test_notification_carries_counts_only_after_reports(world: World) -> None:
-    _subscribe(world)
+    key_id, _uid = _subscribe(world)
     world.collector.set("news", ("a", {"title": "A"}))
     round.run_round(world.app.core)
     world.clock.advance(hours=1)
     round.run_round(world.app.core)
-    assert [(c.reports, c.new_items, c.failing_sources) for c in world.notifier.sent] == [(1, 1, 0)]
+    assert [(c.reports, c.new_items, c.failing_sources) for _t, c in world.notifier.sent] == [(1, 1, 0)]
+    target = world.notifier.sent[0][0]
+    assert target.key_id == key_id and len(target.topic) == 32
+    assert world.app.store.get_pairing(key_id).topic == target.topic  # type: ignore[union-attr]
 
 
 def test_revoked_pairing_is_not_served(world: World) -> None:

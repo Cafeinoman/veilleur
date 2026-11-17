@@ -15,6 +15,7 @@ from .context import Core
 SECRET_BYTES = 32
 KEY_ID_BYTES = 8
 MAX_LABEL = 64
+TOPIC_BYTES = 16
 
 
 def check_label(label: str) -> str:
@@ -32,7 +33,9 @@ def create_pairing(core: Core, label: str) -> Pairing:
             key_id = secrets.token_hex(KEY_ID_BYTES)
             if core.store.get_pairing(key_id) is None:
                 break
-        pairing = Pairing(key_id, label, secrets.token_bytes(SECRET_BYTES), core.clock.now())
+        pairing = Pairing(
+            key_id, label, secrets.token_bytes(SECRET_BYTES), core.clock.now(), topic=secrets.token_hex(TOPIC_BYTES)
+        )
         core.store.add_pairing(pairing)
         core.store.add_event(pairing.created_at, "pairing_created", {"key_id": key_id})
     return pairing

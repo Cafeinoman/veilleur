@@ -185,12 +185,21 @@ class SqliteStore:
 
     @staticmethod
     def _pairing(row: sqlite3.Row) -> Pairing:
-        return Pairing(row["key_id"], row["label"], row["secret"], _dd(row["created_at"]), _d(row["revoked_at"]))
+        return Pairing(
+            row["key_id"], row["label"], row["secret"], _dd(row["created_at"]), _d(row["revoked_at"]), row["topic"]
+        )
 
     def add_pairing(self, pairing: Pairing) -> None:
         self._run(
-            "INSERT INTO pairing (key_id, label, secret, created_at, revoked_at) VALUES (?, ?, ?, ?, ?)",
-            (pairing.key_id, pairing.label, pairing.secret, _t(pairing.created_at), _t(pairing.revoked_at)),
+            "INSERT INTO pairing (key_id, label, secret, created_at, revoked_at, topic) VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                pairing.key_id,
+                pairing.label,
+                pairing.secret,
+                _t(pairing.created_at),
+                _t(pairing.revoked_at),
+                pairing.topic,
+            ),
         )
 
     def get_pairing(self, key_id: str) -> Pairing | None:
