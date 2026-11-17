@@ -1,0 +1,150 @@
+# SPDX-License-Identifier: EUPL-1.2
+"""Pairing code (specification §3): `VEIL1:` followed by the base64url of a UTF-8 JSON object."""
+
+from __future__ import annotations
+
+import ipaddress
+import re
+from dataclasses import dataclass, field
+from typing import Any
+
+from . import strict_json
+from .encoding import b64u_decode, b64u_encode, is_key_id
+from .errors import BAD_PAIRING_CODE, ProtocolError
+from .keys import SECRET_BYTES
+from .signing import is_public_key
+
+PREFIX = "VEIL1:"
+FOLDER = "folder:"
+MAX_CODE_LENGTH = 4096
+
+
+@dataclass(frozen=True)
+class Ntfy:
+    """Where the receiving tool listens for notifications."""
+
+    url: str
+    topic: str
+    token: str | None = field(default=None, repr=False)
+
+
+@dataclass(frozen=True)
+class PairingCode:
+    server: str
+    """`https://host[:port]` without path, or `folder:` for delivery by folder only."""
+    key_id: str
+    secret: bytes
+    sign_key: bytes
+    ntfy: Ntfy | None = None
+
+    def __post_init__(self) -> None:
+        _check(self)
+
+    def __repr__(self) -> str:
+        return f"PairingCode(server={self.server!r}, key_id={self.key_id!r}, secret=<hidden>)"
+
+    def encode(self) -> str:
+        """The code, with sorted member names (§2). Raises `ValueError` if it would exceed `MAX_CODE_LENGTH`."""
+        document: dict[str, Any] = {
+            "v": 1,
+            "server": self.server,
+            "key_id": self.key_id,
+            "secret": b64u_encode(self.secret),
+            "sign_key": b64u_encode(self.sign_key),
+        }
+        if self.ntfy is not None:
+            ntfy: dict[str, str] = {"url": self.ntfy.url, "topic": self.ntfy.topic}
+            if self.ntfy.token is not None:
+                ntfy["token"] = self.ntfy.token
+            document["ntfy"] = ntfy
+        code = PREFIX + b64u_encode(strict_json.dumps(document))
+        if len(code) > MAX_CODE_LENGTH:
+            raise ValueError(f"a pairing code is at most {MAX_CODE_LENGTH} characters")
+        return code
+
+
+_ORIGIN = re.compile(r"https://(\[[0-9A-Fa-f:.]+\]|[A-Za-z0-9.-]+)(?::([1-9][0-9]{0,4}))?")
+_LABEL = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?")
+_REST = re.compile(r"[/?][!$&'()*+,./0-9:;=?@A-Z_a-z~%-]*")
+
+
+def _is_host(host: str) -> bool:
+    """A DNS name, an IPv4 address in dotted decimal, or an IPv6 address in brackets (specification §3)."""
+    try:
+        if host.startswith("["):
+            ipaddress.IPv6Address(host[1:-1])
+            return True
+        if all(c.isdigit() or c == "." for c in host):
+            ipaddress.IPv4Address(host)
+            return True
+    except ValueError:
+        return False
+    labels = host.split(".")
+    return len(host) <= 253 and all(_LABEL.fullmatch(label) for label in labels) and not labels[-1].isdigit()
+
+
+def _authority_end(url: object) -> int | None:
+    """Where `https://host[:port]` ends in `url`, or None if it does not start with one."""
+    match = _ORIGIN.match(url) if isinstance(url, str) else None
+    if match is None or not _is_host(match.group(1)) or int(match.group(2) or 443) > 65535:
+        return None
+    return match.end()
+
+
+def _https_origin(url: object) -> bool:
+    end = _authority_end(url)
+    return end is not None and isinstance(url, str) and url[end:] in ("", "/")
+
+
+def _https_url(url: object) -> bool:
+    end = _authority_end(url)
+    return end is not None and isinstance(url, str) and (url[end:] == "" or _REST.fullmatch(url[end:]) is not None)
+
+
+def _check(code: PairingCode) -> None:
+    if code.server != FOLDER and not _https_origin(code.server):
+        raise ProtocolError(BAD_PAIRING_CODE, "server is an https origin or 'folder:'")
+    if not is_key_id(code.key_id):
+        raise ProtocolError(BAD_PAIRING_CODE, "key_id is 16 lowercase hexadecimal digits")
+    if not isinstance(code.secret, bytes) or len(code.secret) != SECRET_BYTES:
+        raise ProtocolError(BAD_PAIRING_CODE, "secret is 32 bytes")
+    if not is_public_key(code.sign_key):
+        raise ProtocolError(BAD_PAIRING_CODE, "sign_key is a valid Ed25519 public key (§6.1)")
+    if code.ntfy is not None:
+        n = code.ntfy
+        if not _https_url(n.url):
+            raise ProtocolError(BAD_PAIRING_CODE, "ntfy.url is an https URL")
+        if not isinstance(n.topic, str) or not n.topic:
+            raise ProtocolError(BAD_PAIRING_CODE, "ntfy.topic is a non-empty string")
+        if n.token is not None and (not isinstance(n.token, str) or not n.token):
+            raise ProtocolError(BAD_PAIRING_CODE, "ntfy.token is a non-empty string")
+
+
+def decode_pairing_code(text: str) -> PairingCode:
+    """Parse and check a pairing code. Surrounding white space is ignored."""
+    text = text.strip()
+    if len(text) > MAX_CODE_LENGTH:
+        raise ProtocolError(BAD_PAIRING_CODE, "too long")
+    if not text.startswith(PREFIX):
+        raise ProtocolError(BAD_PAIRING_CODE, f"does not start with {PREFIX}")
+    try:
+        document = strict_json.loads(b64u_decode(text[len(PREFIX) :]))
+    except (ProtocolError, strict_json.InvalidJson) as exc:
+        raise ProtocolError(BAD_PAIRING_CODE, "not base64url JSON") from exc
+    if not isinstance(document, dict) or type(document.get("v")) is not int or document["v"] != 1:
+        raise ProtocolError(BAD_PAIRING_CODE, "not a version 1 pairing code")
+    ntfy = document.get("ntfy")
+    if "ntfy" in document and not isinstance(ntfy, dict):
+        raise ProtocolError(BAD_PAIRING_CODE, "ntfy is an object")
+    if ntfy is not None and "token" in ntfy and ntfy["token"] is None:
+        raise ProtocolError(BAD_PAIRING_CODE, "ntfy.token is absent or a non-empty string")
+    try:
+        return PairingCode(
+            server=document.get("server"),  # type: ignore[arg-type]
+            key_id=document.get("key_id"),  # type: ignore[arg-type]
+            secret=b64u_decode(document.get("secret")),  # type: ignore[arg-type]
+            sign_key=b64u_decode(document.get("sign_key")),  # type: ignore[arg-type]
+            ntfy=None if ntfy is None else Ntfy(ntfy.get("url"), ntfy.get("topic"), ntfy.get("token")),
+        )
+    except ProtocolError as exc:
+        raise ProtocolError(BAD_PAIRING_CODE, exc.detail) from exc

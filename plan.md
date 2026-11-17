@@ -8,7 +8,8 @@
 - Dans ce cas, il écrit la question dans la section « Questions en attente » ci-dessous, avec sa recommandation, et la reprend dans la description de la *pull request* en cours, puis s'arrête.
 - **Une branche par lot ou par fonctionnalité** : `claude/<lot>-<sujet>` (par exemple `claude/g1-protocol-spec`), créée depuis `main` à jour.
 - **Un lot = une ou plusieurs *pull requests*.** Claude pousse la branche et ouvre la PR avec `gh pr create`. La description, en anglais, contient le résumé, les étapes du plan couvertes et ce qui a été vérifié. Claude attend que la CI soit verte et corrige si besoin. **La fusion est faite par l'utilisateur.**
-- Tant qu'une PR attend sa fusion, Claude peut avancer le lot suivant sur une nouvelle branche, si celui-ci n'en dépend pas. Sinon, il crée sa branche depuis la branche en attente et le signale dans la PR.
+- **Un lot par session.** Quand le code d'un lot est écrit, contrôlé et commité, Claude s'arrête et demande à l'utilisateur de lancer `/clear` puis `/livrer` (au plus 2 passages du vérificateur ; les écarts non bloquants deviennent des réserves, notées sous le lot).
+- Tant qu'une PR attend sa fusion, Claude peut avancer le lot suivant (dans une nouvelle session) sur une nouvelle branche, si celui-ci n'en dépend pas. Sinon, il crée sa branche depuis la branche en attente et le signale dans la PR.
 - Ce plan est mis à jour dans la même branche que le travail qu'il décrit : étapes cochées, état du lot.
 
 ## Questions en attente
@@ -20,7 +21,7 @@
 | Lot | Objet | État |
 |---|---|---|
 | G0-R | Dépôt git, environnement, contrôles, création du dépôt GitHub | fait |
-| G1 | Protocole 1.0 et `veilleur-protocol` | à faire |
+| G1 | Protocole 1.0 et `veilleur-protocol` | fait, avec réserves (PR en attente) |
 | G2 | Cœur, stockage, administration, service HTTP | à faire |
 | G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | à faire |
 | G4 | Rendus, récepteur de référence | à faire |
@@ -58,7 +59,7 @@ Le squelette (G0) est en place : licence, traduction, CI, documentation bilingue
   Si `uv.lock` ne correspond plus à `pyproject.toml`, comprendre pourquoi avant de le régénérer.
 - [x] **3. Contrôles.** Tous doivent passer :
   ```bash
-  uv run pytest && uv run ruff check src tests tools && uv run mypy && uv run lint-imports
+  uv run pytest && uv run ruff check src tests tools protocol && uv run mypy && uv run lint-imports
   uv run veilleur --lang fr --help
   uv run veilleur --lang fr version && uv run veilleur --lang en version
   ```
@@ -94,7 +95,7 @@ Fini quand : dépôt public avec la seule identité `François Delalleau <Cafein
 
 ## G1 — Protocole 1.0 (cahier ES-02 à ES-07, ES-13, §7.3)
 
-- [ ] Spécification `docs/en/protocol.md` (normative) et `docs/fr/protocol.md` (informative) :
+- [x] Spécification `docs/en/protocol.md` (normative) et `docs/fr/protocol.md` (informative) :
   - code de jumelage `VEIL1:` ;
   - dérivation des clés (étiquettes `info` : `veilleur-report`, `veilleur-subscription`, `veilleur-auth`) ;
   - enveloppe (magie, version, nonce, données associées) ;
@@ -103,13 +104,18 @@ Fini quand : dépôt public avec la seule identité `François Delalleau <Cafein
   - déclaration de rotation de clé ;
   - limites du lecteur ;
   - genres de paquets et fichiers qu'ils contiennent.
-- [ ] Paquet `protocol/` (`veilleur-protocol`), dépendance unique `pycryptodomex`, dans un espace de travail uv avec le serveur.
-- [ ] Vecteurs de test (`protocol/vectors/*.json`) : secrets, `uid`, clés dérivées, paquets scellés, requêtes signées, rotation.
-- [ ] Seconde implémentation, indépendante, de la vérification des vecteurs : un script court, avec une autre bibliothèque cryptographique si possible, exécuté dans la CI.
-- [ ] Tests des refus : paquet altéré, autre abonnement, autre numéro, signature fausse, archive piégée (chemins, trop de fichiers, trop gros), horodatage hors tolérance.
-- [ ] Modèle de menace `docs/{en,fr}/threat-model.md`.
+- [x] Paquet `protocol/` (`veilleur-protocol`), dépendance unique `pycryptodomex`, dans un espace de travail uv avec le serveur.
+- [x] Vecteurs de test (`protocol/vectors/*.json`) : secrets, `uid`, clés dérivées, paquets scellés, requêtes signées, rotation.
+- [x] Seconde implémentation, indépendante, de la vérification des vecteurs : un script court, avec une autre bibliothèque cryptographique si possible, exécuté dans la CI. Fait avec libsodium (PyNaCl, dépendance de développement) : `tools/check_vectors.py`.
+- [x] Tests des refus : paquet altéré, autre abonnement, autre numéro, signature fausse, archive piégée (chemins, trop de fichiers, trop gros), horodatage hors tolérance.
+- [x] Modèle de menace `docs/{en,fr}/threat-model.md`.
 
 Fini quand : vecteurs vérifiés par les deux implémentations ; tous les refus testés.
+
+Réserves à la livraison (7 passages du vérificateur ; le 8ᵉ, interrompu, n'a pas rendu de verdict) :
+- [ ] Les correctifs du 7ᵉ passage (`a48c755` : clés publiques d'ordre faible refusées, §6.1, §8 et §10.1 précisés, seconde implémentation alignée) n'ont pas été revus par un vérificateur indépendant. À faire lors d'une prochaine vérification, limitée au diff depuis `383b9ca`.
+- [ ] `SECURITY.md` (ES-13) : prévu en G6.
+- [ ] Ordre des contrôles du §8 face à un `key_id` inconnu : vérifiable seulement avec le service WSGI (G2, ci-dessous).
 
 ## G2 — Cœur, stockage, administration, service (EF-01 à EF-14, EF-30 à EF-45, EF-60 à EF-72, §7)
 
@@ -126,7 +132,10 @@ Fini quand : vecteurs vérifiés par les deux implémentations ; tous les refus 
   - tâches longues.
 - [ ] SQLite : WAL, migrations SQL numérotées, sauvegarde avant migration.
 - [ ] Ligne de commande d'administration (EF-70), entièrement traduite.
-- [ ] Service WSGI `/v1` (§7.4) et fil de travail ; tests qui appellent l'application directement.
+- [ ] Service WSGI `/v1` (§7.4) et fil de travail ; tests qui appellent l'application directement. Repris de la vérification de G1 :
+  - router sur le chemin **brut**, celui que signe le client (portée de la clé d'authentification, protocole §8), sans normalisation préalable ;
+  - `key_id` inconnu : contrôler l'en-tête, la date et la péremption **avant** la recherche du secret, sans renvoyer `bad_authorization` plus tôt (protocole §8) ;
+  - versions d'abonnement qui continuent de croître après un `DELETE`, pour qu'un `DELETE` ou une création rejoués dans la fenêtre de 5 minutes n'aient pas d'effet (modèle de menace §4).
 - [ ] Abonnements d'équipe déclarés en TOML (EF-10) ; autorisations de collecteurs par jumelage (EF-11).
 
 Fini quand : un tour complet sur un collecteur factice, du jumelage à la récupération d'un paquet par l'API, sans réseau.

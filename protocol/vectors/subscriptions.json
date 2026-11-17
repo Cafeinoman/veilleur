@@ -1,0 +1,27 @@
+{
+ "description": "Sealed subscription documents (kind subscription, seq = base version)",
+ "cases": [
+  {
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "uid": "00112233445566778899aabbccddeeff",
+   "base_version": 0,
+   "document": {
+    "collector": "rss",
+    "params": {
+     "url": "https://example.org/feed.xml"
+    }
+   },
+   "envelope": "5645494c0100112233445566778899aabbccddeeff0000000000000000105dc1125e64a3a411deb86bf9aec5c466e693bef51d7d5151bb4a4b5ad9d7bb2e7f290cbd84c708d63496ff289e766dadd26657eb12f5a66378c97bac03a454bd4e6432e0621fe6fe87d391d47b03c7be9188cd9d3216a140b378b886f87e44fe55c52d05ac989c33c47706"
+  },
+  {
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "uid": "00112233445566778899aabbccddeeff",
+   "base_version": 4,
+   "document": {
+    "collector": "rss",
+    "language": "fr"
+   },
+   "envelope": "5645494c0100112233445566778899aabbccddeeff000000000000000410b497a615f3af8b11d414a13c98384a2948f1c4bfd1e13e0c9d630ae68fabfca9f16e8b3fbc99d71129a2881d0ea8404a474db1172702b494d95b9ecac44fa46d40fa1beb5b5722d4799acf"
+  }
+ ]
+}

@@ -24,13 +24,30 @@ def _pybabel(*args: str) -> None:
 
 
 def extract() -> None:
-    _pybabel("extract", "--project=Veilleur", "--copyright-holder=Veilleur contributors",
-             "--no-location", "--sort-output", "-o", str(TEMPLATE), str(PACKAGE))
+    _pybabel(
+        "extract",
+        "--project=Veilleur",
+        "--copyright-holder=Veilleur contributors",
+        "--no-location",
+        "--sort-output",
+        "-o",
+        str(TEMPLATE),
+        str(PACKAGE),
+    )
 
 
 def update() -> None:
-    _pybabel("update", "--no-fuzzy-matching", "--ignore-pot-creation-date", "-D", "veilleur",
-             "-i", str(TEMPLATE), "-d", str(LOCALE))
+    _pybabel(
+        "update",
+        "--no-fuzzy-matching",
+        "--ignore-pot-creation-date",
+        "-D",
+        "veilleur",
+        "-i",
+        str(TEMPLATE),
+        "-d",
+        str(LOCALE),
+    )
 
 
 def compile_() -> None:

@@ -1,0 +1,22 @@
+[project]
+name = "veilleur-protocol"
+version = "0.0.0"
+description = "Veilleur protocol 1.0: pairing codes, request signing, sealed report packages."
+readme = "README.md"
+license = "EUPL-1.2"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+dependencies = ["pycryptodomex>=3.20"]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security :: Cryptography",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/veilleur_protocol"]

@@ -28,8 +28,10 @@ jobs:
         run: uv sync --locked
       - name: Tests (including translation catalogues, licence headers, bilingual documentation)
         run: uv run --locked pytest
+      - name: Protocol test vectors (independent implementation, libsodium)
+        run: uv run --locked python tools/check_vectors.py
       - name: Lint
-        run: uv run --locked ruff check src tests tools
+        run: uv run --locked ruff check src tests tools protocol
       - name: Types
         run: uv run --locked mypy
       - name: Architecture
