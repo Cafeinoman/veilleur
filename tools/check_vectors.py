@@ -77,8 +77,13 @@ def b64u(text: str) -> bytes:
     return data
 
 
+def key_ok(key: bytes) -> bool:
+    """§6.1: canonical, on the curve, in the prime-order subgroup, not of small order (libsodium's own test)."""
+    return len(key) == 32 and bool(bindings.crypto_core_ed25519_is_valid_point(key))
+
+
 def ed25519_ok(key: bytes, message: bytes, signature: bytes) -> bool:
-    if len(key) != 32 or len(signature) != 64:
+    if not key_ok(key) or len(signature) != 64:
         return False
     try:
         bindings.crypto_sign_open(signature + message, key)
@@ -133,7 +138,7 @@ def read_rotation(statement: bytes, signature: bytes) -> tuple[bytes, bytes]:
         assert isinstance(document, dict) and isinstance(document["protocol"], str)
         assert re.fullmatch(r"1\.(0|[1-9][0-9]*)", document["protocol"])
         old, new = b64u(document["old_key"]), b64u(document["new_key"])
-        assert timestamp(document["issued_at"]) and len(old) == 32 and len(new) == 32
+        assert timestamp(document["issued_at"]) and key_ok(old) and key_ok(new)
     except (ValueError, KeyError, TypeError, AssertionError) as exc:
         raise Refused("bad_rotation") from exc
     if not ed25519_ok(old, statement, signature):
@@ -204,13 +209,8 @@ def open_package(case: JSON) -> JSON:
             raise Refused("bad_archive")
         if 0xFFFFFFFF in (compressed, size, offset):
             raise Refused("bad_archive")
-        cap = {
-            "manifest.sig": 64,
-            "rotation.sig": 64,
-            "rotation.json": 4096,
-            "manifest.json": min(1 << 20, limits["max_file"]),
-        }
-        if size > cap.get(name, limits["max_file"]):
+        cap = {"manifest.sig": 64, "rotation.sig": 64, "rotation.json": 4096, "manifest.json": 1 << 20}
+        if size > min(cap.get(name, limits["max_file"]), limits["max_file"]):  # a lowered limit bounds every file
             raise Refused("file_too_large")
         total += size
         entries[name] = Central(flags, method, crc, compressed, size, offset)
@@ -392,6 +392,10 @@ def verify_request(case: JSON) -> None:
     match = re.fullmatch(r"Veilleur ([0-9a-f]{16}):([A-Za-z0-9_-]{43})", case["authorization"])
     if match is None:
         raise Refused("bad_authorization")
+    # The string to sign must be unambiguous: upper-case method, ASCII path from /, without line feed.
+    path = case["path_and_query"]
+    if not re.fullmatch(r"[A-Z]+", case["method"]) or not (path.startswith("/") and path.isascii()) or "\n" in path:
+        raise Refused("bad_authorization")
     try:  # a MAC that is not canonical base64url makes the header malformed: checked before the date (§8)
         sent_mac = b64u(match.group(2))
     except ValueError as exc:
@@ -421,7 +425,7 @@ def decode_pairing(code: str) -> JSON:
         assert server == "folder:" or origin_ok(server)
         assert re.fullmatch(r"[0-9a-f]{16}", document["key_id"])
         secret, sign_key = b64u(document["secret"]), b64u(document["sign_key"])
-        assert len(secret) == 32 and len(sign_key) == 32
+        assert len(secret) == 32 and key_ok(sign_key)
         ntfy = document.get("ntfy")
         if "ntfy" in document:
             assert isinstance(ntfy, dict) and ntfy_url_ok(ntfy["url"])

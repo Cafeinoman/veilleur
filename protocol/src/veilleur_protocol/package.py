@@ -33,7 +33,7 @@ from .errors import (
     ProtocolError,
 )
 from .items import Item, parse_items
-from .signing import PUBLIC_KEY_BYTES, SIGNATURE_BYTES, SigningKey, verify
+from .signing import SIGNATURE_BYTES, SigningKey, is_public_key, verify
 
 PROTOCOL_VERSION = "1.0"
 MANIFEST = "manifest.json"
@@ -70,13 +70,14 @@ def is_allowed_name(name: str) -> bool:
 
 
 def _size_limit(name: str, limits: Limits) -> int:
-    if name in (MANIFEST_SIG, ROTATION_SIG):
-        return SIGNATURE_BYTES
-    if name == MANIFEST:
-        return min(MAX_MANIFEST, limits.max_file)
-    if name == ROTATION:
-        return MAX_ROTATION
-    return limits.max_file
+    """The fixed limit of a file (§10.1), lowered to `limits.max_file` if the reader chose a lower one."""
+    fixed = {
+        MANIFEST_SIG: SIGNATURE_BYTES,
+        ROTATION_SIG: SIGNATURE_BYTES,
+        MANIFEST: MAX_MANIFEST,
+        ROTATION: MAX_ROTATION,
+    }
+    return min(fixed.get(name, limits.max_file), limits.max_file)
 
 
 # --- Key rotation -----------------------------------------------------------------------------------------------
@@ -95,8 +96,8 @@ class Rotation:
 
 
 def make_rotation(old: SigningKey, new_key: bytes, issued_at: datetime) -> Rotation:
-    if len(new_key) != PUBLIC_KEY_BYTES:
-        raise ValueError("an Ed25519 public key is 32 bytes")
+    if not is_public_key(new_key):
+        raise ValueError("new_key is not a valid Ed25519 public key (§6.1)")
     document = {
         "protocol": PROTOCOL_VERSION,
         "old_key": b64u_encode(old.public_key),
@@ -119,8 +120,8 @@ def verify_rotation(statement: bytes, signature: bytes) -> Rotation:
         issued_at = parse_time(document["issued_at"])
     except (ValueError, KeyError, ProtocolError) as exc:  # strict_json.InvalidJson is a ValueError
         raise ProtocolError(BAD_ROTATION, "malformed rotation statement") from exc
-    if len(old_key) != PUBLIC_KEY_BYTES or len(new_key) != PUBLIC_KEY_BYTES:
-        raise ProtocolError(BAD_ROTATION, "keys are 32 bytes")
+    if not is_public_key(old_key) or not is_public_key(new_key):
+        raise ProtocolError(BAD_ROTATION, "keys are valid Ed25519 public keys (§6.1)")
     if not verify(old_key, statement, signature):
         raise ProtocolError(BAD_ROTATION, "rotation statement not signed by the outgoing key")
     return Rotation(old_key, new_key, issued_at, statement, signature)

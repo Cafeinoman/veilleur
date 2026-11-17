@@ -105,6 +105,12 @@ Le serveur détient une paire de clés Ed25519 (RFC 8032, Ed25519 pur, sans pré
 32 octets, les signatures 64. L'outil de réception fait confiance à la clé de son code de jumelage, puis à celles
 qu'il adopte par des déclarations de rotation (§6.3).
 
+Une clé publique DOIT être l'encodage canonique d'un point du sous-groupe d'ordre premier autre que le point neutre
+(sans composante d'ordre faible). La RFC 8032 laisse une clé d'ordre faible « vérifier » des signatures de messages
+que personne n'a signés, et les bibliothèques divergent sur ces clés ; l'exiger met tous les lecteurs d'accord et ne
+refuse aucune clé produite par un serveur honnête. Un lecteur refuse toute autre clé : `bad_pairing_code` dans un code
+de jumelage, `bad_rotation` dans une déclaration de rotation ; une signature sous cette clé n'est jamais valide.
+
 ### 6.2 Signature du manifeste
 
 `manifest.sig` contient la signature de 64 octets des octets exacts de `manifest.json`. Comme le manifeste porte le
@@ -217,8 +223,9 @@ Authorization: Veilleur <key_id>:<base64url(HMAC-SHA256(A, chaîne à signer))>
 chaîne à signer = méthode "\n" chemin-et-requête "\n" X-Veilleur-Date "\n" hex(SHA-256(corps))
 ```
 
-- `méthode` en majuscules ; `chemin-et-requête` exactement tel qu'envoyé sur la ligne de requête (encodage-pourcent
-  inchangé), commençant par `/` ; le corps est vide pour `GET` et `DELETE` (son empreinte est alors celle de la chaîne
+- `méthode` en lettres majuscules ; `chemin-et-requête` exactement tel qu'envoyé sur la ligne de requête
+  (encodage-pourcent inchangé), en ASCII, commençant par `/`, sans saut de ligne ; sinon la requête est refusée
+  (`bad_authorization`) ; le corps est vide pour `GET` et `DELETE` (son empreinte est alors celle de la chaîne
   vide).
 - `A` est la clé `veilleur-auth` (§4) de la portée de la requête : quand le chemin commence par
   `/v1/subscriptions/<uid>` suivi de `/`, de `?` ou de sa fin, la portée est cet abonnement (un `uid` mal formé à cet
@@ -264,7 +271,7 @@ détail interne.
 | somme des tailles déclarées | 128 Mio |
 | taille d'une enveloppe d'abonnement | 1 000 000 octets (la limite du corps de requête, §9) |
 
-Un lecteur PEUT abaisser ces limites. Il DOIT garder les données déchiffrées en mémoire, ou dans un stockage que lui
+Un lecteur PEUT abaisser ces limites ; une limite par fichier abaissée borne aussi les fichiers indiqués entre parenthèses. Il DOIT garder les données déchiffrées en mémoire, ou dans un stockage que lui
 seul peut lire ; l'implémentation de référence n'écrit rien sur le disque.
 
 ### 10.2 Ordre des contrôles

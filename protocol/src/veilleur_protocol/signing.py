@@ -36,9 +36,33 @@ class SigningKey:
         return f"SigningKey(public_key={self.public_key.hex()})"
 
 
+_ORDER = 2**252 + 27742317777372353535851937790883648493
+"""L, the prime order of the base point."""
+
+
+def is_public_key(public_key: object) -> bool:
+    """True for the canonical encoding of a point of order L (§6.1).
+
+    RFC 8032 lets a key of small order (the neutral point, for one) "verify" a signature of any message; libsodium
+    refuses such keys. Requiring order L makes every reader agree, and no honest key is refused.
+    """
+    if not isinstance(public_key, bytes) or len(public_key) != PUBLIC_KEY_BYTES:
+        return False
+    try:
+        key = eddsa.import_public_key(public_key)
+    except ValueError:
+        return False
+    point = key.pointQ
+    return (
+        key.export_key(format="raw") == public_key
+        and not point.is_point_at_infinity()
+        and (point * _ORDER).is_point_at_infinity()
+    )
+
+
 def verify(public_key: bytes, message: bytes, signature: bytes) -> bool:
-    """True if `signature` is a valid Ed25519 signature of `message` by `public_key`."""
-    if len(public_key) != PUBLIC_KEY_BYTES or len(signature) != SIGNATURE_BYTES:
+    """True if `signature` is a valid Ed25519 signature of `message` by `public_key`, a valid key (§6.1)."""
+    if not is_public_key(public_key) or len(signature) != SIGNATURE_BYTES:
         return False
     try:
         key = eddsa.import_public_key(public_key)

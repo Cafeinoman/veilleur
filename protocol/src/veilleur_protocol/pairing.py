@@ -12,7 +12,7 @@ from . import strict_json
 from .encoding import b64u_decode, b64u_encode, is_key_id
 from .errors import BAD_PAIRING_CODE, ProtocolError
 from .keys import SECRET_BYTES
-from .signing import PUBLIC_KEY_BYTES
+from .signing import is_public_key
 
 PREFIX = "VEIL1:"
 FOLDER = "folder:"
@@ -108,8 +108,8 @@ def _check(code: PairingCode) -> None:
         raise ProtocolError(BAD_PAIRING_CODE, "key_id is 16 lowercase hexadecimal digits")
     if not isinstance(code.secret, bytes) or len(code.secret) != SECRET_BYTES:
         raise ProtocolError(BAD_PAIRING_CODE, "secret is 32 bytes")
-    if not isinstance(code.sign_key, bytes) or len(code.sign_key) != PUBLIC_KEY_BYTES:
-        raise ProtocolError(BAD_PAIRING_CODE, "sign_key is 32 bytes")
+    if not is_public_key(code.sign_key):
+        raise ProtocolError(BAD_PAIRING_CODE, "sign_key is a valid Ed25519 public key (§6.1)")
     if code.ntfy is not None:
         n = code.ntfy
         if not _https_url(n.url):

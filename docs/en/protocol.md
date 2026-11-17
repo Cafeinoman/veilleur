@@ -105,6 +105,12 @@ The server holds an Ed25519 key pair (RFC 8032, pure Ed25519, no pre-hashing). P
 64 bytes. The receiving tool trusts the key of its pairing code, then those it adopts through rotation statements
 (§6.3).
 
+A public key MUST be the canonical encoding of a point of the prime-order subgroup other than the neutral point (no
+small-order component). RFC 8032 lets a small-order key "verify" signatures of messages nobody signed, and libraries
+differ on such keys; requiring this makes every reader agree and refuses no key an honest server makes. A reader
+refuses another key: `bad_pairing_code` in a pairing code, `bad_rotation` in a rotation statement; a signature under
+it never verifies.
+
 ### 6.2 Manifest signature
 
 `manifest.sig` holds the 64-byte signature of the exact bytes of `manifest.json`. Since the manifest holds the
@@ -216,8 +222,8 @@ Authorization: Veilleur <key_id>:<base64url(HMAC-SHA256(A, string to sign))>
 string to sign = method "\n" path-and-query "\n" X-Veilleur-Date "\n" hex(SHA-256(body))
 ```
 
-- `method` in upper case; `path-and-query` exactly as sent on the request line (percent-encoding unchanged), starting
-  with `/`; the body is empty for `GET` and `DELETE` (its hash is then that of the empty string).
+- `method` in upper-case letters; `path-and-query` exactly as sent on the request line (percent-encoding unchanged),
+  ASCII, starting with `/`, without line feed; otherwise the request is refused (`bad_authorization`); the body is empty for `GET` and `DELETE` (its hash is then that of the empty string).
 - `A` is the `veilleur-auth` key (§4) of the request's scope: when the path starts with `/v1/subscriptions/<uid>`
   followed by `/`, `?` or its end, the scope is that subscription (a malformed `uid` there is refused); otherwise the
   pairing.
@@ -261,7 +267,7 @@ Statuses: `400`, `401` (authentication), `403` (revoked pairing, or collector no
 | sum of the declared sizes | 128 MiB |
 | size of a subscription envelope | 1 000 000 bytes (the request body limit, §9) |
 
-A reader MAY lower these limits. It MUST keep decrypted data in memory, or in storage only it can read; the reference
+A reader MAY lower these limits; a lowered limit for one file also bounds the files listed in parentheses. It MUST keep decrypted data in memory, or in storage only it can read; the reference
 implementation writes nothing to disk.
 
 ### 10.2 Order of the checks

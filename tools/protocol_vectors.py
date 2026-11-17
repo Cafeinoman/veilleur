@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import hmac
 import io
 import json
 import sys
@@ -296,8 +297,9 @@ def _refusal(
     kinds: tuple[Kind, ...] = (Kind.DELTA, Kind.STATE, Kind.HISTORY),
     trusted: list[SigningKey] | None = None,
     limits: Limits | None = None,
+    trusted_public_keys: list[bytes] | None = None,
 ) -> JSON:
-    trusted_keys = [k.public_key for k in (trusted or [KEY_1])]
+    trusted_keys = trusted_public_keys or [k.public_key for k in (trusted or [KEY_1])]
     try:
         open_package(
             envelope, secret=SECRET, uid=uid, trusted_keys=trusted_keys, seq=seq, kinds=kinds, limits=limits or Limits()
@@ -367,6 +369,38 @@ def _gap_before_end(items: bytes) -> bytes:
     plain = _zip(_signed({"items.jsonl": items}))
     end = plain.rfind(b"PK\x05\x06")
     return seal(SECRET, Header(UID, 2, Kind.DELTA), plain[:end] + bytes(16) + plain[end:], nonce=_nonce("refusal gap"))
+
+
+def _pairing_mac(method: str, path: str, date: str) -> str:
+    """An Authorization header computed from §4 and §8 for a pairing-wide request, whatever the method and path."""
+    key = derive_key(SECRET, Usage.AUTH, None)
+    message = "\n".join((method, path, date, hashlib.sha256(b"").hexdigest())).encode("utf-8")
+    return f"Veilleur {KEY_ID}:{_b64u(hmac.new(key, message, hashlib.sha256).digest())}"
+
+
+NEUTRAL = bytes([1]) + bytes(31)
+"""The neutral point of edwards25519: under RFC 8032 alone, (R = neutral, S = 0) "verifies" any message."""
+
+
+def _rotation_to_neutral() -> dict[str, bytes]:
+    """A rotation statement, signed by KEY_1, naming the neutral point as the incoming key."""
+    statement = json.dumps(
+        {
+            "protocol": "1.0",
+            "old_key": _b64u(KEY_1.public_key),
+            "new_key": _b64u(NEUTRAL),
+            "issued_at": format_time(YESTERDAY),
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    return {"rotation.json": statement, "rotation.sig": KEY_1.sign(statement)}
+
+
+def _neutral_signed(items: bytes) -> list[tuple[str, bytes]]:
+    """A manifest whose signature is the one any message has under the neutral point."""
+    entries = _signed({"items.jsonl": items})
+    return [(name, NEUTRAL + bytes(32) if name == "manifest.sig" else data) for name, data in entries]
 
 
 def _rotation_with_int_key() -> dict[str, bytes]:
@@ -597,6 +631,17 @@ def refusals() -> JSON:
             "bad_rotation",
         ),
         _refusal(
+            "rotation to the neutral point",
+            _sealed(_signed({"items.jsonl": items, **_rotation_to_neutral()}, key=KEY_2), "rot neutral"),
+            "bad_rotation",
+        ),
+        _refusal(
+            "manifest signed under a trusted neutral point",
+            _sealed(_neutral_signed(items), "neutral"),
+            "bad_signature",
+            trusted_public_keys=[NEUTRAL],
+        ),
+        _refusal(
             "rotation to another key than the signer's",
             _sealed(_signed({"items.jsonl": items, **rot}, key=STRANGER), "rot other"),
             "bad_signature",
@@ -764,6 +809,23 @@ def refusals() -> JSON:
             signed.date,
             "2026-11-17T06:00:00Z",
             "bad_authorization",
+        ),
+        *(
+            (
+                name,
+                method,
+                path,
+                b"",
+                _pairing_mac(method, path, signed.date),
+                signed.date,
+                "2026-11-17T06:00:00Z",
+                "bad_authorization",
+            )
+            for name, method, path in (
+                ("lower-case method", "get", "/v1/collectors"),
+                ("line feed in the path", "GET", "/v1/collectors\n2026"),
+                ("non-ASCII path", "GET", "/v1/collé"),
+            )
         ),
         *(
             (
@@ -946,6 +1008,19 @@ def refusals() -> JSON:
                 ("token not a string", {"url": "https://ntfy.example.org", "topic": "t", "token": 7}),
                 ("null token", {"url": "https://ntfy.example.org", "topic": "t", "token": None}),
             )
+        ),
+        (
+            "sign_key is the neutral point",
+            "VEIL1:"
+            + _b64(
+                {
+                    "v": 1,
+                    "server": "folder:",
+                    "key_id": KEY_ID,
+                    "secret": _b64u(SECRET),
+                    "sign_key": _b64u(NEUTRAL),
+                }
+            ),
         ),
         (
             "longer than 4096 characters",
