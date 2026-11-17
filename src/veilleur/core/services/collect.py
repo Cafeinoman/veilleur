@@ -56,10 +56,15 @@ def _normalise(raw: Iterable[Any], now: datetime) -> tuple[dict[str, tuple[str, 
             if item.url is not None and not isinstance(item.url, str):
                 raise ValueError("url")
             digest = item_hash(item.fields)
+            key = _key(item, digest)
+            # A lone surrogate (valid JSON, decoded by json.loads) cannot be stored: the item is invalid, the
+            # round goes on (EF-05). UnicodeEncodeError is a ValueError.
+            key.encode("utf-8")
+            if item.url is not None:
+                item.url.encode("utf-8")
         except ValueError:
             valid = False
             continue
-        key = _key(item, digest)
         if len(key) > MAX_KEY:
             valid = False
             continue
