@@ -51,7 +51,7 @@ Subscription parameters are encrypted in transit and readable by the server in i
 
 ## 3. Reports
 
-A package contains `manifest.json` (protocol version, subscription, number, kind, period, hash of every other file, status of the collectors), `manifest.sig`, `items.jsonl` (JSON Lines, one item per line, sorted by key: `{key, change: new|changed|gone, hash, fields, fetched_at, url}`) and the requested renderings (`report.md`, `report.html`) in the subscription's language. Renderings are **optional** and **derived**: `items.jsonl` is authoritative.
+A package contains `manifest.json` (protocol version, subscription, number, kind, period, hash of every other file, status of the collections), `manifest.sig`, `items.jsonl` (JSON Lines, one item per line, sorted by key: `{key, change: new|changed|gone, hash, fields, fetched_at, url}`) and the requested renderings (`report.md`, `report.html`) in the subscription's language. Renderings are **optional** and **derived**: `items.jsonl` is authoritative.
 
 Kinds: `delta` (since the previous package), `state` (everything currently valid, for a receiver back after packages were purged), `history` (catch-up from a date, prepared in the background). Frequency per subscription (daily by default, weekly, every round); an empty report is not produced; a new subscription first receives a `state`, then `delta`s. Packages are numbered without gaps and kept 90 days; a purged package answers `410`, and the receiver then asks for a `state`.
 

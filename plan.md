@@ -29,7 +29,7 @@
 
 ## G0-R — Mise en route du dépôt
 
-Le squelette (G0) est en place : licence, traduction, CI, documentation bilingue, tests. Il reste à créer le dépôt et à le publier.
+Le squelette (G0) est en place : licence, traduction, CI, documentation bilingue, tests. Ce lot a créé le dépôt GitHub et l'a publié.
 
 - [x] **0. Accès GitHub (préalable, fait par l'utilisateur).** Le `gh` du serveur est connecté avec un jeton à grain fin limité à un autre dépôt. Avant de lancer Claude :
   1. Sur GitHub, créer le dépôt **vide** `Cafeinoman/veilleur`, public, sans README, licence ni `.gitignore`.
