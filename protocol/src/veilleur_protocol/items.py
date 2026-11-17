@@ -36,8 +36,16 @@ class Item:
 
 
 def _line(item: Item) -> bytes:
-    if not item.key or not _HASH.fullmatch(item.hash):
+    # The same checks as the reader: fields come from third-party collectors (EF-01).
+    if (
+        not isinstance(item.key, str)
+        or not item.key
+        or not isinstance(item.hash, str)
+        or not _HASH.fullmatch(item.hash)
+    ):
         raise ValueError(f"invalid item {item.key!r}")
+    if not isinstance(item.fields, dict) or not (item.url is None or isinstance(item.url, str)):
+        raise ValueError(f"item {item.key!r}: fields is an object, url a string or null")
     document = {
         "key": item.key,
         "change": item.change.value,

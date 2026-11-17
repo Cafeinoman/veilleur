@@ -28,7 +28,7 @@ TOLERANCE = timedelta(minutes=5)
 MAC_BYTES = 32
 
 _AUTHORIZATION = re.compile(r"Veilleur ([0-9a-f]{16}):([A-Za-z0-9_-]{43})")
-_SUBSCRIPTION_PATH = re.compile(r"/v1/subscriptions/([^/?#]*)(?:[/?#]|$)")
+_SUBSCRIPTION_PATH = re.compile(r"/v1/subscriptions/([^/?#]*)(?:[/?]|$)")
 _METHOD = re.compile(r"[A-Z]+")
 
 

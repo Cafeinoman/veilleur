@@ -47,13 +47,13 @@ VEIL1:<base64url(JSON object)>
 | `key_id` | string | `key_id` of the pairing |
 | `secret` | string | base64url of the 32-byte pairing secret |
 | `sign_key` | string | base64url of the server's 32-byte Ed25519 public key |
-| `ntfy` | object, optional | `{"url": https URL, "topic": non-empty string, "token": optional non-empty string}` |
+| `ntfy` | object, optional | `{"url": https URL, "topic": non-empty string, "token": absent, or a non-empty string (not `null`)}` |
 
 In `https://host[:port]`, `host` is a DNS name (labels of letters, digits and inner hyphens, 1 to 63 characters,
 separated by dots, at most 253 characters, the last label not all digits), an IPv4 address in dotted decimal without
 leading zeros, or an IPv6 address in brackets; `port` is a decimal number from 1 to 65535 without leading zero. The
-`ntfy.url` member has the same form, optionally followed by a path and query (`/` or `?` then URL characters, no
-fragment).
+`ntfy.url` member has the same form, optionally followed by a path and query: `/` or `?`, then letters, digits and
+``-._~!$&'()*+,;=:@/?%`` (no fragment).
 
 A reader MUST ignore white space around the code, refuse a code longer than 4096 characters, and refuse a code that
 does not satisfy this table (`bad_pairing_code`). Unknown members MUST be ignored. The pairing code is shown once; it
@@ -274,7 +274,7 @@ these checks in this order and stop at the first failure, with the given code:
 4. decryption with the key of the envelope's kind fails: `decryption_failed`;
 5. archive:
    - no end of central directory record (the last one whose comment ends the archive), several disks, or a central
-     directory out of the archive: `bad_archive`;
+     directory that does not end exactly where that record begins (offset plus size): `bad_archive`;
    - the record announces more entries than the limit: `too_many_files`, before parsing the directory;
    - then the central directory, entry by entry:
      - a truncated or malformed entry: `bad_archive`;

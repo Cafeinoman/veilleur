@@ -160,6 +160,18 @@ def open_package(case: JSON) -> JSON:
         case["seq"],
         limits["max_package"],
     )
+    # zipfile tolerates bytes between the central directory and its end record; §10.2 step 5 does not.
+    end = plain.rfind(b"PK\x05\x06")
+    while end >= 0 and end + 22 + int.from_bytes(plain[end + 20 : end + 22], "little") != len(plain):
+        end = plain.rfind(b"PK\x05\x06", 0, end)
+    if end < 0 or end + 22 > len(plain):
+        raise Refused("bad_archive")
+    cd_size, cd_offset = (
+        int.from_bytes(plain[end + 12 : end + 16], "little"),
+        int.from_bytes(plain[end + 16 : end + 20], "little"),
+    )
+    if cd_offset + cd_size != end:
+        raise Refused("bad_archive")
     try:
         infos = zipfile.ZipFile(io.BytesIO(plain)).infolist()
     except Exception as exc:
@@ -316,7 +328,7 @@ def check_items(data: bytes) -> list[JSON]:
 
 
 def auth_key(secret: bytes, path: str) -> bytes:
-    match = re.match(r"/v1/subscriptions/([^/?#]*)(?:[/?#]|$)", path)
+    match = re.match(r"/v1/subscriptions/([^/?#]*)(?:[/?]|$)", path)
     if match is not None and not re.fullmatch(r"[0-9a-f]{32}", match.group(1)):
         raise Refused("bad_authorization")
     salt = b"" if match is None else bytes.fromhex(match.group(1))
@@ -347,6 +359,14 @@ def origin_ok(server: str) -> bool:
     )
 
 
+def ntfy_url_ok(url: object) -> bool:
+    """An origin as in origin_ok, then optionally / or ? and URL characters (RFC 3986, without # [ ])."""
+    if not isinstance(url, str):
+        return False
+    match = re.fullmatch(r"(https://[^/?#]*)([/?][A-Za-z0-9._~!$&'()*+,;=:@/?%-]*)?", url)
+    return match is not None and origin_ok(match.group(1))
+
+
 def verify_request(case: JSON) -> None:
     match = re.fullmatch(r"Veilleur ([0-9a-f]{16}):([A-Za-z0-9_-]{43})", case["authorization"])
     if match is None:
@@ -371,8 +391,9 @@ def verify_request(case: JSON) -> None:
 
 
 def decode_pairing(code: str) -> JSON:
+    code = code.strip()
     try:
-        assert code.startswith("VEIL1:")
+        assert len(code) <= 4096 and code.startswith("VEIL1:")
         document = strict(b64u(code[6:]))
         assert isinstance(document, dict) and type(document.get("v")) is int and document["v"] == 1
         server = document["server"]
@@ -382,7 +403,9 @@ def decode_pairing(code: str) -> JSON:
         assert len(secret) == 32 and len(sign_key) == 32
         ntfy = document.get("ntfy")
         if "ntfy" in document:
-            assert isinstance(ntfy, dict) and str(ntfy["url"]).startswith("https://") and ntfy["topic"]
+            assert isinstance(ntfy, dict) and ntfy_url_ok(ntfy["url"])
+            assert isinstance(ntfy["topic"], str) and ntfy["topic"]
+            assert "token" not in ntfy or (isinstance(ntfy["token"], str) and ntfy["token"])
             ntfy = {"url": ntfy["url"], "topic": ntfy["topic"], "token": ntfy.get("token")}
     except (AssertionError, ValueError, KeyError, TypeError) as exc:
         raise Refused("bad_pairing_code") from exc

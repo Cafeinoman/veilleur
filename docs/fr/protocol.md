@@ -47,13 +47,13 @@ VEIL1:<base64url(objet JSON)>
 | `key_id` | chaîne | `key_id` du jumelage |
 | `secret` | chaîne | base64url du secret de jumelage de 32 octets |
 | `sign_key` | chaîne | base64url de la clé publique Ed25519 du serveur, 32 octets |
-| `ntfy` | objet, facultatif | `{"url": adresse https, "topic": chaîne non vide, "token": chaîne non vide facultative}` |
+| `ntfy` | objet, facultatif | `{"url": adresse https, "topic": chaîne non vide, "token": absent, ou chaîne non vide (pas `null`)}` |
 
 Dans `https://hôte[:port]`, `hôte` est un nom DNS (étiquettes de lettres, de chiffres et de traits d'union internes,
 de 1 à 63 caractères, séparées par des points, 253 caractères au plus, la dernière étiquette pas entièrement
 numérique), une adresse IPv4 en décimal pointé sans zéro initial, ou une adresse IPv6 entre crochets ; `port` est un
 nombre décimal de 1 à 65535 sans zéro initial. Le membre `ntfy.url` a la même forme, suivie éventuellement d'un chemin
-et d'une requête (`/` ou `?` puis des caractères d'URL, sans fragment).
+et d'une requête : `/` ou `?`, puis des lettres, des chiffres et ``-._~!$&'()*+,;=:@/?%`` (sans fragment).
 
 Un lecteur DOIT ignorer les blancs autour du code, refuser un code de plus de 4096 caractères et refuser un code qui
 ne respecte pas ce tableau (`bad_pairing_code`). Les membres inconnus DOIVENT être ignorés. Le code de jumelage n'est
@@ -277,7 +277,8 @@ DOIT faire ces contrôles dans cet ordre et s'arrêter au premier échec, avec l
 4. le déchiffrement avec la clé du genre de l'enveloppe échoue : `decryption_failed` ;
 5. archive :
    - pas d'enregistrement de fin du répertoire central (le dernier dont le commentaire termine l'archive), plusieurs
-     disques, ou un répertoire central hors de l'archive : `bad_archive` ;
+     disques, ou un répertoire central qui ne se termine pas exactement là où commence cet enregistrement (position
+     plus taille) : `bad_archive` ;
    - l'enregistrement annonce plus d'entrées que la limite : `too_many_files`, avant d'analyser le répertoire ;
    - puis le répertoire central, entrée par entrée :
      - une entrée tronquée ou mal formée : `bad_archive` ;

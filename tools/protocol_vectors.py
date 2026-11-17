@@ -355,6 +355,13 @@ def _signed_manifest(manifest: bytes, items: bytes) -> list[tuple[str, bytes]]:
     return [("manifest.json", manifest), ("manifest.sig", KEY_1.sign(manifest)), ("items.jsonl", items)]
 
 
+def _gap_before_end(items: bytes) -> bytes:
+    """A valid archive with 16 bytes inserted before the end record: readers would disagree on the offsets."""
+    plain = _zip(_signed({"items.jsonl": items}))
+    end = plain.rfind(b"PK\x05\x06")
+    return seal(SECRET, Header(UID, 2, Kind.DELTA), plain[:end] + bytes(16) + plain[end:], nonce=_nonce("refusal gap"))
+
+
 def _longer_than_declared(items: bytes) -> bytes:
     """`report.txt` holds 5000 bytes, but its headers declare the first 100 (size and CRC), as the manifest does."""
     real, declared = b"x" * 5000, b"x" * 100
@@ -605,6 +612,7 @@ def refusals() -> JSON:
             seal(SECRET, Header(UID, 2, Kind.DELTA), _local_crc_changed(items), nonce=_nonce("refusal local")),
             "bad_archive",
         ),
+        _refusal("bytes between the central directory and its end record", _gap_before_end(items), "bad_archive"),
         _refusal(
             "period without from",
             _sealed(_signed({"items.jsonl": items}, _manifest(period={"to": format_time(NOW)})), "period"),
@@ -847,6 +855,44 @@ def refusals() -> JSON:
                 "https://veille.example.org%2Fx",
                 "https://010.0.0.1",
             )
+        ),
+        *(
+            (
+                f"ntfy {label}",
+                "VEIL1:"
+                + _b64(
+                    {
+                        "v": 1,
+                        "server": "folder:",
+                        "key_id": KEY_ID,
+                        "secret": _b64u(SECRET),
+                        "sign_key": _b64u(KEY_1.public_key),
+                        "ntfy": ntfy,
+                    }
+                ),
+            )
+            for label, ntfy in (
+                ("url with a fragment", {"url": "https://ntfy.example.org/a#b", "topic": "t"}),
+                ("url with port 0", {"url": "https://ntfy.example.org:0/a", "topic": "t"}),
+                ("topic not a string", {"url": "https://ntfy.example.org", "topic": 7}),
+                ("empty token", {"url": "https://ntfy.example.org", "topic": "t", "token": ""}),
+                ("token not a string", {"url": "https://ntfy.example.org", "topic": "t", "token": 7}),
+                ("null token", {"url": "https://ntfy.example.org", "topic": "t", "token": None}),
+            )
+        ),
+        (
+            "longer than 4096 characters",
+            "VEIL1:"
+            + _b64(
+                {
+                    "v": 1,
+                    "server": "folder:",
+                    "key_id": KEY_ID,
+                    "secret": _b64u(SECRET),
+                    "sign_key": _b64u(KEY_1.public_key),
+                    "padding": "x" * 3200,
+                }
+            ),
         ),
         (
             "colon without a port",

@@ -65,8 +65,9 @@ def _end_record(data: bytes) -> tuple[int, int, int]:
             _, disk, cd_disk, on_disk, total, cd_size, cd_offset, _ = fields
             if disk or cd_disk or on_disk != total:
                 raise _bad("multi-disk archive")
-            if cd_offset + cd_size > position:
-                raise _bad("central directory out of the archive")
+            if cd_offset + cd_size != position:
+                # Bytes between the directory and the record let readers disagree on where entries are (§10.2).
+                raise _bad("central directory does not end at the end record")
             return total, cd_size, cd_offset
         position -= 1
     raise _bad("no end of central directory record")

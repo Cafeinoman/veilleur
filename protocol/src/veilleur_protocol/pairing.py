@@ -44,6 +44,7 @@ class PairingCode:
         return f"PairingCode(server={self.server!r}, key_id={self.key_id!r}, secret=<hidden>)"
 
     def encode(self) -> str:
+        """The code, with sorted member names (§2). Raises `ValueError` if it would exceed `MAX_CODE_LENGTH`."""
         document: dict[str, Any] = {
             "v": 1,
             "server": self.server,
@@ -56,8 +57,10 @@ class PairingCode:
             if self.ntfy.token is not None:
                 ntfy["token"] = self.ntfy.token
             document["ntfy"] = ntfy
-        text = strict_json.dumps(document, sort_keys=False)
-        return PREFIX + b64u_encode(text)
+        code = PREFIX + b64u_encode(strict_json.dumps(document))
+        if len(code) > MAX_CODE_LENGTH:
+            raise ValueError(f"a pairing code is at most {MAX_CODE_LENGTH} characters")
+        return code
 
 
 _ORIGIN = re.compile(r"https://(\[[0-9A-Fa-f:.]+\]|[A-Za-z0-9.-]+)(?::([1-9][0-9]{0,4}))?")
@@ -133,6 +136,8 @@ def decode_pairing_code(text: str) -> PairingCode:
     ntfy = document.get("ntfy")
     if "ntfy" in document and not isinstance(ntfy, dict):
         raise ProtocolError(BAD_PAIRING_CODE, "ntfy is an object")
+    if ntfy is not None and "token" in ntfy and ntfy["token"] is None:
+        raise ProtocolError(BAD_PAIRING_CODE, "ntfy.token is absent or a non-empty string")
     try:
         return PairingCode(
             server=document.get("server"),  # type: ignore[arg-type]
