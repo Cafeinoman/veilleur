@@ -137,6 +137,21 @@ def test_lone_surrogate_makes_the_item_invalid(world: World, where: str) -> None
     assert [i.key for i in _open(world, key_id, uid, 1)] == ["ok"]
 
 
+def test_too_deep_item_is_invalid(world: World) -> None:
+    """EF-05: json.loads decodes about 10,000 levels, more than the item hash can walk; the round goes on."""
+    import json
+
+    from veilleur.core.domain.model import CollectedItem
+
+    key_id, uid = _subscribe(world)
+    depth = 3000
+    deep = json.loads('{"x":' * depth + "0" + "}" * depth)
+    world.collector.items["news"] = [CollectedItem({"n": 0}, key="ok"), CollectedItem(deep, key="deep")]
+    round.run_round(world.app.core)
+    assert world.app.store.list_sources()[0].error == errors.BAD_ITEM
+    assert [i.key for i in _open(world, key_id, uid, 1)] == ["ok"]
+
+
 def test_item_key_falls_back_to_url_then_hash(world: World) -> None:
     from veilleur.core.domain.model import CollectedItem
 

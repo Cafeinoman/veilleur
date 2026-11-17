@@ -62,7 +62,7 @@ def _normalise(raw: Iterable[Any], now: datetime) -> tuple[dict[str, tuple[str, 
             key.encode("utf-8")
             if item.url is not None:
                 item.url.encode("utf-8")
-        except ValueError:
+        except (ValueError, RecursionError):  # json.loads decodes deeper than the hash can walk (EF-05)
             valid = False
             continue
         if len(key) > MAX_KEY:
