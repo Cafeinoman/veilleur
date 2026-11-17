@@ -49,6 +49,12 @@ VEIL1:<base64url(objet JSON)>
 | `sign_key` | chaîne | base64url de la clé publique Ed25519 du serveur, 32 octets |
 | `ntfy` | objet, facultatif | `{"url": adresse https, "topic": chaîne non vide, "token": chaîne non vide facultative}` |
 
+Dans `https://hôte[:port]`, `hôte` est un nom DNS (étiquettes de lettres, de chiffres et de traits d'union internes,
+de 1 à 63 caractères, séparées par des points, 253 caractères au plus, la dernière étiquette pas entièrement
+numérique), une adresse IPv4 en décimal pointé sans zéro initial, ou une adresse IPv6 entre crochets ; `port` est un
+nombre décimal de 1 à 65535 sans zéro initial. Le membre `ntfy.url` a la même forme, suivie éventuellement d'un chemin
+et d'une requête (`/` ou `?` puis des caractères d'URL, sans fragment).
+
 Un lecteur DOIT ignorer les blancs autour du code, refuser un code de plus de 4096 caractères et refuser un code qui
 ne respecte pas ce tableau (`bad_pairing_code`). Les membres inconnus DOIVENT être ignorés. Le code de jumelage n'est
 montré qu'une fois ; il contient le secret et DOIT être traité comme tel.
@@ -152,7 +158,7 @@ l'horloge du serveur au-delà du manifeste.
 | `seq` | entier | égal à celui de l'enveloppe |
 | `kind` | chaîne | `delta`, `state` ou `history`, égal à celui de l'enveloppe |
 | `created_at` | horodatage | date de fabrication du paquet |
-| `period` | objet | `{"from": horodatage ou null, "to": horodatage}` : ce que couvre le paquet |
+| `period` | objet | `{"from": horodatage ou null, "to": horodatage}`, les deux membres présents : ce que couvre le paquet |
 | `files` | objet | nom de fichier → SHA-256 en hex, pour **chaque** fichier de l'archive sauf `manifest.json` et `manifest.sig` |
 | `sources` | tableau d'objets | état des collectes derrière l'abonnement (§7.5) |
 
@@ -194,8 +200,9 @@ contient jamais de détail interne (traces d'exécution, adresses du serveur).
 
 Le corps de `PUT /v1/subscriptions/{uid}` est une enveloppe de genre `subscription`, scellée avec la clé
 d'abonnement. Son `seq` est la version sur laquelle se fonde la modification : `0` pour créer l'abonnement, sinon la
-version renvoyée par le `PUT` précédent. Le clair est un objet JSON d'au plus 1 Mio dont les membres (collecteur,
-paramètres, filtres, périodicité, langue, rendus) sont définis avec l'interface HTTP.
+version renvoyée par le `PUT` précédent. Le clair est un objet JSON dont les membres (collecteur, paramètres, filtres,
+périodicité, langue, rendus) sont définis avec l'interface HTTP. L'enveloppe entière forme le corps de la requête :
+elle fait donc au plus 1 000 000 octets (§9), et le clair au plus 999 930 octets.
 
 ## 8. Authentification des requêtes
 
@@ -219,8 +226,9 @@ chaîne à signer = méthode "\n" chemin-et-requête "\n" X-Veilleur-Date "\n" h
 - Le serveur retrouve le secret par le `key_id`, refuse une date à plus de **5 minutes** de son horloge dans un sens
   ou dans l'autre (`stale_date`), puis compare le MAC en temps constant.
 
-La date borne le rejeu à une fenêtre de 5 minutes ; les requêtes sont idempotentes (`GET`, `PUT` avec version,
-`DELETE`), si bien qu'un rejeu dans la fenêtre ne change rien.
+La date borne le rejeu à une fenêtre de 5 minutes. Dans cette fenêtre, la plupart des rejeux sont sans effet (une
+lecture ; un `PUT` fondé sur une version désormais dépassée reçoit `409`), mais pas tous : voir le
+[modèle de menace](threat-model.md), §4.
 
 ## 9. Interface HTTP `/v1`
 
@@ -239,7 +247,7 @@ détail interne.
 | `GET /v1/subscriptions/{uid}/history?since=AAAA-MM-JJ` | `200` paquet `history`, ou `202` avec `Retry-After` |
 
 États : `400`, `401` (authentification), `403` (jumelage révoqué, ou collecteur non autorisé pour ce jumelage), `404`,
-`409`, `410`, `413` (corps de plus de 1 Mo), `429`, `500`. Après un `410`, l'outil de réception demande un `state`.
+`409`, `410`, `413` (corps de plus de 1 000 000 octets), `429`, `500`. Après un `410`, l'outil de réception demande un `state`.
 
 ## 10. Lecteur
 
@@ -251,7 +259,7 @@ détail interne.
 | nombre de fichiers de l'archive | 32 |
 | taille déclarée d'un fichier | 64 Mio (`manifest.json` 1 Mio, `rotation.json` 4096 octets, signatures 64 octets) |
 | somme des tailles déclarées | 128 Mio |
-| taille d'une enveloppe d'abonnement | 1 Mio |
+| taille d'une enveloppe d'abonnement | 1 000 000 octets (la limite du corps de requête, §9) |
 
 Un lecteur PEUT abaisser ces limites. Il DOIT garder les données déchiffrées en mémoire, ou dans un stockage que lui
 seul peut lire ; l'implémentation de référence n'écrit rien sur le disque.
@@ -306,7 +314,7 @@ DOIT faire ces contrôles dans cet ordre et s'arrêter au premier échec, avec l
 Alors seulement l'outil de réception peut se servir du paquet. Lors de la lecture d'un dossier (sans numéro attendu),
 l'outil de réception vérifie que les numéros se suivent.
 
-Un serveur qui ouvre un document d'abonnement applique les étapes 1 à 4 (limite de 1 Mio, genre `subscription`), puis
+Un serveur qui ouvre un document d'abonnement applique les étapes 1 à 4 (limite de 1 000 000 octets, genre `subscription`), puis
 refuse un clair qui n'est pas un objet JSON (`bad_subscription`).
 
 ## 11. Codes d'erreur

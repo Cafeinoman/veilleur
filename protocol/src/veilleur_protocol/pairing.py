@@ -3,10 +3,10 @@
 
 from __future__ import annotations
 
-import json
+import ipaddress
+import re
 from dataclasses import dataclass, field
 from typing import Any
-from urllib.parse import urlsplit
 
 from . import strict_json
 from .encoding import b64u_decode, b64u_encode, is_key_id
@@ -56,38 +56,46 @@ class PairingCode:
             if self.ntfy.token is not None:
                 ntfy["token"] = self.ntfy.token
             document["ntfy"] = ntfy
-        text = json.dumps(document, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        text = strict_json.dumps(document, sort_keys=False)
         return PREFIX + b64u_encode(text)
 
 
-def _https_origin(url: object) -> bool:
-    if not isinstance(url, str) or not url.isascii() or any(c.isspace() for c in url):
-        return False
+_ORIGIN = re.compile(r"https://(\[[0-9A-Fa-f:.]+\]|[A-Za-z0-9.-]+)(?::([1-9][0-9]{0,4}))?")
+_LABEL = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?")
+_REST = re.compile(r"[/?][!$&'()*+,./0-9:;=?@A-Z_a-z~%-]*")
+
+
+def _is_host(host: str) -> bool:
+    """A DNS name, an IPv4 address in dotted decimal, or an IPv6 address in brackets (specification §3)."""
     try:
-        parts = urlsplit(url)
-        parts.port  # noqa: B018 - raises on an invalid port
+        if host.startswith("["):
+            ipaddress.IPv6Address(host[1:-1])
+            return True
+        if all(c.isdigit() or c == "." for c in host):
+            ipaddress.IPv4Address(host)
+            return True
     except ValueError:
         return False
-    return (
-        parts.scheme == "https"
-        and bool(parts.hostname)
-        and parts.username is None
-        and parts.path in ("", "/")
-        and "?" not in url
-        and "#" not in url
-        and not parts.netloc.endswith(":")
-    )
+    labels = host.split(".")
+    return len(host) <= 253 and all(_LABEL.fullmatch(label) for label in labels) and not labels[-1].isdigit()
+
+
+def _authority_end(url: object) -> int | None:
+    """Where `https://host[:port]` ends in `url`, or None if it does not start with one."""
+    match = _ORIGIN.match(url) if isinstance(url, str) else None
+    if match is None or not _is_host(match.group(1)) or int(match.group(2) or 443) > 65535:
+        return None
+    return match.end()
+
+
+def _https_origin(url: object) -> bool:
+    end = _authority_end(url)
+    return end is not None and isinstance(url, str) and url[end:] in ("", "/")
 
 
 def _https_url(url: object) -> bool:
-    if not isinstance(url, str) or not url.isascii() or any(c.isspace() for c in url):
-        return False
-    try:
-        parts = urlsplit(url)
-        parts.port  # noqa: B018
-    except ValueError:
-        return False
-    return parts.scheme == "https" and bool(parts.hostname) and parts.username is None
+    end = _authority_end(url)
+    return end is not None and isinstance(url, str) and (url[end:] == "" or _REST.fullmatch(url[end:]) is not None)
 
 
 def _check(code: PairingCode) -> None:

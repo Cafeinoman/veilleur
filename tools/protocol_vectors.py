@@ -166,6 +166,7 @@ def pairing() -> JSON:
             Ntfy("https://ntfy.example.org", "veilleur-0123", "tk_example"),
         ),
         PairingCode("folder:", "fedcba9876543210", OTHER_SECRET, KEY_2.public_key),
+        PairingCode("https://[2001:db8::1]:8443/", "0011223344556677", SECRET, KEY_2.public_key),
     ]
     cases = []
     for code in codes:
@@ -605,6 +606,11 @@ def refusals() -> JSON:
             "bad_archive",
         ),
         _refusal(
+            "period without from",
+            _sealed(_signed({"items.jsonl": items}, _manifest(period={"to": format_time(NOW)})), "period"),
+            "bad_manifest",
+        ),
+        _refusal(
             "change of the wrong type",
             _sealed(_signed({"items.jsonl": items.replace(b'"change":"gone"', b'"change":["gone"]')}), "change"),
             "bad_items",
@@ -684,6 +690,16 @@ def refusals() -> JSON:
             f"/v1/subscriptions/{UID}/state",
             b"",
             "Bearer abc",
+            signed.date,
+            "2026-11-17T06:00:00Z",
+            "bad_authorization",
+        ),
+        (
+            "uid in upper case in the path",
+            "GET",
+            f"/v1/subscriptions/{UID.upper()}/state",
+            b"",
+            signed.authorization,
             signed.date,
             "2026-11-17T06:00:00Z",
             "bad_authorization",
@@ -808,6 +824,29 @@ def refusals() -> JSON:
                     "ntfy": None,
                 }
             ),
+        ),
+        *(
+            (
+                f"server {server}",
+                "VEIL1:"
+                + _b64(
+                    {
+                        "v": 1,
+                        "server": server,
+                        "key_id": KEY_ID,
+                        "secret": _b64u(SECRET),
+                        "sign_key": _b64u(KEY_1.public_key),
+                    }
+                ),
+            )
+            for server in (
+                "https://veille.example.org\\evil",
+                "https://veille.example.org:0",
+                "https://veille.example.org:99999",
+                "https://<veille>.example.org",
+                "https://veille.example.org%2Fx",
+                "https://010.0.0.1",
+            )
         ),
         (
             "colon without a port",

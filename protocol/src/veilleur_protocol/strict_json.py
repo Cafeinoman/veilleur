@@ -35,6 +35,13 @@ def _float(text: str) -> float:
     return number
 
 
+def dumps(document: Any, *, sort_keys: bool = True) -> bytes:
+    """Compact UTF-8 JSON. Raises `ValueError` on NaN or an infinity, which no reader accepts (§2): a writer must not
+    produce what readers refuse, even when a collected value carries one."""
+    text = json.dumps(document, sort_keys=sort_keys, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+    return text.encode("utf-8")
+
+
 def loads(data: bytes) -> Any:
     """Parse UTF-8 JSON bytes, or raise `InvalidJson`."""
     try:

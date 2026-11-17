@@ -15,6 +15,7 @@ import base64
 import hashlib
 import hmac
 import io
+import ipaddress
 import json
 import re
 import struct
@@ -255,7 +256,7 @@ def open_package(case: JSON) -> JSON:
     period = manifest.get("period")
     if not (timestamp(manifest.get("created_at")) and isinstance(period, dict) and timestamp(period.get("to"))):
         raise Refused("bad_manifest")
-    if period.get("from") is not None and not timestamp(period["from"]):
+    if "from" not in period or (period["from"] is not None and not timestamp(period["from"])):
         raise Refused("bad_manifest")
     sources, files = manifest.get("sources"), manifest.get("files")
     if not isinstance(sources, list) or not all(isinstance(s, dict) for s in sources):
@@ -316,8 +317,34 @@ def check_items(data: bytes) -> list[JSON]:
 
 def auth_key(secret: bytes, path: str) -> bytes:
     match = re.match(r"/v1/subscriptions/([^/?#]*)(?:[/?#]|$)", path)
+    if match is not None and not re.fullmatch(r"[0-9a-f]{32}", match.group(1)):
+        raise Refused("bad_authorization")
     salt = b"" if match is None else bytes.fromhex(match.group(1))
     return hkdf(secret, salt, b"veilleur-auth")
+
+
+def origin_ok(server: str) -> bool:
+    """https://host[:port], host = DNS name, dotted IPv4 or bracketed IPv6, port 1-65535; one trailing / allowed."""
+    match = re.fullmatch(r"https://(\[[^\]]*\]|[^/:\[\]]+)(?::([0-9]+))?/?", server)
+    if match is None:
+        return False
+    host, port = match.group(1), match.group(2)
+    if port is not None and (port.startswith("0") or not 1 <= int(port) <= 65535):
+        return False
+    try:
+        if host.startswith("["):
+            ipaddress.ip_address(host[1:-1])
+            return ":" in host
+        if re.fullmatch(r"[0-9.]+", host):
+            return isinstance(ipaddress.ip_address(host), ipaddress.IPv4Address)
+    except ValueError:
+        return False
+    label = r"(?!-)[A-Za-z0-9-]{1,63}(?<!-)"
+    return (
+        len(host) <= 253
+        and re.fullmatch(rf"{label}(\.{label})*", host) is not None
+        and not host.split(".")[-1].isdigit()
+    )
 
 
 def verify_request(case: JSON) -> None:
@@ -349,7 +376,7 @@ def decode_pairing(code: str) -> JSON:
         document = strict(b64u(code[6:]))
         assert isinstance(document, dict) and type(document.get("v")) is int and document["v"] == 1
         server = document["server"]
-        assert server == "folder:" or re.fullmatch(r"https://[A-Za-z0-9.-]+(:[0-9]{1,5})?/?", server)
+        assert server == "folder:" or origin_ok(server)
         assert re.fullmatch(r"[0-9a-f]{16}", document["key_id"])
         secret, sign_key = b64u(document["secret"]), b64u(document["sign_key"])
         assert len(secret) == 32 and len(sign_key) == 32

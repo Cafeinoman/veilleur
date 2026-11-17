@@ -858,6 +858,28 @@
    "error": "bad_archive"
   },
   {
+   "name": "period without from",
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "uid": "00112233445566778899aabbccddeeff",
+   "seq": 2,
+   "kinds": [
+    "delta",
+    "state",
+    "history"
+   ],
+   "trusted_keys": [
+    "610c8f4e8e7025482f241f3678728dec3792adf0deaa17f041936326be47d48f"
+   ],
+   "limits": {
+    "max_package": 67108864,
+    "max_files": 32,
+    "max_file": 67108864,
+    "max_total": 134217728
+   },
+   "envelope": "5645494c0100112233445566778899aabbccddeeff000000000000000201febd2f8206ef933649347ed325d98c8c576f7aa29eb588aeacc769871395e84f8f97e8d71c67e90a875e4599dd5e4ca082c883105e88e05ae7aaba6690ca0070728ad980bf8154bfea85c07fb8a63d5c0d381027e3f813a03fd05e36014aafafe8e5716c730a97a0493460f5018a92eadd73eac3321061a2445f060fb34484d209757d4ea9a36ab9cd626ea42123a774b26caac8737066cafd0e8b51b37de94fe274f5daf8d789126fa0a771d66b4db0260e3403cac106307208b77db7eb151daac644476f1b147190811e3a35974e48e8f69b47dbd0cbf96fde0835c3a3930990c0b1e68b60fea308dc5158e5fc584e9b9b4be61e394e73a8b762cfb6005ccc7fec1d946a4c2614b044851d017bbf7f9e1aceab973f964a2f586074b0e758ef72474c3545b11f143d4d3f2f69a0d6742ab65a61842cb98a8887e8064416a077d21c80d27d85ac8d7239dcd92023cecbe08538467be07108b9ea11e23a84c05b55fc052057211fadb0af5c40cee1c94f50cf8db8b57e17e630a46cf5e4406cf3cb37aba87e72fbdcc1e2dd8e5e51d7d29dca39830caf437ad5b7df7f88fbe9380893c05b00a1459ae7209d6840abdb5a49286decfdb6a970f8dcaf23f0c30b497b79d6f36e0b9b63e934bc9a87a1b1d71e12dc47a060035b7815b5169c5a242ea479b8b7b3dbdc7344c3fa10e739b84d630ffeae05b6342dedaf3daf941f79c6377382625271d8fa764e9b2b319b17352461dd04bdac4cb9b7ccb9e48faa106e3d1209f45234d2f6dec6e53f6faa89955f4bb9168194a31e9d0269bafc63b55b7463b2d46827365c0db0ce13184265c60fe7998e02726e3880b8ed528158d04fb23e6c5b95c8beaea7fc12d63e1b19771d34c5a273d55eacaf9c12a4a17a285f75d496317392086cae1ffb375ce305c4e33663689aeec39f8ba563ed64f0acf4089d454581f48b910b1896c71a45d8a914751ae09a3ed2ebff50e5ce7bfeca28bcbdbe30d48367b717fcb8c58d10ef4cc895f4bfe18574e4a4cb446478679fb20816a7927f2e621098ac59f15dc1e1ec59262e76fcc3a362c1313da6a691336761f68e8bdda81c127157e99b350f0c803b5df79af86b6995828250f228925233c4206c225f5f834d8290f28feb2067d4770e968b992ea328a65dc1cb905481f3989015b275b440d529126158b756297e7e8d3fc295a8e340cd88060397403215b214859c943cb8df25b3918fd3715f7d3b4d9039c8149e853086acc03f9cd2ce7abd91c4e6acac44e0a6f8cd9c49bc8db080f410999158ea88eccba2048058332950d66dfb0b1ec0a497421525d9130a6f1f47de77034b131f6bf7baf5fea013bea05ec0fe467020f941c7859546d393f70322d50dc8138dc5b105debe8f2d47acdf97235c6425024b175b662f7c74517aeaa5852289e1eff5db7543a87df3e2940bf94f97f3410a242bfa06747faa38bfcbc822efe9de3c6753351d4b3a2382e258d1382890219f39caa8cc858a3e7bb95611a71a8d88b17cdd4bfa2475d3ff72a775a2cbfaa375a40691a88bd509b96345f9a2bb83a5a0c57bc7db13ddb4bad09d06040832cfdb9cef9a5be11cf546212eaf22e765200ce81fa677ea8cce3f57bcd944f56d3e71b68b6b869b4cfa360bbef2d5a62655377f3c66d16594b34330ae36bf0593107ced32e667006e07eda10624eb575a967b3b333e4f2561bb695275f67f877c7d5ab13558b37905afedd58673019b6e75fa8ebf78267fa751731afdde7140754fb7ba214362c24d713546438ee99b746e3c969df675731dc22fc3fa5ca48034f51e59d065c78354de172b6540f4b7d6fe1c317e826d33b85d56996ace88a489133a5e2dd239b8a9a82ac8e5e8eab1025c50bb504edfa247ed78dfa883dd156ca5d1728b374cc4930a5f376ec584d864d58419a718f11f51817fe434aec53ea226731b193052727b9810980b0ade6bb2cd821dda0826a49bba1ae40fb0fc0887daf0c0a261c7154346a62d692f1709d8968220a59534364989c3f8d38240f24e42a233121640c023cc14887e1245bc13d96077d10048e22f6cece13e",
+   "error": "bad_manifest"
+  },
+  {
    "name": "change of the wrong type",
    "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
    "uid": "00112233445566778899aabbccddeeff",
@@ -981,6 +1003,17 @@
    "error": "bad_authorization"
   },
   {
+   "name": "uid in upper case in the path",
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "method": "GET",
+   "path_and_query": "/v1/subscriptions/00112233445566778899AABBCCDDEEFF/state",
+   "body": "",
+   "authorization": "Veilleur 0123456789abcdef:M5NGuZXbwFcbblz6ov1F6YFOMcv38PqIgKFzupqNRv0",
+   "date": "2026-11-17T06:00:00Z",
+   "now": "2026-11-17T06:00:00Z",
+   "error": "bad_authorization"
+  },
+  {
    "name": "non-canonical MAC",
    "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
    "method": "GET",
@@ -1031,6 +1064,36 @@
   {
    "name": "ntfy null",
    "code": "VEIL1:eyJ2IjoxLCJzZXJ2ZXIiOiJmb2xkZXI6Iiwia2V5X2lkIjoiMDEyMzQ1Njc4OWFiY2RlZiIsInNlY3JldCI6InBHc20taDZmTVFjeTZ0eF85eHg1Q0hVejJrQUNZUEk4c2h5LVFyckdtR00iLCJzaWduX2tleSI6IllReVBUbzV3SlVndkpCODJlSEtON0RlU3JmRGVxaGZ3UVpOakpyNUgxSTgiLCJudGZ5IjpudWxsfQ",
+   "error": "bad_pairing_code"
+  },
+  {
+   "name": "server https://veille.example.org\\evil",
+   "code": "VEIL1:eyJ2IjoxLCJzZXJ2ZXIiOiJodHRwczovL3ZlaWxsZS5leGFtcGxlLm9yZ1xcZXZpbCIsImtleV9pZCI6IjAxMjM0NTY3ODlhYmNkZWYiLCJzZWNyZXQiOiJwR3NtLWg2Zk1RY3k2dHhfOXh4NUNIVXoya0FDWVBJOHNoeS1RcnJHbUdNIiwic2lnbl9rZXkiOiJZUXlQVG81d0pVZ3ZKQjgyZUhLTjdEZVNyZkRlcWhmd1FaTmpKcjVIMUk4In0",
+   "error": "bad_pairing_code"
+  },
+  {
+   "name": "server https://veille.example.org:0",
+   "code": "VEIL1:eyJ2IjoxLCJzZXJ2ZXIiOiJodHRwczovL3ZlaWxsZS5leGFtcGxlLm9yZzowIiwia2V5X2lkIjoiMDEyMzQ1Njc4OWFiY2RlZiIsInNlY3JldCI6InBHc20taDZmTVFjeTZ0eF85eHg1Q0hVejJrQUNZUEk4c2h5LVFyckdtR00iLCJzaWduX2tleSI6IllReVBUbzV3SlVndkpCODJlSEtON0RlU3JmRGVxaGZ3UVpOakpyNUgxSTgifQ",
+   "error": "bad_pairing_code"
+  },
+  {
+   "name": "server https://veille.example.org:99999",
+   "code": "VEIL1:eyJ2IjoxLCJzZXJ2ZXIiOiJodHRwczovL3ZlaWxsZS5leGFtcGxlLm9yZzo5OTk5OSIsImtleV9pZCI6IjAxMjM0NTY3ODlhYmNkZWYiLCJzZWNyZXQiOiJwR3NtLWg2Zk1RY3k2dHhfOXh4NUNIVXoya0FDWVBJOHNoeS1RcnJHbUdNIiwic2lnbl9rZXkiOiJZUXlQVG81d0pVZ3ZKQjgyZUhLTjdEZVNyZkRlcWhmd1FaTmpKcjVIMUk4In0",
+   "error": "bad_pairing_code"
+  },
+  {
+   "name": "server https://<veille>.example.org",
+   "code": "VEIL1:eyJ2IjoxLCJzZXJ2ZXIiOiJodHRwczovLzx2ZWlsbGU-LmV4YW1wbGUub3JnIiwia2V5X2lkIjoiMDEyMzQ1Njc4OWFiY2RlZiIsInNlY3JldCI6InBHc20taDZmTVFjeTZ0eF85eHg1Q0hVejJrQUNZUEk4c2h5LVFyckdtR00iLCJzaWduX2tleSI6IllReVBUbzV3SlVndkpCODJlSEtON0RlU3JmRGVxaGZ3UVpOakpyNUgxSTgifQ",
+   "error": "bad_pairing_code"
+  },
+  {
+   "name": "server https://veille.example.org%2Fx",
+   "code": "VEIL1:eyJ2IjoxLCJzZXJ2ZXIiOiJodHRwczovL3ZlaWxsZS5leGFtcGxlLm9yZyUyRngiLCJrZXlfaWQiOiIwMTIzNDU2Nzg5YWJjZGVmIiwic2VjcmV0IjoicEdzbS1oNmZNUWN5NnR4Xzl4eDVDSFV6MmtBQ1lQSThzaHktUXJyR21HTSIsInNpZ25fa2V5IjoiWVF5UFRvNXdKVWd2SkI4MmVIS043RGVTcmZEZXFoZndRWk5qSnI1SDFJOCJ9",
+   "error": "bad_pairing_code"
+  },
+  {
+   "name": "server https://010.0.0.1",
+   "code": "VEIL1:eyJ2IjoxLCJzZXJ2ZXIiOiJodHRwczovLzAxMC4wLjAuMSIsImtleV9pZCI6IjAxMjM0NTY3ODlhYmNkZWYiLCJzZWNyZXQiOiJwR3NtLWg2Zk1RY3k2dHhfOXh4NUNIVXoya0FDWVBJOHNoeS1RcnJHbUdNIiwic2lnbl9rZXkiOiJZUXlQVG81d0pVZ3ZKQjgyZUhLTjdEZVNyZkRlcWhmd1FaTmpKcjVIMUk4In0",
    "error": "bad_pairing_code"
   },
   {

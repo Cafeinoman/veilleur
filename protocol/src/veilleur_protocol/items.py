@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import itertools
-import json
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -47,7 +46,7 @@ def _line(item: Item) -> bytes:
         "fetched_at": format_time(item.fetched_at),
         "url": item.url,
     }
-    return json.dumps(document, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8") + b"\n"
+    return strict_json.dumps(document) + b"\n"
 
 
 def encode_items(items: Iterable[Item]) -> bytes:

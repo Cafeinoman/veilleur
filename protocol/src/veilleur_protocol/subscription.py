@@ -7,22 +7,28 @@ refuse a change based on an outdated version, and nobody can replay a sealed bod
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from typing import Any
 
 from . import strict_json
-from .envelope import Header, Kind, open_envelope, seal
+from .envelope import OVERHEAD, Header, Kind, open_envelope, seal
 from .errors import BAD_SUBSCRIPTION, ProtocolError
 
-MAX_SUBSCRIPTION = 1024 * 1024
+MAX_SUBSCRIPTION = 1_000_000
+"""Largest subscription envelope: the request body limit of the HTTP interface (cahier ES-11)."""
+MAX_DOCUMENT = MAX_SUBSCRIPTION - OVERHEAD
 
 
 def seal_subscription(
     secret: bytes, uid: str, base_version: int, document: Mapping[str, Any], *, nonce: bytes | None = None
 ) -> bytes:
-    """Body of `PUT /v1/subscriptions/{uid}`. `nonce` is for test vectors only."""
-    plain = json.dumps(dict(document), sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    """Body of `PUT /v1/subscriptions/{uid}`. `nonce` is for test vectors only.
+
+    Raises `ValueError` for a document the server would refuse: not JSON (NaN, infinities) or over `MAX_DOCUMENT`.
+    """
+    plain = strict_json.dumps(dict(document))
+    if len(plain) > MAX_DOCUMENT:
+        raise ValueError(f"a subscription document is at most {MAX_DOCUMENT} bytes")
     return seal(secret, Header(uid, base_version, Kind.SUBSCRIPTION), plain, nonce=nonce)
 
 

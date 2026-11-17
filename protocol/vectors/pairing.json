@@ -20,6 +20,14 @@
    "secret": "b919c604a205b470d7fca338bf5b508f2f03717754bf70a5eb8d1728bcf8de7f",
    "sign_key": "b98f333489adc82b4d7f50d15a950d14719520166365cf962c3d3cb7844b929b",
    "ntfy": null
+  },
+  {
+   "code": "VEIL1:eyJ2IjoxLCJzZXJ2ZXIiOiJodHRwczovL1syMDAxOmRiODo6MV06ODQ0My8iLCJrZXlfaWQiOiIwMDExMjIzMzQ0NTU2Njc3Iiwic2VjcmV0IjoicEdzbS1oNmZNUWN5NnR4Xzl4eDVDSFV6MmtBQ1lQSThzaHktUXJyR21HTSIsInNpZ25fa2V5IjoidVk4ek5JbXR5Q3ROZjFEUldwVU5GSEdWSUJaalpjLVdMRDA4dDRSTGtwcyJ9",
+   "server": "https://[2001:db8::1]:8443/",
+   "key_id": "0011223344556677",
+   "secret": "a46b26fa1e9f310732eadc7ff71c79087533da400260f23cb21cbe42bac69863",
+   "sign_key": "b98f333489adc82b4d7f50d15a950d14719520166365cf962c3d3cb7844b929b",
+   "ntfy": null
   }
  ]
 }

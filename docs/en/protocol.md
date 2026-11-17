@@ -49,6 +49,12 @@ VEIL1:<base64url(JSON object)>
 | `sign_key` | string | base64url of the server's 32-byte Ed25519 public key |
 | `ntfy` | object, optional | `{"url": https URL, "topic": non-empty string, "token": optional non-empty string}` |
 
+In `https://host[:port]`, `host` is a DNS name (labels of letters, digits and inner hyphens, 1 to 63 characters,
+separated by dots, at most 253 characters, the last label not all digits), an IPv4 address in dotted decimal without
+leading zeros, or an IPv6 address in brackets; `port` is a decimal number from 1 to 65535 without leading zero. The
+`ntfy.url` member has the same form, optionally followed by a path and query (`/` or `?` then URL characters, no
+fragment).
+
 A reader MUST ignore white space around the code, refuse a code longer than 4096 characters, and refuse a code that
 does not satisfy this table (`bad_pairing_code`). Unknown members MUST be ignored. The pairing code is shown once; it
 holds the secret and MUST be handled as one.
@@ -152,7 +158,7 @@ clock beyond the manifest.
 | `seq` | integer | equal to the envelope's |
 | `kind` | string | `delta`, `state` or `history`, equal to the envelope's |
 | `created_at` | timestamp | when the package was made |
-| `period` | object | `{"from": timestamp or null, "to": timestamp}`: what the package covers |
+| `period` | object | `{"from": timestamp or null, "to": timestamp}`, both members present: what the package covers |
 | `files` | object | file name → hex SHA-256, for **every** file of the archive except `manifest.json` and `manifest.sig` |
 | `sources` | array of objects | status of the collections behind the subscription (§7.5) |
 
@@ -193,8 +199,9 @@ detail (stack traces, addresses of the server).
 
 The body of `PUT /v1/subscriptions/{uid}` is an envelope of kind `subscription`, sealed with the subscription key.
 Its `seq` is the version the change is based on: `0` to create the subscription, otherwise the version returned by
-the previous `PUT`. The plaintext is a JSON object of at most 1 MiB whose members (collector, parameters, filters,
-frequency, language, renderings) are defined with the HTTP API.
+the previous `PUT`. The plaintext is a JSON object whose members (collector, parameters, filters, frequency,
+language, renderings) are defined with the HTTP API. The whole envelope is the request body, so it is at most
+1 000 000 bytes (§9), and the plaintext at most 999 930 bytes.
 
 ## 8. Request authentication
 
@@ -217,8 +224,8 @@ string to sign = method "\n" path-and-query "\n" X-Veilleur-Date "\n" hex(SHA-25
 - The server finds the secret from `key_id`, refuses a date more than **5 minutes** away from its clock in either
   direction (`stale_date`), then compares the MAC in constant time.
 
-The date bounds replay to a 5-minute window; requests are idempotent (`GET`, `PUT` with a version, `DELETE`), so a
-replay within the window changes nothing.
+The date bounds replay to a 5-minute window. Within it, most replays have no effect (a read; a `PUT` based on a
+version that is now outdated gets `409`), but some do: see the [threat model](threat-model.md), §4.
 
 ## 9. HTTP interface `/v1`
 
@@ -237,7 +244,7 @@ detail.
 | `GET /v1/subscriptions/{uid}/history?since=YYYY-MM-DD` | `200` `history` package, or `202` with `Retry-After` |
 
 Statuses: `400`, `401` (authentication), `403` (revoked pairing, or collector not allowed for this pairing), `404`,
-`409`, `410`, `413` (body over 1 MB), `429`, `500`. After a `410`, the receiving tool asks for a `state`.
+`409`, `410`, `413` (body over 1 000 000 bytes), `429`, `500`. After a `410`, the receiving tool asks for a `state`.
 
 ## 10. Reader
 
@@ -249,7 +256,7 @@ Statuses: `400`, `401` (authentication), `403` (revoked pairing, or collector no
 | number of files in the archive | 32 |
 | declared size of one file | 64 MiB (`manifest.json` 1 MiB, `rotation.json` 4096 bytes, signatures 64 bytes) |
 | sum of the declared sizes | 128 MiB |
-| size of a subscription envelope | 1 MiB |
+| size of a subscription envelope | 1 000 000 bytes (the request body limit, §9) |
 
 A reader MAY lower these limits. It MUST keep decrypted data in memory, or in storage only it can read; the reference
 implementation writes nothing to disk.
@@ -302,7 +309,7 @@ these checks in this order and stop at the first failure, with the given code:
 Only then may the receiving tool use the package. When reading a folder (no expected number), the receiving tool
 checks that numbers follow each other.
 
-A server opening a subscription document applies steps 1 to 4 (limit 1 MiB, kind `subscription`), then refuses a
+A server opening a subscription document applies steps 1 to 4 (limit 1 000 000 bytes, kind `subscription`), then refuses a
 plaintext that is not a JSON object (`bad_subscription`).
 
 ## 11. Error codes

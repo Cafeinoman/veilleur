@@ -22,8 +22,10 @@ from veilleur_protocol import (
     encode_items,
     make_rotation,
     open_package,
+    open_subscription,
     parse_items,
     seal_package,
+    seal_subscription,
 )
 from veilleur_protocol.envelope import Header, seal
 from veilleur_protocol.package import build_archive, manifest_bytes
@@ -307,6 +309,25 @@ def test_signed_content_only_ever_raises_protocol_errors(key: SigningKey) -> Non
         except ProtocolError as error:
             refused.add(error.code)
     assert {"bad_manifest", "bad_items"} <= refused
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+def test_writers_refuse_what_readers_refuse(key: SigningKey, value: float) -> None:
+    with pytest.raises(ValueError):
+        encode_items([item("a", price=value)])
+    with pytest.raises(ValueError):
+        seal_package(SECRET, key, content(sources=[{"id": "s", "latency": value}]))
+    with pytest.raises(ValueError):
+        seal_subscription(SECRET, UID, 0, {"threshold": value})
+
+
+def test_writers_stay_within_the_default_limits(key: SigningKey) -> None:
+    with pytest.raises(ValueError):
+        seal_package(SECRET, key, content(renderings={f"report.r{i}": b"" for i in range(30)}))
+    with pytest.raises(ValueError):
+        seal_subscription(SECRET, UID, 0, {"x": "a" * 1_000_000})
+    largest = {"x": "a" * (999_930 - len(b'{"x":""}'))}
+    assert open_subscription(SECRET, UID, seal_subscription(SECRET, UID, 0, largest))[1] == largest
 
 
 def _end_record(archive: bytes) -> int:

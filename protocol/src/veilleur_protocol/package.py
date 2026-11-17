@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import hashlib
 import io
-import json
 import re
 import zipfile
 from collections.abc import Collection, Mapping, Sequence
@@ -104,7 +103,7 @@ def make_rotation(old: SigningKey, new_key: bytes, issued_at: datetime) -> Rotat
         "new_key": b64u_encode(new_key),
         "issued_at": format_time(issued_at),
     }
-    statement = json.dumps(document, sort_keys=True, separators=(",", ":")).encode("ascii")
+    statement = strict_json.dumps(document)
     return Rotation(old.public_key, new_key, issued_at, statement, old.sign(statement))
 
 
@@ -161,7 +160,18 @@ def manifest_bytes(content: PackageContent, files: Mapping[str, bytes]) -> bytes
         "files": {name: hashlib.sha256(data).hexdigest() for name, data in sorted(files.items())},
         "sources": [dict(source) for source in content.sources],
     }
-    return json.dumps(document, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return strict_json.dumps(document)
+
+
+def _within_limits(files: Sequence[tuple[str, bytes]]) -> None:
+    limits = DEFAULT_LIMITS
+    if len(files) > limits.max_files:
+        raise ValueError(f"a package holds at most {limits.max_files} files")
+    for name, data in files:
+        if len(data) > _size_limit(name, limits):
+            raise ValueError(f"{name} is over its size limit")
+    if sum(len(data) for _, data in files) > limits.max_total:
+        raise ValueError(f"the files of a package add up to at most {limits.max_total} bytes")
 
 
 def build_archive(
@@ -180,6 +190,7 @@ def build_archive(
         files[name] = data
     manifest = manifest_bytes(content, files)
     ordered = [(MANIFEST, manifest), (MANIFEST_SIG, signing_key.sign(manifest)), *files.items()]
+    _within_limits(ordered)
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as archive:
         for name, data in ordered:
@@ -198,9 +209,16 @@ def seal_package(
     compression: int = zipfile.ZIP_DEFLATED,
     nonce: bytes | None = None,
 ) -> bytes:
-    """Build, sign and seal a package. `nonce` is for test vectors only."""
+    """Build, sign and seal a package. `nonce` is for test vectors only.
+
+    Raises `ValueError` for a package a reader with the default limits would refuse (too many files, too large, NaN or
+    infinity in the items or the sources): the server must split or fix it rather than deliver it.
+    """
     archive = build_archive(content, signing_key, compression=compression)
-    return seal(secret, Header(content.uid, content.seq, content.kind), archive, nonce=nonce)
+    sealed = seal(secret, Header(content.uid, content.seq, content.kind), archive, nonce=nonce)
+    if len(sealed) > DEFAULT_LIMITS.max_package:
+        raise ValueError(f"a package is at most {DEFAULT_LIMITS.max_package} bytes")
+    return sealed
 
 
 # --- Reading ----------------------------------------------------------------------------------------------------
@@ -279,7 +297,9 @@ def _manifest(data: bytes, header: Header, names: Collection[str]) -> dict[str, 
         if not isinstance(period, dict):
             raise ValueError("period")
         parse_time(period.get("to"))
-        if period.get("from") is not None:
+        if "from" not in period:
+            raise ValueError("period.from")
+        if period["from"] is not None:
             parse_time(period.get("from"))
     except (ProtocolError, ValueError) as exc:
         raise ProtocolError(BAD_MANIFEST, "created_at or period") from exc
