@@ -19,7 +19,7 @@
 
 | Lot | Objet | État |
 |---|---|---|
-| G0-R | Dépôt git, environnement, contrôles, création du dépôt GitHub | en cours |
+| G0-R | Dépôt git, environnement, contrôles, création du dépôt GitHub | fait |
 | G1 | Protocole 1.0 et `veilleur-protocol` | à faire |
 | G2 | Cœur, stockage, administration, service HTTP | à faire |
 | G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | à faire |
@@ -29,7 +29,7 @@
 
 ## G0-R — Mise en route du dépôt
 
-Le squelette (G0) est en place : licence, traduction, CI, documentation bilingue, tests. Il reste à créer le dépôt et à le publier.
+Le squelette (G0) est en place : licence, traduction, CI, documentation bilingue, tests. Ce lot a créé le dépôt GitHub et l'a publié.
 
 - [x] **0. Accès GitHub (préalable, fait par l'utilisateur).** Le `gh` du serveur est connecté avec un jeton à grain fin limité à un autre dépôt. Avant de lancer Claude :
   1. Sur GitHub, créer le dépôt **vide** `Cafeinoman/veilleur`, public, sans README, licence ni `.gitignore`.
@@ -64,12 +64,12 @@ Le squelette (G0) est en place : licence, traduction, CI, documentation bilingue
   ```
   Attendu : tests verts ; aide et erreurs entièrement en français avec `--lang fr`.
 - [x] **4. Cohérence documentaire.** Relire `docs/en/design.md` et `docs/fr/design.md` contre `cahier_des_charges.MD`, en particulier ENF-03 et ENF-03b (intégration NixOS) et §9 (branches et PR). Le cahier prime : corriger les écarts dans les deux langues.
-- [ ] **5. Premier commit sur `main`**, avec tous les fichiers. C'est le seul commit fait directement sur `main`. Message :
+- [x] **5. Premier commit sur `main`**, avec tous les fichiers. C'est le seul commit fait directement sur `main`. Message :
   ```
   Project skeleton: licence, bilingual messages and documentation, CI
   ```
   Il se termine par la ligne `Co-Authored-By` demandée par l'environnement. Vérifier ensuite que `git log --format='%an <%ae>'` ne montre que l'identité ci-dessus.
-- [ ] **6. Envoi sur GitHub.** Le dépôt a été créé vide à l'étape 0. S'il n'est pas vide, c'est un arrêt avec une question en attente. Sinon :
+- [x] **6. Envoi sur GitHub.** Le dépôt a été créé vide à l'étape 0. S'il n'est pas vide, c'est un arrêt avec une question en attente. Sinon :
   ```bash
   git remote add origin https://github.com/Cafeinoman/veilleur.git
   git push -u origin main
@@ -77,7 +77,7 @@ Le squelette (G0) est en place : licence, traduction, CI, documentation bilingue
     --description "Self-hosted watch server: pluggable collectors, signed and encrypted reports"
   ```
   C'est le **seul envoi direct sur `main`** ; l'étape 7 l'interdit ensuite.
-- [ ] **7. Réglages GitHub** (par `gh api` ou `gh repo edit`) :
+- [x] **7. Réglages GitHub** (par `gh api` ou `gh repo edit`) :
   - sujets du dépôt : `watch`, `rss`, `self-hosted`, `nixos`, `encryption` ;
   - protection de `main` :
     - *pull request* obligatoire, sans approbation exigée (l'utilisateur fusionne lui-même ses PR) ;
@@ -87,8 +87,8 @@ Le squelette (G0) est en place : licence, traduction, CI, documentation bilingue
   - signalement privé des failles activé.
 
   Les contrôles requis ne peuvent être nommés qu'une fois la CI passée : faire l'étape 8 avant de régler la protection.
-- [ ] **8. CI.** Attendre la fin de la première exécution de GitHub Actions sur `main` (`gh run watch`). Elle doit être verte pour Python 3.12 et 3.13.
-- [ ] **9. Clôture**, sur la branche `claude/g0r-close` : passer G0-R à « fait » dans le tableau d'état, ouvrir la PR. L'étiquette `g0` sera posée après la fusion.
+- [x] **8. CI.** Attendre la fin de la première exécution de GitHub Actions sur `main` (`gh run watch`). Elle doit être verte pour Python 3.12 et 3.13.
+- [x] **9. Clôture**, sur la branche `claude/g0r-close` : passer G0-R à « fait » dans le tableau d'état, ouvrir la PR. L'étiquette `g0` sera posée après la fusion.
 
 Fini quand : dépôt public avec la seule identité `François Delalleau <Cafeinoman@users.noreply.github.com>`, `main` protégée, CI verte.
 

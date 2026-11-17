@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Veilleur VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-15 16:33+0100\n"
+"POT-Creation-Date: 2026-11-17 01:57+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,10 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
+
+#, python-format
+msgid " (default: %(default)s)"
+msgstr ""
 
 #, python-format
 msgid "%(heading)s:"
@@ -40,10 +44,30 @@ msgstr ""
 msgid "argument %(argument_name)s: %(message)s"
 msgstr ""
 
+#, python-format
+msgid "can't open '%(filename)s': %(error)s"
+msgstr ""
+
 msgid "command"
 msgstr ""
 
+#, python-format
+msgid "expected %s argument"
+msgid_plural "expected %s arguments"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "expected at least one argument"
+msgstr ""
+
+msgid "expected at most one argument"
+msgstr ""
+
 msgid "expected one argument"
+msgstr ""
+
+#, python-format
+msgid "ignored explicit argument %r"
 msgstr ""
 
 #, python-format
@@ -71,6 +95,9 @@ msgstr ""
 msgid "positional arguments"
 msgstr ""
 
+msgid "show program's version number and exit"
+msgstr ""
+
 msgid "show the version"
 msgstr ""
 
@@ -82,6 +109,14 @@ msgstr ""
 
 #, python-format
 msgid "the following arguments are required: %s"
+msgstr ""
+
+#, python-format
+msgid "unexpected option string: %s"
+msgstr ""
+
+#, python-format
+msgid "unknown parser %(parser_name)r (choices: %(choices)s)"
 msgstr ""
 
 #, python-format

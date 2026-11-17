@@ -36,9 +36,18 @@ def test_resolve(lang: str | None, environ: dict[str, str], expected: str) -> No
     assert i18n.resolve(lang, environ) == expected
 
 
+def _key(msgid: object) -> str:
+    """Singular form of a message identifier (plural entries have a tuple of forms)."""
+    return msgid if isinstance(msgid, str) else str(msgid[0])  # type: ignore[index]
+
+
+def _forms(text: object) -> tuple[str, ...]:
+    """Every form of a message text, singular or plural."""
+    return (text,) if isinstance(text, str) else tuple(text)  # type: ignore[arg-type]
+
+
 def _source_ids() -> set[str]:
-    return {msgid if isinstance(msgid, str) else msgid[0]
-            for _file, _line, msgid, _comments, _context in extract_from_dir(str(PACKAGE))}
+    return {_key(msgid) for _file, _line, msgid, _comments, _context in extract_from_dir(str(PACKAGE))}
 
 
 def _po(lang: str) -> Catalog:
@@ -49,7 +58,7 @@ def _po(lang: str) -> Catalog:
 @pytest.mark.parametrize("lang", TRANSLATED)
 def test_every_message_is_translated(lang: str) -> None:
     catalog = _po(lang)
-    missing = sorted(i for i in _source_ids() if not (catalog.get(i) and catalog[i].string))
+    missing = sorted(i for i in _source_ids() if not (catalog.get(i) and all(_forms(catalog[i].string))))
     assert not missing, f"untranslated in {lang} (run tools/i18n.py all, then translate): {missing}"
     fuzzy = sorted(str(m.id) for m in catalog if m.id and m.fuzzy)
     assert not fuzzy, f"fuzzy entries in {lang}: {fuzzy}"
@@ -58,7 +67,7 @@ def test_every_message_is_translated(lang: str) -> None:
 @pytest.mark.parametrize("lang", TRANSLATED)
 def test_no_obsolete_message(lang: str) -> None:
     catalog = _po(lang)
-    obsolete = sorted(str(m.id) for m in catalog if m.id and m.id not in _source_ids())
+    obsolete = sorted(_key(m.id) for m in catalog if m.id and _key(m.id) not in _source_ids())
     assert not obsolete and not catalog.obsolete, f"obsolete in {lang} (run tools/i18n.py update): {obsolete}"
 
 
@@ -67,7 +76,9 @@ def test_placeholders_are_kept(lang: str) -> None:
     pattern = re.compile(r"%\(\w+\)[sdr]|%[sdr]|\{\w*\}")
     for m in _po(lang):
         if m.id and m.string:
-            assert sorted(pattern.findall(str(m.id))) == sorted(pattern.findall(str(m.string))), m.id
+            source = sorted(pattern.findall(_key(m.id)))
+            for form in _forms(m.string):
+                assert sorted(pattern.findall(form)) == source, m.id
 
 
 @pytest.mark.parametrize("lang", TRANSLATED)
@@ -75,6 +86,6 @@ def test_compiled_catalogue_is_up_to_date(lang: str) -> None:
     mo_path = PACKAGE / "locale" / lang / "LC_MESSAGES" / "veilleur.mo"
     with mo_path.open("rb") as f:
         compiled = read_mo(io.BytesIO(f.read()))
-    expected = {str(m.id): m.string for m in _po(lang) if m.id and m.string}
-    actual = {str(m.id): m.string for m in compiled if m.id}
+    expected = {_key(m.id): _forms(m.string) for m in _po(lang) if m.id and m.string}
+    actual = {_key(m.id): _forms(m.string) for m in compiled if m.id}
     assert actual == expected, "run tools/i18n.py compile"

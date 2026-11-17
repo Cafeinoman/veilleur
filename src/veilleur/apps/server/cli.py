@@ -15,13 +15,34 @@ from veilleur.apps.server import argparse_i18n
 from veilleur.i18n import _
 
 
+def _is_lang_option(token: str) -> bool:
+    """`--lang` or an abbreviation argparse would accept (`--la`, `--lan`)."""
+    return len(token) >= 3 and "--lang".startswith(token)
+
+
 def _language_option(argv: Sequence[str]) -> str | None:
-    """Read `--lang` before anything else (the parser's own texts depend on it)."""
-    pre = argparse.ArgumentParser(add_help=False)
-    pre.add_argument("--lang")
-    known, _rest = pre.parse_known_args(argv)
-    value: str | None = known.lang
-    return value
+    """Read `--lang` before anything else (the parser's own texts depend on it).
+
+    This scan never fails: a malformed command line is left to the real parser, which then reports the error in the
+    language found here. The last supported value wins, so `--lang fr --lang` or `--lang fr --lang xx` still
+    produce a French error message.
+    """
+    found: str | None = None
+    tokens = iter(argv)
+    for token in tokens:
+        if token == "--":
+            break
+        if "=" in token:
+            option, value = token.split("=", 1)
+            if not _is_lang_option(option):
+                continue
+        elif _is_lang_option(token):
+            value = next(tokens, "")
+        else:
+            continue
+        if value in i18n.LANGUAGES:
+            found = value
+    return found
 
 
 def build_parser() -> argparse.ArgumentParser:

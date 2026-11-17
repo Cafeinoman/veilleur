@@ -51,7 +51,7 @@ Principe de confidentialité : *le serveur connaît ce qu'il collecte, jamais ce
 
 ## 3. Rapports
 
-Un paquet contient `manifest.json` (version du protocole, abonnement, numéro, genre, période, empreinte de chaque autre fichier, état des collecteurs), `manifest.sig`, `items.jsonl` (JSON Lines, un élément par ligne, trié par clé : `{key, change: new|changed|gone, hash, fields, fetched_at, url}`) et les rendus demandés (`report.md`, `report.html`) dans la langue de l'abonnement. Les rendus sont **facultatifs** et **dérivés** : `items.jsonl` fait foi.
+Un paquet contient `manifest.json` (version du protocole, abonnement, numéro, genre, période, empreinte de chaque autre fichier, état des collectes), `manifest.sig`, `items.jsonl` (JSON Lines, un élément par ligne, trié par clé : `{key, change: new|changed|gone, hash, fields, fetched_at, url}`) et les rendus demandés (`report.md`, `report.html`) dans la langue de l'abonnement. Les rendus sont **facultatifs** et **dérivés** : `items.jsonl` fait foi.
 
 Genres : `delta` (depuis le paquet précédent), `state` (tout ce qui est en vigueur, pour un récepteur revenu après la purge des paquets), `history` (rattrapage depuis une date, préparé en tâche de fond). Périodicité par abonnement (quotidienne par défaut, hebdomadaire, à chaque tour) ; un rapport vide n'est pas produit ; un abonnement neuf reçoit d'abord un `state`, puis des `delta`. Les paquets sont numérotés sans trou et gardés 90 jours ; un paquet purgé répond `410`, et le récepteur demande alors un `state`.
 
