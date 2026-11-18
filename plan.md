@@ -26,7 +26,7 @@ Aucune.
 | G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | fait, avec réserves (PR à fusionner, puis étiquette `g3`) |
 | G4 | Rendus, récepteur de référence | fait, avec réserves (étiquette `g4`) |
 | G5 | Déploiement NixOS et repli systemd | fait, avec réserves (PR à fusionner, puis étiquette `g5`) |
-| G6 | Publication 0.1.0 | en cours : à livrer |
+| G6 | Publication 0.1.0 | fait, avec réserves (PR à fusionner, puis étiquette `v0.1.0` et release GitHub) |
 
 ## G0-R — Mise en route du dépôt
 
@@ -254,3 +254,9 @@ Réserves à la livraison (3 passages du vérificateur, le 3ᵉ autorisé par l'
 - [x] Version 0.1.0 préparée : numéros de version, notes de version bilingues.
 - [ ] Après la fusion : étiquette `v0.1.0` sur `main` et release GitHub.
 - [x] Publication sur PyPI : écartée par l'utilisateur (cahier §10).
+
+Réserves à la livraison (1 passage du vérificateur, verdict `CONFORME` ; aucun écart bloquant ni mineur). Les trois points ci-dessous sont hors spécification et ne sont pas corrigés dans ce lot :
+
+- Les guides de contribution (`CONTRIBUTING.md`, `CONTRIBUTING.fr.md`) ne citent pas `tools/check_vectors.py`, que la CI exécute (test en `xfail` strict dans `tests/verif/test_g6_release.py`).
+- La recherche de marque ne couvre que l'INPI : une marque de l'Union européenne ou internationale (TMview, WIPO) reste possible.
+- L'exclusion de `.gitleaks.toml` dépend du dossier de lancement : `gitleaks dir <chemin absolu>` donne 158 fausses alertes ; la commande documentée, `gitleaks git --redact .`, n'est pas touchée.
