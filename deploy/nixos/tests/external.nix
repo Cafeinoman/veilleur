@@ -67,6 +67,8 @@ pkgs.testers.runNixOSTest {
     server.wait_for_unit("veilleur.service")
     server.wait_for_unit("caddy.service")
     server.wait_for_open_port(443)
+    # The unit is active as soon as the process starts, before the socket is bound.
+    server.wait_for_open_port(8470)
 
     with subtest("Veilleur adds nothing to the host's front end"):
         server.fail("systemctl cat ntfy-sh.service")
