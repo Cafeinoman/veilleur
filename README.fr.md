@@ -4,7 +4,7 @@
 
 Veilleur est un **serveur de veille** auto-hébergé. Il collecte des informations depuis des sources branchables (flux RSS/Atom, API JSON, pages web, ou toute source écrite comme greffon), repère ce qui est nouveau ou a changé d'un tour à l'autre, en fait des **rapports** et les livre, **signés et chiffrés**, à des outils de réception. Ces outils sont hors du périmètre du projet ; un petit récepteur de référence (`receiver/`) montre comment en écrire un.
 
-> **État : début du développement.** Seul le squelette du projet existe ; rien n'est encore utilisable. La conception et la feuille de route sont dans [docs/fr/design.md](docs/fr/design.md).
+> **État : alpha (0.1.0).** Le protocole et les formats de données peuvent encore changer. Les [notes de version](docs/fr/release-notes.md) présentent le contenu et les limites connues, et le [guide d'administration](docs/fr/admin-guide.md) explique l'installation.
 
 ## Principes
 
@@ -27,7 +27,7 @@ uv run lint-imports
 uv run veilleur --lang fr version
 ```
 
-Traductions : voir [docs/fr/translating.md](docs/fr/translating.md).
+Traductions : voir [docs/fr/translating.md](docs/fr/translating.md). Contributions : voir [CONTRIBUTING.fr.md](CONTRIBUTING.fr.md). Failles de sécurité : voir [SECURITY.md](SECURITY.md).
 
 ## Licence
 

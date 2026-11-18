@@ -702,7 +702,7 @@ wheels = [
 
 [[package]]
 name = "veilleur"
-version = "0.0.0"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "google-re2" },
@@ -739,7 +739,7 @@ dev = [
 
 [[package]]
 name = "veilleur-protocol"
-version = "0.0.0"
+version = "0.1.0"
 source = { editable = "protocol" }
 dependencies = [
     { name = "pycryptodomex" },
@@ -750,7 +750,7 @@ requires-dist = [{ name = "pycryptodomex", specifier = ">=3.20" }]
 
 [[package]]
 name = "veilleur-receive"
-version = "0.0.0"
+version = "0.1.0"
 source = { editable = "receiver" }
 dependencies = [
     { name = "veilleur-protocol" },
