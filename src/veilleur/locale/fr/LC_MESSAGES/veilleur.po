@@ -134,6 +134,11 @@ msgstr "Aucun notificateur n'est configuré."
 msgid "No pairing matches {reference}."
 msgstr "Aucun jumelage ne correspond à {reference}."
 
+msgid "No state could be made: only the stored packages were written."
+msgstr ""
+"Aucun état n'a pu être produit : seuls les paquets conservés ont été "
+"écrits."
+
 #, python-brace-format
 msgid "No subscription matches {reference}."
 msgstr "Aucun abonnement ne correspond à {reference}."
@@ -145,10 +150,10 @@ msgstr "Rien ici."
 msgid "Origin: {origin}"
 msgstr "Origine : {origin}"
 
-msgid "Packages signed by the previous server key: a state was written instead."
+msgid "Packages signed by the previous server key: a state was written as well."
 msgstr ""
-"Paquets signés par la clé précédente du serveur : un état a été écrit à "
-"leur place."
+"Paquets signés par la clé précédente du serveur : un état a aussi été "
+"écrit."
 
 #, python-brace-format
 msgid "Packages up to {seq} are purged: a state was written instead."

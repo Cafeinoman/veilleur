@@ -134,8 +134,8 @@ When the server replaces its key, the outgoing key signs a statement naming the 
 `new_key` (§10, step 7). Once it has adopted `new_key`, the receiving tool MUST stop trusting `old_key`: a rotation
 is how the server recovers from the theft of its key, so the stolen key must not keep signing. A package of another
 subscription still signed by `old_key` is then refused (`bad_signature`); the receiving tool asks for a `state` (§9),
-which the server signs with `new_key`. A folder offers no such request: an export that would hold a package signed
-by `old_key` holds that `state` instead. A receiving tool that missed the whole 90-day window must be paired again.
+which the server signs with `new_key`. A folder offers no such request: an export that holds a package signed by
+`old_key` also holds that `state`, and the packages stay so that a receiving tool on an older key can follow each statement. A receiving tool that missed the whole 90-day window must be paired again.
 
 ## 7. Packages
 

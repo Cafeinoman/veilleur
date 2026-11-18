@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Veilleur VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 11:01+0100\n"
+"POT-Creation-Date: 2026-11-18 12:08+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -130,6 +130,9 @@ msgstr ""
 msgid "No pairing matches {reference}."
 msgstr ""
 
+msgid "No state could be made: only the stored packages were written."
+msgstr ""
+
 #, python-brace-format
 msgid "No subscription matches {reference}."
 msgstr ""
@@ -141,7 +144,7 @@ msgstr ""
 msgid "Origin: {origin}"
 msgstr ""
 
-msgid "Packages signed by the previous server key: a state was written instead."
+msgid "Packages signed by the previous server key: a state was written as well."
 msgstr ""
 
 #, python-brace-format

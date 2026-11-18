@@ -304,17 +304,22 @@ def _cmd_export(app: App, args: argparse.Namespace) -> None:
     signing_key = keys.load_signing_key(app.config.state_dir)
     rotation = keys.current_rotation(app.config.state_dir, signing_key, app.core.clock.now())
     # A member who adopted the new key refuses the packages signed by the old one (protocol §6.3), and a folder
-    # offers no way to ask for a `state`: it has to be there already. It accounts for every package listed.
+    # offers no way to ask for a `state`: it has to be there already. The packages stay beside it, as each one carries
+    # the statement a member still on an older key needs to follow the chain of rotations.
     outdated = rotation is not None and any(info.created_at <= rotation.issued_at for info in packages)
     if args.after < bounds.purged_through or outdated:
         core = replace(app.core, sealer=ProtocolSealer(signing_key, rotation))
-        built = reports.build_state(core, s)
+        try:
+            built = reports.build_state(core, s)
+        except reports.ReportSkipped:
+            built = None
+            print(_("No state could be made: only the stored packages were written."))
         if built is not None:
-            (args.folder / f"{s.uid}-{built[0]:08d}-state.veil").write_bytes(built[1])
+            # A name of its own: a stored `state` can have the same number.
+            (args.folder / f"{s.uid}-{built[0]:08d}-state-rebuilt.veil").write_bytes(built[1])
             written += 1
             if outdated:
-                packages = []
-                print(_("Packages signed by the previous server key: a state was written instead."))
+                print(_("Packages signed by the previous server key: a state was written as well."))
             else:
                 print(
                     _("Packages up to {seq} are purged: a state was written instead.").format(

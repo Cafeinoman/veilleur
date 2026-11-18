@@ -277,10 +277,18 @@ def _survey(source: Path, outcome: Outcome) -> dict[str, list[_Found]]:
     return found
 
 
+def _can_take_over(package: _Found, following: list[_Found]) -> bool:
+    """Whether a package further on holds this number, or a `state` accounts for it."""
+    return any(
+        other.header.kind in _NUMBERED and (other.header.seq == package.header.seq or other.header.kind is Kind.STATE)
+        for other in following
+    )
+
+
 def _read_subscription(filing: _Filing, uid: str, packages: list[_Found]) -> None:
     ordered = sorted(packages, key=lambda found: found.order)
     newest_state = max((p.header.seq for p in ordered if p.header.kind is Kind.STATE), default=0)
-    for package in ordered:
+    for position, package in enumerate(ordered):
         seq, kind = package.header.seq, package.header.kind
         if kind not in _NUMBERED:
             filing.outcome.failures.append(Failure("kind_mismatch", uid, seq))
@@ -297,8 +305,8 @@ def _read_subscription(filing: _Filing, uid: str, packages: list[_Found]) -> Non
                 raise _Stop("too_large", seq)
             opened = filing.open(package.path.read_bytes(), uid, seq=seq)
         except ProtocolError as exc:
-            if exc.code == "bad_signature" and filing.state.rotated and newest_state > seq:
-                continue  # signed by the key given up since: the later `state`, signed by the new one, covers it
+            if exc.code == "bad_signature" and _can_take_over(package, ordered[position + 1 :]):
+                continue  # another key than the one trusted now: what follows is checked in turn, the last one stops
             raise _Stop(exc.code, seq) from exc
         except OSError as exc:
             raise _Stop("unreadable_file", seq) from exc

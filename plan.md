@@ -14,15 +14,7 @@
 
 ## Questions en attente
 
-**G4 — vérification NON CONFORME après 2 passages (limite de `/livrer` atteinte) : quelle suite donner à l'écart R1 ?**
-
-- **R1 (bloquant).** Depuis `dc32788`, `veilleur export` remplace tous les paquets par un seul `state` signé par la clé courante, qui ne porte que la dernière déclaration de rotation. Après deux rotations en moins de 90 jours (A→B→C), un membre livré par dossier et resté sur la clé A ne peut plus suivre la chaîne : `bad_signature`, et aucune option de `--after` n'y remédie. Il doit être rejumelé, ce que ES-05 veut éviter. Le même scénario passait sur `ce28a57` et passe par HTTP.
-- **Régressions mineures du même commit.** Après une rotation, l'export finit en trace d'appels pour un jumelage révoqué (`pairing_revoked`) ou un `state` trop gros (`package_too_large`).
-- **Recommandation : option A.** Écrire le `state` **en plus** des paquets, sous un nom de fichier qui ne peut pas écraser un paquet de même numéro, intercepter `ReportSkipped` dans l'export, remplacer « à la place » dans le cahier §10 et le protocole §6.3, puis autoriser un 3ᵉ passage du vérificateur. Piste non testée à ce stade.
-- **Option B.** Déclasser R1 en réserve et ouvrir la PR en l'état : cas rare, mais sans recours pour l'administrateur.
-- **Option C.** Retirer `dc32788` : R1 disparaît, mais l'écart B1 du passage 1 revient (abonnement par dossier bloqué après une seule rotation).
-
-Les tests du vérificateur (`tests/verif/test_g4_verif.py`, `tests/verif/test_g4_verif_pass2.py`) sont conservés, non commités, dans le worktree `../.verif-veilleur`.
+Aucune.
 
 ## État
 
@@ -32,7 +24,7 @@ Les tests du vérificateur (`tests/verif/test_g4_verif.py`, `tests/verif/test_g4
 | G1 | Protocole 1.0 et `veilleur-protocol` | fait, avec réserves (étiquette `g1`) |
 | G2 | Cœur, stockage, administration, service HTTP | fait, avec réserves (PR à fusionner, puis étiquette `g2`) |
 | G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | fait, avec réserves (PR à fusionner, puis étiquette `g3`) |
-| G4 | Rendus, récepteur de référence | vérification non conforme, arbitrage attendu (voir « Questions en attente ») |
+| G4 | Rendus, récepteur de référence | code écrit, à livrer (`/livrer`) |
 | G5 | Déploiement NixOS et repli systemd | à faire |
 | G6 | Publication 0.1.0 | à faire |
 

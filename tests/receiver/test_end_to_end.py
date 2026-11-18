@@ -538,7 +538,10 @@ def test_an_export_replaces_the_packages_of_the_old_key_by_a_state(
     _export_command(bench, monkeypatch, tmp_path / "first", UID)
     assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(tmp_path / "first")) == 0
     _export_command(bench, monkeypatch, tmp_path / "second", OTHER)
-    assert [path.name for path in (tmp_path / "second").iterdir()] == [f"{OTHER}-00000001-state.veil"]
+    assert sorted(path.name for path in (tmp_path / "second").iterdir()) == [
+        f"{OTHER}-00000001-state-rebuilt.veil",
+        f"{OTHER}-00000001-state.veil",
+    ]
     assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(tmp_path / "second")) == 0
     assert bench.last(OTHER) == 1
 
@@ -572,3 +575,68 @@ def test_a_package_of_the_old_key_is_skipped_only_when_a_later_state_covers_it(
     _export(source, "2.veil", _sealed(bench, 2, Kind.STATE, uid=OTHER, key=_server_key(bench)))
     assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(source)) == 0
     assert bench.filed(OTHER) == ["00000002-state"]
+
+
+def _three_keys(bench: Bench) -> None:
+    """Packages 1, 2 and 3, each signed by another key and carrying the statement of the last rotation."""
+    bench.world.collector.set("news", ("a", {"title": "A"}))
+    bench.subscribe()
+    bench.round()
+    bench.core = _rotate(bench)
+    bench.world.collector.set("news", ("a", {"title": "A"}), ("b", {"title": "B"}))
+    bench.round()
+    bench.core = _rotate(bench)
+    bench.world.collector.set("news", ("a", {"title": "A"}), ("b", {"title": "B"}), ("c", {"title": "C"}))
+    bench.round()
+
+
+def test_an_export_lets_a_member_on_the_first_key_follow_two_rotations(
+    bench: Bench, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """ES-05: the `state` alone only vouches for the last key, the packages walk the chain."""
+    _three_keys(bench)
+    _export_command(bench, monkeypatch, tmp_path / "usb", UID)
+    assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(tmp_path / "usb")) == 0
+    assert bench.last() == 3
+
+
+def test_an_export_after_a_number_lets_a_member_at_that_number_follow_two_rotations(
+    bench: Bench, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    bench.world.collector.set("news", ("a", {"title": "A"}))
+    bench.subscribe()
+    bench.round()
+    assert bench.pull() == 0
+    bench.core = _rotate(bench)
+    bench.world.collector.set("news", ("a", {"title": "A"}), ("b", {"title": "B"}))
+    bench.round()
+    bench.core = _rotate(bench)
+    bench.world.collector.set("news", ("a", {"title": "A"}), ("b", {"title": "B"}), ("c", {"title": "C"}))
+    bench.round()
+    _export_command(bench, monkeypatch, tmp_path / "usb", UID, "--after", "1")
+    assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(tmp_path / "usb")) == 0
+    assert bench.last() == 3
+
+
+def test_an_export_without_a_possible_state_still_writes_the_packages(
+    bench: Bench, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _two_reports(bench)
+    bench.core = _rotate(bench)
+    pairing.revoke_pairing(bench.core, bench.pairing.key_id)
+    _export_command(bench, monkeypatch, tmp_path / "usb", UID)
+    assert "No state could be made" in capsys.readouterr().out
+    assert sorted(path.name for path in (tmp_path / "usb").iterdir()) == [
+        f"{UID}-00000001-state.veil",
+        f"{UID}-00000002-delta.veil",
+    ]
+
+
+def test_packages_of_the_same_number_that_all_fail_are_reported(
+    bench: Bench, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = tmp_path / "usb"
+    _export(source, "1.veil", _sealed(bench, 1, Kind.STATE, key=SigningKey.generate()))
+    _export(source, "2.veil", _sealed(bench, 1, Kind.STATE, key=SigningKey.generate()))
+    assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(source)) == 1
+    assert "bad_signature" in capsys.readouterr().err and bench.filed() == []
