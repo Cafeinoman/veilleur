@@ -24,8 +24,8 @@ Aucune.
 | G1 | Protocole 1.0 et `veilleur-protocol` | fait, avec réserves (étiquette `g1`) |
 | G2 | Cœur, stockage, administration, service HTTP | fait, avec réserves (PR à fusionner, puis étiquette `g2`) |
 | G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | fait, avec réserves (PR à fusionner, puis étiquette `g3`) |
-| G4 | Rendus, récepteur de référence | fait, avec réserves (PR à fusionner, puis étiquette `g4`) |
-| G5 | Déploiement NixOS et repli systemd | à faire |
+| G4 | Rendus, récepteur de référence | fait, avec réserves (étiquette `g4`) |
+| G5 | Déploiement NixOS et repli systemd | code écrit, à livrer (`/livrer`) |
 | G6 | Publication 0.1.0 | à faire |
 
 ## G0-R — Mise en route du dépôt
@@ -174,7 +174,7 @@ Réserves à la livraison (3 passages du vérificateur, le 3ᵉ autorisé par l'
 - [ ] EF-12 : `page` ne contrôle pas son sélecteur à la réception (`a:hover` accepté, puis `bad_selector` à la collecte).
 - [ ] EF-02 : une virgule dans une valeur d'attribut entre guillemets coupe le groupe de sélecteurs (`adapters/collectors/html.py`, `compile_selector`).
 - [ ] Hors spécification : cache des motifs `regex` compilés sans borne (≈ 2,6 Mo par motif sous RE2 ; test `xfail` `test_the_compiled_pattern_cache_is_bounded`) ; certains motifs RE2 coûtent jusqu'à ≈ 4 s par champ de 20 000 caractères (borner les répétitions comptées ou la taille du programme) ; le schéma de `pattern` n'annonce pas la syntaxe RE2 ; quota de 200 requêtes par hôte jamais remis à zéro dans `serve` ; le webhook transmet le `topic` ntfy du jumelage à un tiers ; lecture du corps jusqu'à ≈ 2× le délai ; course rare dans `cut` (`transport.py`, lire `connection.sock` une seule fois).
-- [ ] G5 : empaqueter `google-re2` pour Nix (le sdist demande re2, abseil et pybind11 natifs).
+- [x] G5 : empaqueter `google-re2` pour Nix (fait avec les *wheels* de `uv.lock`, cahier §10).
 
 ## G4 — Rendus et récepteur de référence (EF-43, cahier §5)
 
@@ -194,11 +194,11 @@ Réserves à la livraison (3 passages du vérificateur, le 3ᵉ autorisé par l'
 
 ## G5 — Déploiement (ENF-01 à ENF-08)
 
-- [ ] `flake.nix` :
+- [x] `flake.nix` :
   - paquet, construit par uv2nix d'après `uv.lock` ;
   - `nixosModules.default` et `nixosModules.container` ;
   - `devShells.default` (uv, Python 3.12, gh) et `.envrc` (`use flake`) pour direnv.
-- [ ] Module de service (`services.veilleur`) :
+- [x] Module de service (`services.veilleur`) :
   - inerte si `enable = false` ;
   - service et minuterie du tour, durcissement systemd ;
   - `proxy = "caddy" | "external"` : Caddy sans journal d'accès, ou adresse d'écoute interne ;
@@ -206,23 +206,23 @@ Réserves à la livraison (3 passages du vérificateur, le 3ᵉ autorisé par l'
   - secrets fournis par chemins (sops-nix, agenix) ou générés ;
   - `backupPaths` et service de copie cohérente de la base ;
   - options des greffons et de la langue.
-- [ ] Assertions :
+- [x] Assertions :
   - `publicHost` obligatoire ;
   - conflit de ports avec un autre service de l'hôte qui écoute sur 80 ou 443 ;
   - rappel IPv4 seulement en mode conteneur.
-- [ ] Module conteneur (`services.veilleur-container`) :
+- [x] Module conteneur (`services.veilleur-container`) :
   - `systemd-nspawn` à utilisateurs privés ;
   - réseau privé et redirection des ports ;
   - pare-feu sortant : ni hôte, ni réseaux privés, ni 100.64/10, port 25 fermé ;
   - `memoryMax`, plafond de processus.
-- [ ] Exemple d'intégration dans une configuration d'hôte existante (`deploy/nixos/examples/`) :
+- [x] Exemple d'intégration dans une configuration d'hôte existante (`deploy/nixos/examples/`) :
   - fichier de réglages (`enable`, `publicHost`, `ntfyHost`, `acmeEmail`, `memoryMax`) ;
   - chargement par entrée de flake `github:Cafeinoman/veilleur/<étiquette>`, ou par `builtins.getFlake` avec `narHash` ;
   - l'exemple **s'évalue sur n'importe quelle machine**.
-- [ ] Exemple de VPS dédié (`deploy/nixos/examples/vps/`).
-- [ ] Tests en VM NixOS dans `nix flake check` (installation complète ; mode `proxy = "external"` derrière un Caddy d'hôte), ajoutés à la CI.
-- [ ] Repli pour les autres distributions : unités systemd, `Caddyfile`, extrait ntfy dans `deploy/systemd/`.
-- [ ] Guide d'administration `docs/{en,fr}/admin-guide.md` :
+- [x] Exemple de VPS dédié (`deploy/nixos/examples/vps/`).
+- [x] Tests en VM NixOS dans `nix flake check` (installation complète ; mode `proxy = "external"` derrière un Caddy d'hôte), ajoutés à la CI.
+- [x] Repli pour les autres distributions : unités systemd, `Caddyfile`, extrait ntfy dans `deploy/systemd/`.
+- [x] Guide d'administration `docs/{en,fr}/admin-guide.md` :
   - installation sur VPS et en conteneur ;
   - intégration dans une configuration d'hôte ;
   - choix de `publicHost` (nom plutôt qu'IP, pas d'AAAA en mode conteneur) ;
