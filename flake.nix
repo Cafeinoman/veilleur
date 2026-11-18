@@ -71,6 +71,7 @@
               pkgs.uv
               pkgs.python312
               pkgs.gh
+              pkgs.gitleaks
             ];
             env = {
               UV_PYTHON_DOWNLOADS = "never";
