@@ -1,0 +1,183 @@
+# French translations for Veilleur.
+# Copyright (C) 2026 Veilleur contributors
+# This file is distributed under the same license as the Veilleur project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Veilleur VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-11-18 10:02+0100\n"
+"PO-Revision-Date: 2026-11-18 10:02+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: fr\n"
+"Language-Team: fr <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#, python-format
+msgid "%(heading)s:"
+msgstr "%(heading)s :"
+
+#, python-format
+msgid "%(prog)s: error: %(message)s\n"
+msgstr "%(prog)s : erreur : %(message)s\n"
+
+msgid "A file or folder cannot be read or written."
+msgstr "Un fichier ou un dossier ne peut être ni lu ni écrit."
+
+msgid "Another veilleur-receive command is running on this state."
+msgstr "Une autre commande veilleur-receive est en cours sur cet état."
+
+#, python-brace-format
+msgid "Paired for delivery by folder ({key_id})."
+msgstr "Jumelé pour la livraison par dossier ({key_id})."
+
+#, python-brace-format
+msgid "Paired with {server} ({key_id})."
+msgstr "Jumelé avec {server} ({key_id})."
+
+msgid "Pairing code: "
+msgstr "Code de jumelage : "
+
+msgid "Reference receiver of Veilleur reports."
+msgstr "Récepteur de référence des rapports Veilleur."
+
+msgid "The destination folder cannot be used safely."
+msgstr "Le dossier de destination ne peut pas être utilisé en sécurité."
+
+msgid "The folder to read does not exist."
+msgstr "Le dossier à lire n'existe pas."
+
+msgid "The receiver's state file cannot be read."
+msgstr "Le fichier d'état du récepteur est illisible."
+
+msgid "The receiver's state is not private to this user; nothing was done."
+msgstr ""
+"L'état du récepteur n'est pas réservé à cet utilisateur ; rien n'a été "
+"fait."
+
+msgid ""
+"The server's key changed: the new key is now trusted, the old one no "
+"longer is."
+msgstr ""
+"La clé du serveur a changé : la nouvelle clé est désormais reconnue, "
+"l'ancienne ne l'est plus."
+
+msgid "This pairing code is not valid."
+msgstr "Ce code de jumelage n'est pas valide."
+
+msgid ""
+"This pairing is for delivery by folder: give the folder to read with "
+"--from."
+msgstr ""
+"Ce jumelage est prévu pour la livraison par dossier : indiquez le dossier"
+" à lire avec --from."
+
+msgid ""
+"This receiver is already paired; use another state directory for another "
+"pairing."
+msgstr ""
+"Ce récepteur est déjà jumelé ; utilisez un autre dossier d'état pour un "
+"autre jumelage."
+
+msgid "This receiver is not paired yet: run “veilleur-receive pair” first."
+msgstr ""
+"Ce récepteur n'est pas encore jumelé : lancez d'abord « veilleur-receive "
+"pair »."
+
+#, python-format
+msgid "argument %(argument_name)s: %(message)s"
+msgstr "argument %(argument_name)s : %(message)s"
+
+msgid "command"
+msgstr "commande"
+
+#, python-brace-format
+msgid "error: {message}"
+msgstr "erreur : {message}"
+
+msgid "expected one argument"
+msgstr "un argument est attendu"
+
+msgid "fetch, check and file the new reports"
+msgstr "récupérer, vérifier et déposer les nouveaux rapports"
+
+#, python-brace-format
+msgid "file {file}: refused ({code})"
+msgstr "fichier {file} : refusé ({code})"
+
+msgid "folder"
+msgstr "dossier"
+
+#, python-format
+msgid "invalid choice: %(value)r (choose from %(choices)s)"
+msgstr "choix invalide : %(value)r (choisir parmi %(choices)s)"
+
+msgid "language of messages (default: from the system)"
+msgstr "langue des messages (par défaut : celle du système)"
+
+msgid "options"
+msgstr "options"
+
+msgid "positional arguments"
+msgstr "arguments positionnels"
+
+msgid "read a pairing code from the terminal or standard input"
+msgstr "lire un code de jumelage depuis le terminal ou l'entrée standard"
+
+msgid "read the packages of this folder instead of the server"
+msgstr "lire les paquets de ce dossier au lieu du serveur"
+
+msgid "show the version"
+msgstr "afficher la version"
+
+msgid "show this help message and exit"
+msgstr "afficher cette aide et quitter"
+
+#, python-brace-format
+msgid "subscription {uid}, package {seq}: refused ({code})"
+msgstr "abonnement {uid}, paquet {seq} : refusé ({code})"
+
+#, python-brace-format
+msgid "subscription {uid}: stopped ({code})"
+msgstr "abonnement {uid} : arrêté ({code})"
+
+#, python-brace-format
+msgid "subscription {uid}: the server is preparing a report, pull again later"
+msgstr "abonnement {uid} : le serveur prépare un rapport, relancez plus tard"
+
+#, python-format
+msgid "the following arguments are required: %s"
+msgstr "les arguments suivants sont obligatoires : %s"
+
+#, python-brace-format
+msgid "the server refused or failed ({code})"
+msgstr "le serveur a refusé ou échoué ({code})"
+
+#, python-format
+msgid "unrecognized arguments: %s"
+msgstr "arguments non reconnus : %s"
+
+msgid "usage: "
+msgstr "utilisation : "
+
+#, python-brace-format
+msgid "veilleur-receive {version}"
+msgstr "veilleur-receive {version}"
+
+msgid "where the pairing is kept"
+msgstr "où le jumelage est conservé"
+
+msgid "where to file the reports"
+msgstr "où déposer les rapports"
+
+#, python-brace-format
+msgid "{count} report filed in {folder}"
+msgid_plural "{count} reports filed in {folder}"
+msgstr[0] "{count} rapport déposé dans {folder}"
+msgstr[1] "{count} rapports déposés dans {folder}"
+

@@ -24,7 +24,7 @@ Aucune.
 | G1 | Protocole 1.0 et `veilleur-protocol` | fait, avec réserves (étiquette `g1`) |
 | G2 | Cœur, stockage, administration, service HTTP | fait, avec réserves (PR à fusionner, puis étiquette `g2`) |
 | G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | fait, avec réserves (PR à fusionner, puis étiquette `g3`) |
-| G4 | Rendus, récepteur de référence | à faire |
+| G4 | Rendus, récepteur de référence | code écrit, à livrer (`/livrer`) |
 | G5 | Déploiement NixOS et repli systemd | à faire |
 | G6 | Publication 0.1.0 | à faire |
 
@@ -178,8 +178,8 @@ Réserves à la livraison (3 passages du vérificateur, le 3ᵉ autorisé par l'
 
 ## G4 — Rendus et récepteur de référence (EF-43, cahier §5)
 
-- [ ] Rendus `markdown` et `html` dans les deux langues (gabarits sans JavaScript ni ressource externe).
-- [ ] Récepteur de référence `veilleur-receive` : collage du code de jumelage, `pull --folder`, vérification, dépôt des rapports ; lecture d'un dossier exporté (EF-51).
+- [x] Rendus `markdown` et `html` dans les deux langues (gabarits sans JavaScript ni ressource externe).
+- [x] Récepteur de référence `veilleur-receive` : collage du code de jumelage, `pull --folder`, vérification, dépôt des rapports ; lecture d'un dossier exporté (EF-51).
 
 Fini quand : test de bout en bout serveur → récepteur, par HTTP (application WSGI) et par dossier.
 

@@ -132,8 +132,9 @@ When the server replaces its key, the outgoing key signs a statement naming the 
 `rotation.sig` holds the signature of `rotation.json` by `old_key`. The server puts both files in every package for
 90 days after the rotation. A reader that trusts `old_key` and finds the manifest signed by `new_key` adopts
 `new_key` (§10, step 7). Once it has adopted `new_key`, the receiving tool MUST stop trusting `old_key`: a rotation
-is how the server recovers from the theft of its key, so the stolen key must not keep signing. A receiving tool that
-missed the whole 90-day window must be paired again.
+is how the server recovers from the theft of its key, so the stolen key must not keep signing. A package of another
+subscription still signed by `old_key` is then refused (`bad_signature`); the receiving tool asks for a `state` (§9),
+which the server signs with `new_key`. A receiving tool that missed the whole 90-day window must be paired again.
 
 ## 7. Packages
 

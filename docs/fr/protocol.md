@@ -133,7 +133,9 @@ Quand le serveur remplace sa clé, la clé sortante signe une déclaration qui n
 paquet pendant 90 jours après la rotation. Un lecteur qui fait confiance à `old_key` et trouve le manifeste signé par
 `new_key` adopte `new_key` (§10, étape 7). Une fois `new_key` adoptée, l'outil de réception DOIT cesser de faire
 confiance à `old_key` : la rotation est le moyen pour le serveur de se remettre du vol de sa clé, la clé volée ne doit
-donc plus pouvoir signer. Un outil de réception qui a manqué toute la fenêtre de 90 jours doit être jumelé de nouveau.
+donc plus pouvoir signer. Un paquet d'un autre abonnement encore signé par `old_key` est alors refusé (`bad_signature`) ;
+l'outil de réception demande un `state` (§9), que le serveur signe avec `new_key`. Un outil de réception qui a manqué
+toute la fenêtre de 90 jours doit être jumelé de nouveau.
 
 ## 7. Paquets
 

@@ -17,7 +17,7 @@ Puis, depuis la racine du dépôt :
 uv run python tools/i18n.py all
 ```
 
-La commande extrait les textes dans `src/veilleur/locale/veilleur.pot`, les reporte dans `src/veilleur/locale/fr/LC_MESSAGES/veilleur.po` et compile `veilleur.mo`. Traduire les nouvelles entrées du `.po` (`msgstr` vide), puis lancer `uv run python tools/i18n.py compile`. Les fichiers `.po` et `.mo` sont tous deux suivis par git.
+La commande extrait les textes dans `src/veilleur/locale/veilleur.pot`, les reporte dans `src/veilleur/locale/fr/LC_MESSAGES/veilleur.po` et compile `veilleur.mo`. Traduire les nouvelles entrées du `.po` (`msgstr` vide), puis lancer `uv run python tools/i18n.py compile`. Les fichiers `.po` et `.mo` sont tous deux suivis par git. Le récepteur de référence a son propre catalogue, traité par la même commande, dans `receiver/src/veilleur_receive/locale/` : il ne dépend pas du serveur.
 
 Les tests échouent si un message n'a pas de traduction française, si une traduction est approximative (*fuzzy*) ou obsolète, si un paramètre a disparu, ou si le `.mo` n'est pas à jour.
 
