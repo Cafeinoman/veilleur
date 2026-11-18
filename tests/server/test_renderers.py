@@ -305,3 +305,13 @@ def test_a_package_too_large_with_its_renderings_is_sealed_without_them(world: W
     data = world.app.store.get_package(created.key_id, UID, 1)
     assert data is not None
     assert open_package(data, secret=created.secret, uid=UID, trusted_keys=[sealer.public_key]).renderings == {}
+
+
+@pytest.mark.parametrize("mark", ["\u202e", "\u2066", "\u200f", "\x90"])
+def test_an_address_with_a_direction_or_control_character_is_no_link(mark: str) -> None:
+    """Such a character makes an address read differently from where it leads: `gnp.exe` shown as `exe.png`."""
+    report = view(change("k", url=f"https://example.org/{mark}gnp.exe", title="T"))
+    for text in (markdown(report), page(report)):
+        assert mark not in text
+    assert "<a " not in page(report) and "](<" not in markdown(report)
+    assert "gnp.exe" in page(report), "the address stays readable, as text"

@@ -84,7 +84,8 @@ def _value(value: Any) -> str:
 
 
 def _safe_url(url: str | None) -> str | None:
-    if url is None or _URL.fullmatch(url) is None:
+    # Refused rather than cleaned: without these characters it would no longer be the address the source gave.
+    if url is None or _UNSAFE.search(url) is not None or _URL.fullmatch(url) is None:
         return None
     try:
         return url if urlsplit(url).hostname else None
