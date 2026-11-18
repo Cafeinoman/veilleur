@@ -135,7 +135,8 @@ When the server replaces its key, the outgoing key signs a statement naming the 
 is how the server recovers from the theft of its key, so the stolen key must not keep signing. A package of another
 subscription still signed by `old_key` is then refused (`bad_signature`); the receiving tool asks for a `state` (§9),
 which the server signs with `new_key`. A folder offers no such request: an export that holds a package signed by
-`old_key` also holds that `state`, and the packages stay so that a receiving tool on an older key can follow each statement. A receiving tool that missed the whole 90-day window must be paired again.
+`old_key` also holds that `state`, and the packages stay so that a receiving tool on an older key can follow each statement. A receiving tool that missed the whole 90-day window must be paired again; so must one that lacks a purged package and
+missed two rotations or more, as the `state` that covers the gap carries the last statement only.
 
 ## 7. Packages
 

@@ -137,7 +137,8 @@ donc plus pouvoir signer. Un paquet d'un autre abonnement encore signé par `old
 l'outil de réception demande un `state` (§9), que le serveur signe avec `new_key`. Un dossier ne permet pas cette
 demande : un export qui contient un paquet signé par `old_key` contient aussi ce `state`, et les paquets y restent pour
 qu'un outil de réception resté sur une clé plus ancienne puisse suivre chaque déclaration. Un outil de réception
-qui a manqué toute la fenêtre de 90 jours doit être jumelé de nouveau.
+qui a manqué toute la fenêtre de 90 jours doit être jumelé de nouveau ; de même pour celui à qui il manque un paquet
+purgé et qui a manqué au moins deux rotations, le `state` qui comble le trou ne portant que la dernière déclaration.
 
 ## 7. Paquets
 
