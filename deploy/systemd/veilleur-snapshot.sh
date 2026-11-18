@@ -3,6 +3,11 @@
 # A consistent copy of what a restore needs, replaced in one step. Needs the sqlite3 command.
 set -eu
 state=/var/lib/veilleur
+# sqlite3 would create an empty database, and the last good copy would be replaced by it.
+if [ ! -s "$state/veilleur.db" ]; then
+    echo "veilleur-snapshot: no database in $state, the previous copy is kept" >&2
+    exit 1
+fi
 work=$(mktemp -d "$state/.snapshot.XXXXXX")
 trap 'rm -rf "$work"' EXIT
 sqlite3 "$state/veilleur.db" ".backup '$work/veilleur.db'"

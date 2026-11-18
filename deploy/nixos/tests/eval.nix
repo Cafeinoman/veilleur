@@ -52,6 +52,34 @@ let
     containerModule
   ];
 
+  # The service next to something else the host declares.
+  withHost =
+    host: settings:
+    evaluate [
+      serviceModule
+      host
+      {
+        services.veilleur = {
+          enable = true;
+          publicHost = "watch.example.org";
+        }
+        // settings;
+      }
+    ];
+  natOn443 = {
+    networking.nat = {
+      enable = true;
+      externalInterface = "eth0";
+      forwardPorts = [
+        {
+          sourcePort = 443;
+          proto = "tcp";
+          destination = "10.1.1.2:443";
+        }
+      ];
+    };
+  };
+
   hostExample =
     settingsFile:
     evaluate [
@@ -157,6 +185,64 @@ let
     "backupPaths names ntfy's state when built in" = builtins.elem "/var/lib/veilleur-ntfy" (named { }).services.veilleur.backupPaths;
     "backupPaths leaves out ntfy when absent" =
       (named { ntfy.mode = "none"; }).services.veilleur.backupPaths == [ "/var/lib/veilleur/snapshot" ];
+
+    "a redirection of a public port conflicts" = refused "443/tcp (networking.nat.forwardPorts)" (
+      withHost natOn443 { }
+    );
+    "an OCI container on a public port conflicts" = refused "443/tcp (virtualisation.oci-containers" (
+      withHost { virtualisation.oci-containers.containers.web = { image = "example.org/web:1"; ports = [ "127.0.0.1:443:443" ]; }; } { }
+    );
+    "an OCI container on another port is fine" = accepted (
+      withHost { virtualisation.oci-containers.containers.web = { image = "example.org/web:1"; ports = [ "8080:80" "443" ]; }; } { }
+    );
+    "a site on the internal port conflicts" = refused "8470/tcp (services.nginx" (
+      withHost {
+        services.nginx = {
+          enable = true;
+          virtualHosts.other.listen = [ { addr = "127.0.0.1"; port = 8470; } ];
+        };
+      } { proxy = "external"; ntfy.mode = "none"; }
+    );
+    "a site on the same port of another address is fine" = accepted (
+      withHost {
+        services.nginx = {
+          enable = true;
+          virtualHosts.other.listen = [ { addr = "192.0.2.10"; port = 8470; } ];
+        };
+      } { proxy = "external"; ntfy.mode = "none"; }
+    );
+    "the container reports a redirection of a public port" = refused "443/tcp (networking.nat.forwardPorts)" (
+      evaluate [
+        containerModule
+        natOn443
+        {
+          services.veilleur-container = {
+            enable = true;
+            publicHost = "watch.example.org";
+            externalInterface = "eth0";
+            noAaaaRecord = true;
+          };
+        }
+      ]
+    );
+    "a disabled container lists nothing to back up" = inert.services.veilleur-container.backupPaths == [ ];
+    "the built-in ntfy is reachable from the host's front end" =
+      let
+        config = container {
+          proxy = "external";
+          ntfy.publicUrl = "https://ntfy.example.org";
+        };
+        inner = config.containers.veilleur.config;
+      in
+      accepted config
+      && inner.services.ntfy-sh.settings.listen-http == "10.233.50.2:2586"
+      && builtins.elem 2586 inner.networking.firewall.allowedTCPPorts;
+    "the built-in ntfy stays private behind the container's Caddy" =
+      let
+        inner = (container { }).containers.veilleur.config;
+      in
+      inner.services.ntfy-sh.settings.listen-http == "127.0.0.1:2586"
+      && !(builtins.elem 2586 inner.networking.firewall.allowedTCPPorts);
 
     "the container is accepted" = accepted (container { }) && built (container { });
     "the container reminds of the AAAA record" = refused "AAAA" (container { noAaaaRecord = false; });

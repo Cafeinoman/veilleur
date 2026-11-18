@@ -23,7 +23,8 @@ let
   stateDir = "/var/lib/veilleur";
   snapshotDir = "${stateDir}/snapshot";
   ntfySecretsDir = "/var/lib/veilleur-ntfy";
-  ntfyListen = "127.0.0.1:2586";
+  ntfyPort = 2586;
+  ntfyListen = "${cfg.ntfy.listenAddress}:${toString ntfyPort}";
   toml = pkgs.formats.toml { };
 
   # Without a value, the assertion below has to be the error the administrator sees.
@@ -153,6 +154,11 @@ let
         pkgs.sqlite
       ]
     }
+    # sqlite3 would create an empty database, and the last good copy would be replaced by it.
+    if [ ! -s ${stateDir}/veilleur.db ]; then
+      echo "veilleur-snapshot: no database in ${stateDir}, the previous copy is kept" >&2
+      exit 1
+    fi
     work=$(mktemp -d ${stateDir}/.snapshot.XXXXXX)
     trap 'rm -rf "$work"' EXIT
     sqlite3 ${stateDir}/veilleur.db ".backup '$work/veilleur.db'"
@@ -209,6 +215,33 @@ let
     "haproxy"
     "lighttpd"
     "envoy"
+  ];
+
+  # Every port Veilleur takes, against those the rest of the configuration declares (ENF-03b).
+  publicNtfyPort = optional (useCaddy && builtinNtfy && cfg.ntfy.host == null) 8443;
+  portConflicts = (import ./ports.nix { inherit config lib; }).conflicts {
+    tcp = optionals useCaddy [
+      80
+      443
+    ] ++ publicNtfyPort;
+    udp = optional useCaddy 443 ++ publicNtfyPort;
+    internal = [
+      {
+        address = cfg.listenAddress;
+        inherit (cfg) port;
+      }
+    ]
+    ++ optional builtinNtfy {
+      address = cfg.ntfy.listenAddress;
+      port = ntfyPort;
+    };
+  };
+
+  wildcardAddresses = [
+    "0.0.0.0"
+    "::"
+    "[::]"
+    "*"
   ];
 
   proxyBlock = upstream: ''
@@ -312,6 +345,12 @@ in
         default = null;
         example = "ntfy.example.org";
         description = "Name of the built-in ntfy server. Without one, it is served on port 8443 of `publicHost`.";
+      };
+
+      listenAddress = mkOption {
+        type = types.str;
+        default = "127.0.0.1";
+        description = "Internal address of the built-in ntfy server, on port 2586. It is never a wildcard address.";
       };
 
       url = mkOption {
@@ -422,16 +461,22 @@ in
             + ". Use proxy = \"external\" and add Veilleur to that front end (see the administration guide).";
         }
         {
-          assertion = !builtins.elem cfg.listenAddress [
-            "0.0.0.0"
-            "::"
-            "[::]"
-            "*"
-          ];
+          assertion = portConflicts == [ ];
+          message =
+            "services.veilleur needs ports that the configuration also declares: "
+            + lib.concatStringsSep ", " portConflicts
+            + ".";
+        }
+        {
+          assertion = !builtins.elem cfg.listenAddress wildcardAddresses;
           message = "services.veilleur.listenAddress must be an internal address, not a wildcard (cahier ES-09).";
         }
         {
-          assertion = !builtinNtfy || cfg.port != 2586;
+          assertion = !builtinNtfy || !builtins.elem cfg.ntfy.listenAddress wildcardAddresses;
+          message = "services.veilleur.ntfy.listenAddress must be an internal address, not a wildcard (cahier ES-09).";
+        }
+        {
+          assertion = !builtinNtfy || cfg.port != ntfyPort;
           message = "services.veilleur.port conflicts with the built-in ntfy server (port 2586).";
         }
         {

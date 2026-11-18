@@ -105,6 +105,16 @@ let
     "envoy"
   ];
 
+  # The public ports forwarded to the container, against those the rest of the configuration declares (ENF-03b).
+  portConflicts = (import ./ports.nix { inherit config lib; }).conflicts {
+    tcp = forwardedTcp;
+    udp = forwardedUdp;
+    ownAddress = cfg.containerAddress;
+  };
+
+  # Behind the host's front end, the services have to be reachable on the container's private link.
+  internalAddress = if useCaddy then "127.0.0.1" else cfg.containerAddress;
+
   admin = pkgs.writeShellScriptBin "veilleur-admin" ''
     exec ${config.systemd.package}/bin/systemd-run --quiet --pipe --wait --machine=${name} \
       /run/current-system/sw/bin/veilleur-admin "$@"
@@ -296,7 +306,10 @@ in
     backupPaths = mkOption {
       type = types.listOf types.str;
       readOnly = true;
-      default = map (path: "${containerRoot}${path}") config.containers.${name}.config.services.veilleur.backupPaths;
+      # The container only exists once enabled, and a host may wire its backup to this option unconditionally.
+      default = lib.optionals cfg.enable (
+        map (path: "${containerRoot}${path}") config.containers.${name}.config.services.veilleur.backupPaths
+      );
       defaultText = lib.literalExpression ''[ "${containerRoot}/var/lib/veilleur/snapshot" ]'';
       description = "Paths for the host's backup. Start `veilleur-container-snapshot.service` first.";
     };
@@ -332,6 +345,13 @@ in
             ${lib.concatStringsSep ", " conflictingServers}. Use proxy = "external" and add Veilleur to that front end.
           '';
         }
+        {
+          assertion = portConflicts == [ ];
+          message =
+            "services.veilleur-container forwards ports that the configuration also declares: "
+            + lib.concatStringsSep ", " portConflicts
+            + ".";
+        }
       ];
 
       containers.${name} = {
@@ -359,7 +379,7 @@ in
               snapshotSchedule
               subscriptions
               ;
-            listenAddress = if useCaddy then "127.0.0.1" else cfg.containerAddress;
+            listenAddress = internalAddress;
             ntfy = {
               inherit (cfg.ntfy)
                 mode
@@ -367,6 +387,7 @@ in
                 url
                 publicUrl
                 ;
+              listenAddress = internalAddress;
               tokenFile = secretPath "ntfy-token";
               clientTokenFile = secretPath "ntfy-client-token";
             };
@@ -378,7 +399,7 @@ in
 
           networking.useHostResolvConf = lib.mkForce false;
           networking.nameservers = cfg.nameservers;
-          networking.firewall.allowedTCPPorts = optional (!useCaddy) cfg.port;
+          networking.firewall.allowedTCPPorts = optionals (!useCaddy) ([ cfg.port ] ++ optional builtinNtfy 2586);
 
           systemd.services = optionalAttrs (credentials != { }) {
             veilleur-credentials = {

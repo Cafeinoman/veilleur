@@ -99,7 +99,9 @@ server {
 
 **Keep access logs off** for this site: members' addresses must not be written down. In container mode, use `containerAddress` (default `10.233.50.2`) instead of `127.0.0.1`.
 
-The built-in ntfy server behind an external proxy needs `ntfy.publicUrl`, and a block of the same form towards `127.0.0.1:2586`.
+The built-in ntfy server behind an external proxy needs `ntfy.publicUrl`, and a block of the same form towards `127.0.0.1:2586` (in container mode, `containerAddress` on port 2586).
+
+The modules refuse a configuration that declares a port Veilleur needs: redirections (`networking.nat.forwardPorts`, `containers.<name>.forwardPorts`), published ports of OCI containers, and explicit `listen` entries of nginx and Apache virtual hosts. A port opened any other way cannot be seen at evaluation.
 
 ## 6. Notifications and secrets
 

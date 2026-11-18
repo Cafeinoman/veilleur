@@ -99,7 +99,9 @@ server {
 
 **Gardez le journal d'accès désactivé** pour ce site : l'adresse des membres ne doit pas être écrite. En mode conteneur, employez `containerAddress` (par défaut `10.233.50.2`) au lieu de `127.0.0.1`.
 
-Le ntfy intégré derrière un frontal externe demande `ntfy.publicUrl`, et un bloc de même forme vers `127.0.0.1:2586`.
+Le ntfy intégré derrière un frontal externe demande `ntfy.publicUrl`, et un bloc de même forme vers `127.0.0.1:2586` (en mode conteneur, `containerAddress` sur le port 2586).
+
+Les modules refusent une configuration qui déclare un port dont Veilleur a besoin : redirections (`networking.nat.forwardPorts`, `containers.<nom>.forwardPorts`), ports publiés par des conteneurs OCI et entrées `listen` explicites des hôtes virtuels nginx et Apache. Un port ouvert autrement ne peut pas être détecté à l'évaluation.
 
 ## 6. Notifications et secrets
 

@@ -94,6 +94,9 @@
             inherit pkgs containerModule;
             nftables = true;
           };
+          vm-container-external = import ./deploy/nixos/tests/container-external.nix {
+            inherit pkgs containerModule;
+          };
           vm-fallback = import ./deploy/nixos/tests/fallback.nix {
             inherit pkgs;
             server = built.x86_64-linux.server;
