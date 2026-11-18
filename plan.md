@@ -23,7 +23,7 @@ Aucune.
 | G0-R | Dépôt git, environnement, contrôles, création du dépôt GitHub | fait |
 | G1 | Protocole 1.0 et `veilleur-protocol` | fait, avec réserves (étiquette `g1`) |
 | G2 | Cœur, stockage, administration, service HTTP | fait, avec réserves (PR à fusionner, puis étiquette `g2`) |
-| G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | écrit, à livrer (branche `claude/g3-collectors`) |
+| G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | fait, avec réserves (PR à fusionner, puis étiquette `g3`) |
 | G4 | Rendus, récepteur de référence | à faire |
 | G5 | Déploiement NixOS et repli systemd | à faire |
 | G6 | Publication 0.1.0 | à faire |
@@ -168,6 +168,13 @@ Reste hors de G2, prévu plus loin : client HTTP réel (G3 ; G2 fournit le mode 
 - [x] Guide « écrire un collecteur » (`docs/{en,fr}/writing-a-collector.md`) et greffon d'exemple hors du paquet principal.
 
 Fini quand : tentatives SSRF (adresses privées, DNS piégé, redirection) refusées par les tests ; les trois collecteurs passent sur leurs réponses enregistrées.
+
+Réserves à la livraison (3 passages du vérificateur, le 3ᵉ autorisé par l'utilisateur ; B1 corrigé avant le 2ᵉ, B2 levé au 3ᵉ par le passage à RE2). Les écarts mineurs ont leur test en `xfail` strict dans `tests/verif/test_g3_*.py` :
+- [ ] ES-08 : une réponse `304` sert la copie en cache sans contrôler son type par rapport à `accept` (`adapters/http/client.py`).
+- [ ] EF-12 : `page` ne contrôle pas son sélecteur à la réception (`a:hover` accepté, puis `bad_selector` à la collecte).
+- [ ] EF-02 : une virgule dans une valeur d'attribut entre guillemets coupe le groupe de sélecteurs (`adapters/collectors/html.py`, `compile_selector`).
+- [ ] Hors spécification : cache des motifs `regex` compilés sans borne (≈ 2,6 Mo par motif sous RE2 ; test `xfail` `test_the_compiled_pattern_cache_is_bounded`) ; certains motifs RE2 coûtent jusqu'à ≈ 4 s par champ de 20 000 caractères (borner les répétitions comptées ou la taille du programme) ; le schéma de `pattern` n'annonce pas la syntaxe RE2 ; quota de 200 requêtes par hôte jamais remis à zéro dans `serve` ; le webhook transmet le `topic` ntfy du jumelage à un tiers ; lecture du corps jusqu'à ≈ 2× le délai ; course rare dans `cut` (`transport.py`, lire `connection.sock` une seule fois).
+- [ ] G5 : empaqueter `google-re2` pour Nix (le sdist demande re2, abseil et pybind11 natifs).
 
 ## G4 — Rendus et récepteur de référence (EF-43, cahier §5)
 
