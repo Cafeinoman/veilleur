@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: EUPL-1.2
+# Consistent copy of the Veilleur state in /var/lib/veilleur/snapshot: start it before the backup (cahier ENF-08).
+[Unit]
+Description=Consistent copy of the Veilleur state
+After=veilleur.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/veilleur/veilleur-snapshot.sh
+PrivateNetwork=yes
+
+User=veilleur
+Group=veilleur
+StateDirectory=veilleur
+StateDirectoryMode=0700
+WorkingDirectory=/var/lib/veilleur
+UMask=0077
+CapabilityBoundingSet=
+AmbientCapabilities=
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateUsers=yes
+PrivateMounts=yes
+DevicePolicy=closed
+ProtectClock=yes
+ProtectControlGroups=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=none
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RemoveIPC=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+SystemCallErrorNumber=EPERM

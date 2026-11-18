@@ -1,0 +1,225 @@
+# SPDX-License-Identifier: EUPL-1.2
+# What can be decided without booting a machine: inert modules, assertions, examples (cahier ENF-03, ENF-03b).
+{
+  nixpkgs,
+  self,
+  serviceModule,
+  containerModule,
+}:
+let
+  inherit (nixpkgs) lib;
+  pkgs = nixpkgs.legacyPackages.x86_64-linux;
+
+  base = {
+    boot.loader.grub.enable = false;
+    fileSystems."/" = {
+      device = "/dev/vda";
+      fsType = "ext4";
+    };
+    system.stateVersion = "26.05";
+  };
+  evaluate =
+    modules:
+    (lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [ base ] ++ modules;
+    }).config;
+
+  failures = config: map (a: a.message) (lib.filter (a: !a.assertion) config.assertions);
+  refused = needle: config: lib.any (lib.hasInfix needle) (failures config);
+  accepted = config: failures config == [ ];
+  built = config: builtins.unsafeDiscardStringContext config.system.build.toplevel.drvPath != "";
+
+  service = settings: evaluate [ serviceModule { services.veilleur = { enable = true; } // settings; } ];
+  named = settings: service ({ publicHost = "watch.example.org"; } // settings);
+  container =
+    settings:
+    evaluate [
+      containerModule
+      {
+        services.veilleur-container = {
+          enable = true;
+          publicHost = "watch.example.org";
+          externalInterface = "eth0";
+          noAaaaRecord = true;
+        }
+        // settings;
+      }
+    ];
+
+  inert = evaluate [
+    serviceModule
+    containerModule
+  ];
+
+  hostExample =
+    settingsFile:
+    evaluate [
+      (import ../examples/host-module.nix {
+        veilleur = self;
+        inherit settingsFile;
+      })
+    ];
+  # A complete machine of its own: it brings its file systems and boot loader.
+  vpsExample =
+    (lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        serviceModule
+        ../examples/vps/configuration.nix
+      ];
+    }).config;
+
+  configText = config: builtins.readFile config.environment.etc."veilleur/config.toml".source;
+
+  checks = {
+    "disabled modules add no service" =
+      !(inert.systemd.services ? veilleur)
+      && !(inert.systemd.services ? "container@veilleur")
+      && !(inert.systemd.services ? veilleur-container-firewall);
+    "disabled modules add no user, proxy or ntfy" =
+      !(inert.users.users ? veilleur) && !inert.services.caddy.enable && !inert.services.ntfy-sh.enable;
+    "disabled modules leave the network alone" =
+      !inert.networking.nat.enable && inert.networking.firewall.allowedTCPPorts == [ ];
+    "disabled modules build" = built inert;
+
+    "publicHost is required" = refused "publicHost" (service { });
+    "publicHost takes no scheme" = refused "publicHost" (service { publicHost = "https://watch.example.org"; });
+    "a complete service is accepted" = accepted (named { }) && built (named { });
+    "a wildcard address is refused" = refused "wildcard" (named { listenAddress = "0.0.0.0"; });
+
+    "another web server conflicts with Caddy" = refused "ports 80 and 443" (
+      evaluate [
+        serviceModule
+        {
+          services.nginx.enable = true;
+          services.veilleur = {
+            enable = true;
+            publicHost = "watch.example.org";
+          };
+        }
+      ]
+    );
+    "another web server is fine behind an external proxy" = accepted (
+      evaluate [
+        serviceModule
+        {
+          services.nginx.enable = true;
+          services.veilleur = {
+            enable = true;
+            publicHost = "watch.example.org";
+            proxy = "external";
+            ntfy.mode = "none";
+          };
+        }
+      ]
+    );
+
+    "an external proxy takes no public port" =
+      let
+        config = named {
+          proxy = "external";
+          ntfy.mode = "none";
+        };
+      in
+      !config.services.caddy.enable && config.networking.firewall.allowedTCPPorts == [ ];
+    "built-in ntfy behind an external proxy needs its address" = refused "ntfy.publicUrl" (
+      named { proxy = "external"; }
+    );
+    "external ntfy needs its addresses" = refused "ntfy.url" (named { ntfy.mode = "external"; });
+    "ntfy without a name takes port 8443" = builtins.elem 8443 (named { }).networking.firewall.allowedTCPPorts;
+    "ntfy with a name takes no extra port" =
+      !(builtins.elem 8443 (named { ntfy.host = "ntfy.example.org"; }).networking.firewall.allowedTCPPorts);
+    "no ntfy means no ntfy service" = !(named { ntfy.mode = "none"; }).services.ntfy-sh.enable;
+
+    "Caddy keeps no access log" =
+      (named { }).services.caddy.virtualHosts."watch.example.org".logFormat == null
+      && (named { }).services.caddy.virtualHosts."watch.example.org:8443".logFormat == null;
+
+    "secrets are given by path" =
+      let
+        text = configText (named {
+          ntfy = {
+            mode = "external";
+            url = "https://ntfy.example.org";
+            publicUrl = "https://ntfy.example.org";
+            tokenFile = "/run/secrets/ntfy-publish";
+          };
+          webhook = {
+            url = "https://hooks.example.org/veilleur";
+            keyFile = "/run/secrets/webhook";
+          };
+        });
+      in
+      lib.hasInfix "/run/secrets/ntfy-publish" text && lib.hasInfix "/run/secrets/webhook" text;
+
+    "backupPaths names the consistent copy" = builtins.elem "/var/lib/veilleur/snapshot" (named { }).services.veilleur.backupPaths;
+    "backupPaths names ntfy's state when built in" = builtins.elem "/var/lib/veilleur-ntfy" (named { }).services.veilleur.backupPaths;
+    "backupPaths leaves out ntfy when absent" =
+      (named { ntfy.mode = "none"; }).services.veilleur.backupPaths == [ "/var/lib/veilleur/snapshot" ];
+
+    "the container is accepted" = accepted (container { }) && built (container { });
+    "the container reminds of the AAAA record" = refused "AAAA" (container { noAaaaRecord = false; });
+    "the container needs the external interface" = refused "externalInterface" (container { externalInterface = null; });
+    "the container needs publicHost" = refused "publicHost" (container { publicHost = null; });
+    "the container has private users" = (container { }).containers.veilleur.privateUsers == "pick";
+    "the container has a private network" = (container { }).containers.veilleur.privateNetwork;
+    "the container is capped" =
+      let
+        unit = (container { memoryMax = "800M"; }).systemd.services."container@veilleur".serviceConfig;
+      in
+      unit.MemoryMax == "800M" && unit.TasksMax == 512;
+    "the container refuses a web server of the host" = refused "ports 80 and 443" (
+      evaluate [
+        containerModule
+        {
+          services.nginx.enable = true;
+          services.veilleur-container = {
+            enable = true;
+            publicHost = "watch.example.org";
+            externalInterface = "eth0";
+            noAaaaRecord = true;
+          };
+        }
+      ]
+    );
+    "both modules cannot be enabled together" = refused "cannot be enabled together" (
+      evaluate [
+        serviceModule
+        containerModule
+        {
+          services.veilleur = {
+            enable = true;
+            publicHost = "watch.example.org";
+            proxy = "external";
+            ntfy.mode = "none";
+          };
+          services.veilleur-container = {
+            enable = true;
+            publicHost = "watch.example.org";
+            externalInterface = "eth0";
+            noAaaaRecord = true;
+          };
+        }
+      ]
+    );
+
+    "the host example is inert without its settings" =
+      let
+        config = hostExample ./does-not-exist.nix;
+      in
+      !config.services.veilleur-container.enable && built config;
+    "the host example works with its settings" =
+      let
+        config = hostExample ../examples/veilleur-settings.example.nix;
+      in
+      config.services.veilleur-container.enable && accepted config && built config;
+    "the VPS example is accepted" = accepted vpsExample && built vpsExample;
+  };
+
+  wrong = builtins.attrNames (lib.filterAttrs (_: passed: !passed) checks);
+in
+assert lib.assertMsg (wrong == [ ]) "failed: ${lib.concatStringsSep "; " wrong}";
+pkgs.runCommand "veilleur-eval-checks" { } ''
+  echo ${toString (builtins.length (builtins.attrNames checks))} checks passed > "$out"
+''
