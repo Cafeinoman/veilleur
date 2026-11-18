@@ -20,8 +20,8 @@ from veilleur.core.domain.model import (
     Subscription,
     SubscriptionSpec,
 )
-from veilleur.core.domain.schema import validate
-from veilleur.core.ports.plugins import Collector, Plugins
+from veilleur.core.domain.schema import SchemaViolation, validate
+from veilleur.core.ports.plugins import Collector, Filter, ParamsCheck, Plugins
 
 from .context import Core
 
@@ -37,10 +37,18 @@ def _member(document: Mapping[str, Any], name: str, kind: type | tuple[type, ...
     return value
 
 
-def _params(schema: Mapping[str, Any], params: Any, where: str) -> dict[str, Any]:
+def _params(plugin: Collector | Filter, params: Any, where: str) -> dict[str, Any]:
+    """Parameters valid against the plugin's schema, then against its own check if it has one (`ParamsCheck`)."""
     if not isinstance(params, dict):
         raise VeilleurError(errors.INVALID_SUBSCRIPTION, member=where)
-    violation = validate(params, schema)
+    violation = validate(params, plugin.schema)
+    if violation is None and isinstance(plugin, ParamsCheck):
+        try:
+            path = plugin.check_params(params)
+        except Exception:  # a plugin may raise anything: its parameters are then refused
+            path = ""
+        if path is not None:
+            violation = SchemaViolation(path if path.startswith("/") or not path else "/" + path, "check")
     if violation is not None:
         raise VeilleurError(errors.INVALID_PARAMS, path=f"{where}{violation.path}", keyword=violation.keyword)
     return params
@@ -55,7 +63,7 @@ def parse_spec(document: Mapping[str, Any], plugins: Plugins) -> SubscriptionSpe
     collector = plugins.collectors.get(collector_name)
     if collector is None:
         raise VeilleurError(errors.UNKNOWN_COLLECTOR, name=collector_name[:64])
-    params = _params(collector.schema, document.get("params", {}), "params")
+    params = _params(collector, document.get("params", {}), "params")
     filters: list[FilterSpec] = []
     raw_filters = _member(document, "filters", list, [])
     if len(raw_filters) > MAX_FILTERS:
@@ -67,7 +75,7 @@ def parse_spec(document: Mapping[str, Any], plugins: Plugins) -> SubscriptionSpe
         if plugin is None:
             raise VeilleurError(errors.UNKNOWN_FILTER, name=raw["name"][:64])
         filters.append(
-            FilterSpec(raw["name"], _params(plugin.schema, raw.get("params", {}), f"filters/{index}/params"))
+            FilterSpec(raw["name"], _params(plugin, raw.get("params", {}), f"filters/{index}/params"))
         )
     frequency_name = _member(document, "frequency", str, Frequency.DAILY.value)
     if frequency_name not in {f.value for f in Frequency}:

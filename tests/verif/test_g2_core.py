@@ -340,13 +340,7 @@ class InPlaceFilter:
         return item
 
 
-@pytest.mark.xfail(
-    reason=(
-        "minor: reports._current_view keeps the stored hash when a filter changes fields in place "
-        "(`seen.fields is item.fields`)"
-    ),
-    strict=True,
-)
+# Reservation fixed in G3: filtered items are hashed again (reports._current_view).
 def test_hash_matches_the_fields_of_a_transformed_item(world: World) -> None:
     """Protocol §7.4: `hash` is computed from the item's fields as reported; EF-21: stored items untouched."""
     from veilleur.core.domain.model import item_hash

@@ -229,7 +229,8 @@ def test_unlisted_queries_are_400(call: Caller, target: str) -> None:
         f"/v1/subscriptions/{UID}/reports/1/x",
         "/v1/collectors/",
         "/v1//collectors",
-        "/v1/subscriptions",
+        # "/v1/subscriptions" became a route in G3 (GET /v1/subscriptions, decided by the user on 2026-11-18).
+        "/v1/subscription",
     ],
 )
 def test_other_paths_are_404(call: Caller, target: str) -> None:

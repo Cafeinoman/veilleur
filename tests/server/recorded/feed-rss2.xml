@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Example news</title>
+    <link>https://news.example.org/</link>
+    <description>Recorded RSS 2.0 feed for the tests</description>
+    <item>
+      <title>Council  adopts the
+        budget</title>
+      <link>https://news.example.org/2026/budget</link>
+      <guid isPermaLink="false">news-2026-0042</guid>
+      <description>&lt;p&gt;The council adopted the budget.&lt;/p&gt;</description>
+      <pubDate>Tue, 17 Nov 2026 08:30:00 +0100</pubDate>
+      <dc:creator>Editorial desk</dc:creator>
+      <category>Budget</category>
+      <category>Council</category>
+    </item>
+    <item>
+      <title>Road works on the bridge</title>
+      <link>https://news.example.org/2026/bridge</link>
+      <description>Works start on Monday.</description>
+      <pubDate>not a date</pubDate>
+    </item>
+    <item>
+      <title>Item without link nor guid</title>
+      <description>Keyed by its content.</description>
+    </item>
+  </channel>
+</rss>

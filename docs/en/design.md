@@ -32,13 +32,15 @@ Collections are **shared**: two subscriptions asking for the same feed cause a s
 | Group | Interface (sketch) | Built in |
 |---|---|---|
 | `veilleur.collectors` | `schema` (parameters, validated on receipt); `collect(params, since, http) -> Iterable[Item]` | `rss` (RSS/Atom), `json_api` (URL + path in the response + key field), `page` (change of a page, extracted by CSS selector) |
-| `veilleur.filters` | `keep(item, params) -> bool` or `transform(item) -> Item` | keywords / regular expression (on chosen fields, optionally case- and accent-insensitive), deduplication across the collections of one subscription |
+| `veilleur.filters` | `apply(item, params) -> item or None`; optionally `select(items, params)` for a filter that needs every item at once | keywords / regular expression (on chosen fields, optionally case- and accent-insensitive), deduplication (`dedup`: one item per value of chosen fields, among the items gathered by successive collections) |
 | `veilleur.renderers` | `render(report, language) -> dict[file_name, bytes]` | `markdown`, `html` (simple template, no JavaScript) |
-| `veilleur.notifiers` | `notify(target, counts)` | `ntfy`, `webhook` (HMAC-signed body) |
+| `veilleur.notifiers` | `notify(target, counts)`, the target being a pairing's random topic | `ntfy`, `webhook` (HMAC-signed body) |
 
-Filters apply after change detection and before the report; they never modify stored items.
+Filters apply after change detection and before the report; they never modify stored items. A collector or a filter may also check its parameters beyond its schema (`check_params`), when a subscription is received: the `regex` filter refuses patterns RE2 does not support (back-references, look-around), the `page` collector unsupported selectors. Patterns of the `regex` filter follow RE2 syntax and are searched in time linear in the text, so none can stall the round; `\w`, `\d` and `\b` are ASCII only (`\pL` matches any letter). A feed (`rss`) shows only its latest entries: its collections are never complete, so an entry that leaves the feed is not reported as gone.
 
-A collector never uses the network directly: it receives the server's HTTP client (cache, quotas, `robots.txt`, SSRF guard, offline mode). On NixOS, plugins are added through a module option and built into the read-only environment; nothing is installed at run time.
+Notifications go to each pairing that received reports in the round, on a random topic drawn at pairing time and given in its pairing code; they carry counts only (reports, new items, sources failing for more than two days).
+
+A collector never uses the network directly: it receives the server's HTTP client (conditional request cache, delay and quota per host, `robots.txt`, `User-Agent: Veilleur/<version> (+<server address>)`, SSRF guard, offline mode with `offline = true`). The SSRF guard resolves the name, refuses it when **any** of its addresses is internal, connects to the checked address itself (no second resolution), and starts again at each redirection. A guide explains how to [write a collector](writing-a-collector.md). On NixOS, plugins are added through a module option and built into the read-only environment; nothing is installed at run time.
 
 ### 2.2 Who creates subscriptions
 

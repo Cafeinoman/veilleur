@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 import sys
 from collections.abc import Callable, Sequence
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from veilleur import __version__, i18n
@@ -17,7 +17,7 @@ from veilleur.adapters import keys
 from veilleur.apps.server import argparse_i18n
 from veilleur.core.domain import errors
 from veilleur.core.domain.errors import VeilleurError
-from veilleur.core.domain.model import Origin, Subscription
+from veilleur.core.domain.model import Origin, Pairing, Subscription
 from veilleur.core.ports.plugins import RoundCounts
 from veilleur.core.services import pairing as pairings
 from veilleur.core.services import reports, round
@@ -26,7 +26,7 @@ from veilleur.i18n import _, ngettext
 from veilleur_protocol import PairingCode, ProtocolError, b64u_encode
 
 from . import config as config_module
-from .context import App, open_app, synchronise_team
+from .context import App, ntfy_for_pairing, open_app, synchronise_team
 from .messages import error_message, event_message, source_error
 
 Opener = Callable[[config_module.Config], App]
@@ -112,6 +112,9 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument("--after", type=int, default=0, help=_("only the packages after this number"))
     notify = commands.add_parser("notify", help=_("send notifications"))
     notify.add_argument("--test", action="store_true", required=True, help=_("send a test notification"))
+    notify.add_argument(
+        "--pairing", dest="notify_pairing", metavar=_("pairing"), help=_("only to this pairing (key_id or label)")
+    )
     key = commands.add_parser("key", help=_("manage the server's signing key"))
     key_commands = key.add_subparsers(dest="key_command", metavar=_("action"), required=True)
     key_commands.add_parser("rotate", help=_("replace the server's key; paired tools follow without re-pairing"))
@@ -169,12 +172,24 @@ def _cmd_config(app: App) -> None:
 def _cmd_pairing(app: App, args: argparse.Namespace) -> None:
     if args.pairing_command == "new":
         pairings.check_label(args.label)
-        try:  # check the public address before creating anything
-            PairingCode(app.config.public_url, "0" * 16, bytes(32), app.core.sealer.public_key)
+        try:  # check the public address and the ntfy settings before creating anything
+            PairingCode(
+                app.config.public_url,
+                "0" * 16,
+                bytes(32),
+                app.core.sealer.public_key,
+                ntfy_for_pairing(app.config, Pairing("0" * 16, "-", bytes(32), datetime.now(UTC), topic="0" * 32)),
+            )
         except ProtocolError as exc:
             raise VeilleurError(errors.INVALID_CONFIG, member="public_url") from exc
         created = pairings.create_pairing(app.core, args.label)
-        code = PairingCode(app.config.public_url, created.key_id, created.secret, app.core.sealer.public_key)
+        code = PairingCode(
+            app.config.public_url,
+            created.key_id,
+            created.secret,
+            app.core.sealer.public_key,
+            ntfy_for_pairing(app.config, created),
+        )
         print(_("Pairing {key_id} created ({label}).").format(key_id=created.key_id, label=created.label))
         print(_("Give this code to the receiving tool. It is shown only once and holds a secret:"))
         print(code.encode())
@@ -297,13 +312,17 @@ def _cmd_export(app: App, args: argparse.Namespace) -> None:
     print(ngettext("{count} package written", "{count} packages written", written).format(count=written))
 
 
-def _cmd_notify(app: App) -> None:
+def _cmd_notify(app: App, reference: str | None) -> None:
     if not app.core.notifiers:
         print(_("No notifier is configured."))
         return
-    failed = round.notify(app.core, RoundCounts(0, 0, 0))
-    total = len(app.core.notifiers)
-    print(_("Test notification sent: {ok} of {total} notifiers.").format(ok=total - failed, total=total))
+    if reference is not None:
+        targets = [pairings.find_pairing(app.core, reference)]
+    else:
+        targets = [p for p in app.store.list_pairings() if p.active]
+    failed = round.notify(app.core, {p.key_id: RoundCounts(0, 0, 0) for p in targets if p.active})
+    sent = len([p for p in targets if p.active]) * len(app.core.notifiers)
+    print(_("Test notification: {ok} of {total} sendings succeeded.").format(ok=sent - failed, total=sent))
 
 
 def _cmd_key(app: App) -> None:
@@ -336,7 +355,7 @@ def _run(args: argparse.Namespace, opener: Opener | None) -> int:
             case "export":
                 _cmd_export(app, args)
             case "notify":
-                _cmd_notify(app)
+                _cmd_notify(app, args.notify_pairing)
             case "key":
                 _cmd_key(app)
             case "serve":

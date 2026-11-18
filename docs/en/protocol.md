@@ -245,6 +245,7 @@ internal detail, in the language of `Accept-Language` (`en` or `fr`) or else the
 | Request | Response |
 |---|---|
 | `GET /v1/collectors` | `200 {"collectors": [{"name", "schema"}]}`: collectors this pairing may use, with the JSON schema of their parameters |
+| `GET /v1/subscriptions` | `200 {"subscriptions": [{"uid", "origin", "name", "version"}]}`: the live (not deleted) subscriptions of this pairing, sorted by `uid`; `origin` is `"team"` (declared by the administrator, with its `name`) or `"client"` (created by the receiving tool, without `name`); parameters are never listed |
 | `PUT /v1/subscriptions/{uid}` | sealed subscription document (§7.6, §9.1); `200 {"version"}`; `409` if based on an outdated version |
 | `DELETE /v1/subscriptions/{uid}` | `204` |
 | `GET /v1/subscriptions/{uid}/reports?after=N` | `200 {"packages": [{"seq", "size", "sha256"}], "oldest", "last"}`, in clear, without content |

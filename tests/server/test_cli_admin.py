@@ -17,6 +17,7 @@ from veilleur.apps.server import cli
 from veilleur.apps.server.config import Config, TeamDeclaration
 from veilleur.apps.server.context import App
 from veilleur.apps.server.wsgi import Api
+from veilleur.core.ports.plugins import RoundCounts
 from veilleur.core.services import jobs
 from veilleur_protocol import (
     PairingCode,
@@ -180,7 +181,10 @@ def test_sources_info_config_notify(world: World, capsys: pytest.CaptureFixture[
     code, out, _ = run(world, capsys, "config")
     assert "Public address: https://veille.example.org" in out and "Team subscription team_news" in out
     code, out, _ = run(world, capsys, "notify", "--test")
-    assert code == 0 and out == "Test notification sent: 1 of 1 notifiers.\n"
+    assert code == 0 and out == "Test notification: 1 of 1 sendings succeeded.\n"
+    assert [counts for _target, counts in world.notifier.sent] == [RoundCounts(0, 0, 0)]
+    code, out, _ = run(world, capsys, "notify", "--test", "--pairing", "desk 1")
+    assert code == 0 and world.notifier.sent[-1][0].topic == world.app.store.list_pairings()[0].topic
 
 
 def test_export_to_a_folder(world: World, capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:

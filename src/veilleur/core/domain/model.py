@@ -99,6 +99,8 @@ class Pairing:
     secret: bytes = field(repr=False)
     created_at: datetime
     revoked_at: datetime | None = None
+    topic: str = ""
+    """Notification topic (EF-52): random, unguessable, given in the pairing code (drawn by `create_pairing`)."""
 
     @property
     def active(self) -> bool:

@@ -10,11 +10,11 @@ from importlib.metadata import entry_points
 from typing import Any
 
 from veilleur.core.domain.schema import check_schema
-from veilleur.core.ports.plugins import Collector, Filter, Plugins, Renderer
+from veilleur.core.ports.plugins import Collector, Filter, Notifier, Plugins, Renderer
 
 log = logging.getLogger(__name__)
 NAME = re.compile(r"[a-z][a-z0-9_]{0,63}")
-GROUPS = ("veilleur.collectors", "veilleur.filters", "veilleur.renderers")
+GROUPS = ("veilleur.collectors", "veilleur.filters", "veilleur.renderers", "veilleur.notifiers")
 
 
 def _load(group: str) -> dict[str, Any]:
@@ -55,3 +55,9 @@ def installed(extra: Mapping[str, Collector] | None = None) -> Plugins:
     filters: dict[str, Filter] = _load("veilleur.filters")
     renderers: dict[str, Renderer] = _load("veilleur.renderers")
     return Plugins(collectors, filters, renderers)
+
+
+def installed_notifiers() -> dict[str, Notifier]:
+    """Notifier plugins (`veilleur.notifiers`), other than the provided `ntfy` and `webhook`, which are set in the
+    configuration."""
+    return {name: n for name, n in _load("veilleur.notifiers").items() if name not in ("ntfy", "webhook")}

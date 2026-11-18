@@ -4,11 +4,12 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import timedelta
 
 from veilleur.core.domain.model import RETENTION_DAYS, Subscription
-from veilleur.core.ports.plugins import RoundCounts
+from veilleur.core.ports.plugins import NotificationTarget, RoundCounts
 
 from . import reports
 from .collect import CollectionResult, collect
@@ -30,6 +31,9 @@ class RoundSummary:
     failing_sources: int = 0
     skipped: dict[str, int] = field(default_factory=dict)
     purged: dict[str, int] = field(default_factory=dict)
+    per_pairing: dict[str, RoundCounts] = field(default_factory=dict)
+    """Counts of each pairing that got reports: what its notification carries."""
+    notifications_failed: int = 0
 
     def counts(self) -> RoundCounts:
         return RoundCounts(self.reports + self.states, self.new_items, self.failing_sources)
@@ -51,6 +55,7 @@ def run_round(core: Core) -> RoundSummary:
             results[collection_id] = collect(core, subscription.spec)
     summary.collections = len(results)
     summary.failed_collections = sum(1 for r in results.values() if r.status.error is not None)
+    made: dict[str, list[int]] = {}
     for subscription in subscriptions:
         try:
             if core.store.package_bounds(subscription.key_id, subscription.uid).last == 0:
@@ -63,15 +68,23 @@ def run_round(core: Core) -> RoundSummary:
             summary.skipped[skipped.reason] = summary.skipped.get(skipped.reason, 0) + 1
             continue
         if info is not None:
-            summary.new_items += _count_new(core, subscription)
+            new = _count_new(core, subscription)
+            summary.new_items += new
+            counts = made.setdefault(subscription.key_id, [0, 0])
+            counts[0] += 1
+            counts[1] += new
     now = core.clock.now()
-    summary.failing_sources = sum(
-        1
+    failing = {
+        status.collection_id
         for status in core.store.list_sources()
         if status.collection_id in results
         and status.failing_since is not None
         and now - status.failing_since >= FAILURE_NOTICE
-    )
+    }
+    summary.failing_sources = len(failing)
+    for key_id, (reports_made, new_items) in made.items():
+        own = {s.spec.collection_id for s in subscriptions if s.key_id == key_id}
+        summary.per_pairing[key_id] = RoundCounts(reports_made, new_items, len(own & failing))
     summary.purged = dict(core.store.purge(now - timedelta(days=RETENTION_DAYS), now - JOB_RETENTION))
     core.store.add_event(
         now,
@@ -83,8 +96,7 @@ def run_round(core: Core) -> RoundSummary:
             "new_items": summary.new_items,
         },
     )
-    if summary.reports + summary.states:
-        notify(core, summary.counts())
+    summary.notifications_failed = notify(core, summary.per_pairing)
     return summary
 
 
@@ -100,13 +112,20 @@ def _count_new(core: Core, subscription: Subscription) -> int:
     )
 
 
-def notify(core: Core, counts: RoundCounts) -> int:
-    """Send the counts to every notifier (EF-52); return how many failed. A failing notifier never stops a round."""
+def notify(core: Core, per_pairing: Mapping[str, RoundCounts]) -> int:
+    """Send each pairing its counts through every notifier (EF-52); return how many sendings failed. A failing
+    notifier never stops a round. Revoked pairings are never notified."""
     failed = 0
-    for notifier in core.notifiers:
-        try:
-            notifier.notify(counts)
-        except Exception as exc:  # a plugin may raise anything
-            log.warning("notifier %s failed: %s", notifier.name, type(exc).__name__)
-            failed += 1
+    pairings = {p.key_id: p for p in core.store.list_pairings() if p.active}
+    for key_id, counts in sorted(per_pairing.items()):
+        pairing = pairings.get(key_id)
+        if pairing is None:
+            continue
+        target = NotificationTarget(key_id, pairing.topic)
+        for notifier in core.notifiers:
+            try:
+                notifier.notify(target, counts)
+            except Exception as exc:  # a plugin may raise anything
+                log.warning("notifier %s failed: %s", notifier.name, type(exc).__name__)
+                failed += 1
     return failed

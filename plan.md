@@ -14,9 +14,7 @@
 
 ## Questions en attente
 
-1. **Découverte des abonnements d'équipe par l'outil de réception** (G2, cahier EF-10 et §7.4). Un abonnement d'équipe reçoit un `uid` tiré par le serveur, mais l'interface `/v1` n'offre aucun moyen de le découvrir : l'outil de réception ne connaît que les `uid` qu'il a créés. Aujourd'hui, l'administrateur lit l'`uid` dans `veilleur subscription list` et le transmet à part, ce qui est peu pratique. Ajouter une requête à §7.4 modifie le cahier : c'est votre arbitrage.
-   **Recommandation** : ajouter `GET /v1/subscriptions` → `200 {"subscriptions": [{"uid", "origin": "team"|"client", "name" (abonnements d'équipe), "version"}]}`, limité aux abonnements non supprimés du jumelage, authentifié avec la clé propre au jumelage (sel vide, comme `GET /v1/collectors`). Les paramètres n'y figurent pas (l'outil de réception connaît les siens ; ceux d'équipe restent côté serveur). À faire en G3 si vous l'acceptez.
-2. **Compléments apportés au cahier en G2, à confirmer.** Pour mettre en œuvre des exigences existantes, j'ai ajouté à EF-70 `collectors allow|deny|default` (EF-11 exige que l'administrateur autorise des collecteurs par jumelage, sans dire comment), `key rotate` (ES-05) et `serve` (EF-71) ; j'ai aligné la liste des tables du §7.2 sur le schéma réel et consigné au §10 les choix de G2 (pierres tombales, instantané de ce qui a été rapporté, document d'abonnement). Si l'un de ces choix ne vous convient pas, dites lequel ; sinon, cette question se retire d'elle-même.
+Aucune.
 
 ## État
 
@@ -25,7 +23,7 @@
 | G0-R | Dépôt git, environnement, contrôles, création du dépôt GitHub | fait |
 | G1 | Protocole 1.0 et `veilleur-protocol` | fait, avec réserves (étiquette `g1`) |
 | G2 | Cœur, stockage, administration, service HTTP | fait, avec réserves (PR à fusionner, puis étiquette `g2`) |
-| G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | à faire |
+| G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | fait, avec réserves (PR à fusionner, puis étiquette `g3`) |
 | G4 | Rendus, récepteur de référence | à faire |
 | G5 | Déploiement NixOS et repli systemd | à faire |
 | G6 | Publication 0.1.0 | à faire |
@@ -148,27 +146,35 @@ Réserves à la livraison (2 passages du vérificateur ; B1 corrigé avant le 2�
 - [ ] EF-05, autres arrêts du tour par un greffon qui viole son contrat : liste d'éléments paresseuse qui lève une exception (`_normalise` hors du `try`), `CollectorError` dont le code n'est pas une chaîne. Piste : un garde-fou autour de chaque collecte dans `run_round`.
 - [ ] Une déclaration d'équipe cassée (greffon absent) fait échouer `veilleur round` et `serve` avant toute collecte, au lieu de `collector_missing`.
 - [ ] EF-10 : `sync_team` peut dupliquer un abonnement d'équipe supprimé puis redéclaré dans la même seconde (pierre tombale qui masque la ligne vivante).
-- [ ] Protocole §7.4 : quand un filtre modifie les champs en place, `_current_view` garde l'empreinte stockée ; le `hash` publié ne correspond plus aux `fields`.
+- [x] (corrigé en G3) Protocole §7.4 : quand un filtre modifie les champs en place, `_current_view` garde l'empreinte stockée ; le `hash` publié ne correspond plus aux `fields`.
 - [ ] ES-05 : le service en marche ne suit pas un `key rotate` lancé par un autre processus ; deux rotations en moins de 90 jours : la seconde remplace la première déclaration.
 - [ ] EF-12 : un surrogate isolé dans les paramètres d'un `PUT` donne `500 internal_error` au lieu d'un 400.
 - [ ] EF-70, EF-80 : noms de valeur `LABEL`, `LIMIT`, `AFTER`, `LISTEN`, `PORT` non traduits dans l'aide française ; argument `collecteur` sans aide.
-- [ ] Hors spécification : un filtre qui renvoie une adresse invalide est compté `package_too_large` au lieu de `filter_failed` (`adapters/sealer.py`) ; `veilleur.db` en 0644 (0600 suggéré) ; requêtes non authentifiées non limitées en débit et corps lu avant l'authentification ; `history` sans plafond de jobs ; `export` après purge redondant ; `subscription show`/`export` par `uid` ambigus entre jumelages ; `GET` avec corps accepté ; une faute dans `pairings` d'une déclaration d'équipe supprime l'abonnement ; `1` et `1.0` donnent deux collectes distinctes (EF-04).
+- [ ] Hors spécification (en G3, l'adresse invalide renvoyée par un filtre donne `filter_failed`) : un filtre qui renvoie une adresse invalide est compté `package_too_large` au lieu de `filter_failed` (`adapters/sealer.py`) ; `veilleur.db` en 0644 (0600 suggéré) ; requêtes non authentifiées non limitées en débit et corps lu avant l'authentification ; `history` sans plafond de jobs ; `export` après purge redondant ; `subscription show`/`export` par `uid` ambigus entre jumelages ; `GET` avec corps accepté ; une faute dans `pairings` d'une déclaration d'équipe supprime l'abonnement ; `1` et `1.0` donnent deux collectes distinctes (EF-04).
 
 Reste hors de G2, prévu plus loin : client HTTP réel (G3 ; G2 fournit le mode hors ligne), notificateurs `ntfy` et `webhook` et leur configuration (G3), rendus `markdown` et `html` (G4).
 
 ## G3 — Client HTTP, collecteurs, filtres, notificateurs (EF-02 à EF-06, EF-20, EF-52, ES-08)
 
-- [ ] Client HTTP :
+- [x] Client HTTP :
   - cache, délais, quotas par hôte ;
   - `robots.txt`, `User-Agent` ;
   - mode hors ligne ;
   - **garde SSRF** : résolution DNS puis contrôle de chaque adresse, à chaque redirection, en IPv4 et IPv6.
-- [ ] Collecteurs `rss`, `json_api`, `page`, avec leurs schémas ; tests sur réponses enregistrées.
-- [ ] Filtres : mots-clés, expressions régulières, dédoublonnage.
-- [ ] Notificateurs `ntfy` et `webhook` (signé).
-- [ ] Guide « écrire un collecteur » (`docs/{en,fr}/writing-a-collector.md`) et greffon d'exemple hors du paquet principal.
+- [x] Collecteurs `rss`, `json_api`, `page`, avec leurs schémas ; tests sur réponses enregistrées.
+- [x] Filtres : mots-clés, expressions régulières, dédoublonnage.
+- [x] Notificateurs `ntfy` et `webhook` (signé).
+- [x] `GET /v1/subscriptions` (réponse à la question 1 de G2), spécification du protocole en anglais et en français.
+- [x] Guide « écrire un collecteur » (`docs/{en,fr}/writing-a-collector.md`) et greffon d'exemple hors du paquet principal.
 
 Fini quand : tentatives SSRF (adresses privées, DNS piégé, redirection) refusées par les tests ; les trois collecteurs passent sur leurs réponses enregistrées.
+
+Réserves à la livraison (3 passages du vérificateur, le 3ᵉ autorisé par l'utilisateur ; B1 corrigé avant le 2ᵉ, B2 levé au 3ᵉ par le passage à RE2). Les écarts mineurs ont leur test en `xfail` strict dans `tests/verif/test_g3_*.py` :
+- [ ] ES-08 : une réponse `304` sert la copie en cache sans contrôler son type par rapport à `accept` (`adapters/http/client.py`).
+- [ ] EF-12 : `page` ne contrôle pas son sélecteur à la réception (`a:hover` accepté, puis `bad_selector` à la collecte).
+- [ ] EF-02 : une virgule dans une valeur d'attribut entre guillemets coupe le groupe de sélecteurs (`adapters/collectors/html.py`, `compile_selector`).
+- [ ] Hors spécification : cache des motifs `regex` compilés sans borne (≈ 2,6 Mo par motif sous RE2 ; test `xfail` `test_the_compiled_pattern_cache_is_bounded`) ; certains motifs RE2 coûtent jusqu'à ≈ 4 s par champ de 20 000 caractères (borner les répétitions comptées ou la taille du programme) ; le schéma de `pattern` n'annonce pas la syntaxe RE2 ; quota de 200 requêtes par hôte jamais remis à zéro dans `serve` ; le webhook transmet le `topic` ntfy du jumelage à un tiers ; lecture du corps jusqu'à ≈ 2× le délai ; course rare dans `cut` (`transport.py`, lire `connection.sock` une seule fois).
+- [ ] G5 : empaqueter `google-re2` pour Nix (le sdist demande re2, abseil et pybind11 natifs).
 
 ## G4 — Rendus et récepteur de référence (EF-43, cahier §5)
 

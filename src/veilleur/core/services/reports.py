@@ -25,7 +25,7 @@ from veilleur.core.domain.model import (
     item_hash,
     sha256_hex,
 )
-from veilleur.core.ports.plugins import FilterItem, ReportView
+from veilleur.core.ports.plugins import FilterItem, ReportView, SetFilter
 from veilleur.core.ports.sealer import PackageSpec, PackageTooLarge
 
 from .context import Core
@@ -65,22 +65,28 @@ def _current_view(core: Core, subscription: Subscription) -> dict[str, _Current]
         if plugin is None:
             raise ReportSkipped("filter_missing")
         filters.append((plugin, spec.params))
-    view: dict[str, _Current] = {}
-    for key, item in core.store.current_items(subscription.spec.collection_id).items():
-        seen: FilterItem | None = FilterItem(key, item.fields, item.url)
-        try:
-            for plugin, params in filters:
-                assert seen is not None
-                seen = plugin.apply(seen, params)
-                if seen is None:
-                    break
-            if seen is None:
-                continue
-            digest = item.hash if seen.fields is item.fields else item_hash(seen.fields)
-        except Exception as exc:  # a plugin may raise anything; the subscription waits for the next round
-            log.warning("filter failed for a subscription: %s", type(exc).__name__)
-            raise ReportSkipped("filter_failed") from exc
-        view[key] = _Current(digest, seen.fields, seen.url, item.fetched_at)
+    stored = core.store.current_items(subscription.spec.collection_id)
+    seen = [FilterItem(key, item.fields, item.url) for key, item in sorted(stored.items())]
+    try:
+        for plugin, params in filters:
+            if isinstance(plugin, SetFilter):
+                kept = list(plugin.select(seen, params))
+            else:
+                kept = [result for item in seen if (result := plugin.apply(item, params)) is not None]
+            if not all(
+                isinstance(item, FilterItem) and item.key in stored and (item.url is None or isinstance(item.url, str))
+                for item in kept
+            ):
+                raise TypeError("a filter returned something else than an item it was given")
+            seen = kept
+        view: dict[str, _Current] = {}
+        for item in seen:
+            # Hashed again: a filter may have changed the fields, even in place (protocol §7.4: `hash` matches
+            # `fields`).
+            view[item.key] = _Current(item_hash(item.fields), item.fields, item.url, stored[item.key].fetched_at)
+    except Exception as exc:  # a plugin may raise anything; the subscription waits for the next round
+        log.warning("filter failed for a subscription: %s", type(exc).__name__)
+        raise ReportSkipped("filter_failed") from exc
     return view
 
 

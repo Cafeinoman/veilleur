@@ -7,6 +7,18 @@
     listen = "127.0.0.1"
     port = 8470
 
+    offline = false                               # true: collectors never reach the network (EF-06)
+
+    [ntfy]                                        # notifications (EF-52), optional
+    url = "http://127.0.0.1:2586"                 # where the server publishes
+    public_url = "https://veille.example.org:8443"  # given in pairing codes (default: url, must be https)
+    token_file = "/run/secrets/ntfy-publish"      # access token to publish (optional)
+    client_token_file = "/run/secrets/ntfy-read"  # access token given in pairing codes (optional)
+
+    [webhook]                                     # optional
+    url = "https://hooks.example.org/veilleur"
+    key_file = "/run/secrets/veilleur-webhook"    # HMAC key; default: <state_dir>/webhook.key, generated
+
     [[subscriptions]]                             # team subscriptions
     name = "team_feed"
     collector = "rss"
@@ -15,7 +27,7 @@
     frequency = "daily"
     language = "fr"
 
-No secret belongs here (ES-10): secrets live in the state directory.
+No secret belongs here (ES-10): secrets live in the state directory, or in files whose paths are given here.
 """
 
 from __future__ import annotations
@@ -34,7 +46,9 @@ from veilleur.core.domain.model import LANGUAGES
 DEFAULT_CONFIG = Path("/etc/veilleur/config.toml")
 DEFAULT_STATE_DIR = Path("/var/lib/veilleur")
 DEFAULT_PORT = 8470
-_KEYS = {"state_dir", "public_url", "language", "listen", "port", "subscriptions"}
+_KEYS = {"state_dir", "public_url", "language", "listen", "port", "offline", "ntfy", "webhook", "subscriptions"}
+_NTFY_KEYS = {"url", "public_url", "token_file", "client_token_file"}
+_WEBHOOK_KEYS = {"url", "key_file"}
 _SUBSCRIPTION_KEYS = {"name", "collector", "params", "pairings", "filters", "frequency", "language", "renderings"}
 
 
@@ -48,6 +62,20 @@ class TeamDeclaration:
 
 
 @dataclass(frozen=True)
+class NtfyConfig:
+    url: str
+    public_url: str
+    token_file: Path | None = None
+    client_token_file: Path | None = None
+
+
+@dataclass(frozen=True)
+class WebhookConfig:
+    url: str
+    key_file: Path | None = None
+
+
+@dataclass(frozen=True)
 class Config:
     state_dir: Path = DEFAULT_STATE_DIR
     public_url: str = "folder:"
@@ -56,6 +84,9 @@ class Config:
     port: int = DEFAULT_PORT
     subscriptions: tuple[TeamDeclaration, ...] = ()
     source: Path | None = field(default=None, compare=False)
+    offline: bool = False
+    ntfy: NtfyConfig | None = None
+    webhook: WebhookConfig | None = None
 
     @property
     def database(self) -> Path:
@@ -77,6 +108,46 @@ def _team(raw: Any, index: int) -> TeamDeclaration:
         raise _bad(f"{where}.pairings")
     document = {k: v for k, v in raw.items() if k not in ("name", "pairings")}
     return TeamDeclaration(name, document, tuple(pairings))
+
+
+def _http_url(value: Any, member: str, *, https: bool = False) -> str:
+    prefixes = ("https://",) if https else ("http://", "https://")
+    if not isinstance(value, str) or not value.startswith(prefixes) or len(value) <= len(prefixes[-1]):
+        raise _bad(member)
+    if any(c.isspace() for c in value):
+        raise _bad(member)
+    return value.rstrip("/")
+
+
+def _path(value: Any, member: str) -> Path | None:
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value.startswith("/"):
+        raise _bad(member)
+    return Path(value)
+
+
+def _ntfy(raw: Any) -> NtfyConfig | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, dict) or set(raw) - _NTFY_KEYS:
+        raise _bad("ntfy")
+    url = _http_url(raw.get("url"), "ntfy.url")
+    public_url = _http_url(raw.get("public_url", url), "ntfy.public_url", https=True)
+    return NtfyConfig(
+        url,
+        public_url,
+        _path(raw.get("token_file"), "ntfy.token_file"),
+        _path(raw.get("client_token_file"), "ntfy.client_token_file"),
+    )
+
+
+def _webhook(raw: Any) -> WebhookConfig | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, dict) or set(raw) - _WEBHOOK_KEYS:
+        raise _bad("webhook")
+    return WebhookConfig(_http_url(raw.get("url"), "webhook.url"), _path(raw.get("key_file"), "webhook.key_file"))
 
 
 def parse(data: Mapping[str, Any], *, source: Path | None = None) -> Config:
@@ -102,11 +173,25 @@ def parse(data: Mapping[str, Any], *, source: Path | None = None) -> Config:
         raise _bad("port")
     if not isinstance(raw_subscriptions, list):
         raise _bad("subscriptions")
+    offline = data.get("offline", False)
+    if not isinstance(offline, bool):
+        raise _bad("offline")
     subscriptions = tuple(_team(raw, i) for i, raw in enumerate(raw_subscriptions))
     names = [s.name for s in subscriptions]
     if len(set(names)) != len(names):
         raise _bad("subscriptions.name")
-    return Config(Path(state_dir), public_url.rstrip("/"), language, listen, port, subscriptions, source)
+    return Config(
+        Path(state_dir),
+        public_url.rstrip("/"),
+        language,
+        listen,
+        port,
+        subscriptions,
+        source,
+        offline,
+        _ntfy(data.get("ntfy")),
+        _webhook(data.get("webhook")),
+    )
 
 
 def load(

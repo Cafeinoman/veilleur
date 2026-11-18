@@ -16,7 +16,7 @@ ROTATION_WINDOW = timedelta(days=90)
 """A rotation statement travels in every package for 90 days (ES-05)."""
 
 
-def _write_private(path: Path, data: bytes) -> None:
+def write_private(path: Path, data: bytes) -> None:
     """Write a file only the service user can read, atomically."""
     temporary = path.with_name(path.name + ".tmp")
     fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
@@ -32,7 +32,7 @@ def load_signing_key(state_dir: Path) -> SigningKey:
     """The server's key, drawn on first use."""
     path = state_dir / KEY_FILE
     if not path.exists():
-        _write_private(path, SigningKey.generate().seed)
+        write_private(path, SigningKey.generate().seed)
     return SigningKey(path.read_bytes())
 
 
@@ -55,7 +55,7 @@ def rotate(state_dir: Path, now: datetime) -> Rotation:
     old = load_signing_key(state_dir)
     new = SigningKey.generate()
     rotation = make_rotation(old, new.public_key, now)
-    _write_private(state_dir / ROTATION_FILE, rotation.statement)
-    _write_private(state_dir / ROTATION_SIG_FILE, rotation.signature)
-    _write_private(state_dir / KEY_FILE, new.seed)
+    write_private(state_dir / ROTATION_FILE, rotation.statement)
+    write_private(state_dir / ROTATION_SIG_FILE, rotation.signature)
+    write_private(state_dir / KEY_FILE, new.seed)
     return rotation

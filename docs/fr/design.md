@@ -32,13 +32,15 @@ Les collectes sont **mutualisées** : deux abonnements qui demandent le même fl
 | Groupe | Interface (esquisse) | Fournis d'office |
 |---|---|---|
 | `veilleur.collectors` | `schema` (paramètres, validés à la réception) ; `collect(params, since, http) -> Iterable[Item]` | `rss` (RSS/Atom), `json_api` (URL + chemin dans la réponse + champ clé), `page` (changement d'une page, extrait par sélecteur CSS) |
-| `veilleur.filters` | `keep(item, params) -> bool` ou `transform(item) -> Item` | mots-clés / expression régulière (sur des champs désignés, insensibles à la casse et aux accents au choix), dédoublonnage entre les collectes d'un même abonnement |
+| `veilleur.filters` | `apply(item, params) -> élément ou None` ; au besoin `select(items, params)` pour un filtre qui a besoin de tous les éléments à la fois | mots-clés / expression régulière (sur des champs désignés, insensibles à la casse et aux accents au choix), dédoublonnage (`dedup` : un élément par valeur de champs choisis, parmi les éléments réunis par les collectes successives) |
 | `veilleur.renderers` | `render(report, language) -> dict[nom_de_fichier, bytes]` | `markdown`, `html` (gabarit simple, sans JavaScript) |
-| `veilleur.notifiers` | `notify(target, counts)` | `ntfy`, `webhook` (corps signé HMAC) |
+| `veilleur.notifiers` | `notify(target, counts)`, la cible étant le sujet aléatoire d'un jumelage | `ntfy`, `webhook` (corps signé HMAC) |
 
-Les filtres s'appliquent après la détection des changements et avant le rapport ; ils ne modifient jamais les éléments mémorisés.
+Les filtres s'appliquent après la détection des changements et avant le rapport ; ils ne modifient jamais les éléments mémorisés. Un collecteur ou un filtre peut aussi contrôler ses paramètres au-delà de son schéma (`check_params`), à la réception d'un abonnement : le filtre `regex` refuse les motifs que RE2 ne prend pas en charge (références arrière, assertions avant ou arrière), le collecteur `page` les sélecteurs non pris en charge. Les motifs du filtre `regex` suivent la syntaxe RE2 et sont recherchés en temps linéaire dans la taille du texte : aucun ne peut bloquer le tour ; `\w`, `\d` et `\b` se limitent à l'ASCII (`\pL` reconnaît toute lettre). Un flux (`rss`) ne montre que ses dernières entrées : ses collectes ne sont jamais complètes, si bien qu'une entrée qui sort du flux n'est pas signalée comme disparue.
 
-Un collecteur ne touche jamais au réseau directement : il reçoit le client HTTP du serveur (cache, quotas, `robots.txt`, garde anti-SSRF, mode hors ligne). Sous NixOS, les greffons s'ajoutent par une option du module et sont construits dans l'environnement en lecture seule ; rien n'est installé à chaud.
+Les notifications vont à chaque jumelage qui a reçu des rapports pendant le tour, sur un sujet aléatoire tiré au jumelage et donné dans son code ; elles ne portent que des comptes (rapports, éléments nouveaux, sources en panne depuis plus de deux jours).
+
+Un collecteur ne touche jamais au réseau directement : il reçoit le client HTTP du serveur (cache des requêtes conditionnelles, délai et quota par hôte, `robots.txt`, `User-Agent: Veilleur/<version> (+<adresse du serveur>)`, garde anti-SSRF, mode hors ligne avec `offline = true`). La garde anti-SSRF résout le nom, le refuse si **une seule** de ses adresses est interne, se connecte à l'adresse contrôlée elle-même (sans seconde résolution) et recommence à chaque redirection. Un guide explique comment [écrire un collecteur](writing-a-collector.md). Sous NixOS, les greffons s'ajoutent par une option du module et sont construits dans l'environnement en lecture seule ; rien n'est installé à chaud.
 
 ### 2.2 Qui crée les abonnements
 

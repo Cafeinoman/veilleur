@@ -61,7 +61,22 @@ SOURCE_ERRORS: dict[str, str] = {
     "bad_item": N_("some items were invalid"),
     "network_unavailable": N_("the network is unavailable"),
     "invalid_params": N_("invalid parameters"),
+    "bad_url": N_("the address is not a valid http or https address"),
+    "address_refused": N_("the address leads to a private or reserved network"),
+    "dns_failed": N_("the host name could not be resolved"),
+    "network_error": N_("the connection failed"),
+    "timeout": N_("the source took too long to answer"),
+    "too_many_redirects": N_("too many redirections"),
+    "response_too_large": N_("the answer is too large"),
+    "unexpected_content_type": N_("the answer is not of the expected type"),
+    "bad_response": N_("the answer could not be read"),
+    "robots_disallowed": N_("the site's robots.txt forbids this address"),
+    "robots_unavailable": N_("the site's robots.txt could not be read"),
+    "host_quota_exceeded": N_("too many requests to this host in one round"),
+    "selector_no_match": N_("the CSS selector matches nothing on the page"),
+    "bad_selector": N_("the CSS selector is not supported"),
 }
+HTTP_STATUS = N_("the source answered with HTTP status {status}")
 
 EVENTS: dict[str, str] = {
     "pairing_created": N_("pairing {key_id} created"),
@@ -102,4 +117,6 @@ def event_message(code: str, params: Mapping[str, Any]) -> str:
 def source_error(code: str) -> str:
     """A collection's error, translated; a plugin's own code is shown as is."""
     template = SOURCE_ERRORS.get(code)
+    if template is None and code.startswith("http_") and code[5:].isdigit():
+        return i18n._(HTTP_STATUS).format(status=code[5:])
     return code if template is None else i18n._(template)

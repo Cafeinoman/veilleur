@@ -1,0 +1,10 @@
+{
+  "meta": {"next": "/api/v1/notices?page=2"},
+  "data": {
+    "items": [
+      {"id": 101, "title": "Notice one", "href": "https://api.example.org/notices/101", "body": "First", "internal": "x"},
+      {"id": 102, "title": "Notice two", "href": "https://api.example.org/notices/102", "body": "Second", "internal": "y"},
+      "not an object"
+    ]
+  }
+}

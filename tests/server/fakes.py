@@ -9,12 +9,13 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from veilleur.adapters.http import OfflineHttpClient
 from veilleur.apps.server.config import Config
 from veilleur.apps.server.context import App, open_app
 from veilleur.core.domain.errors import CollectorError
 from veilleur.core.domain.model import Collected, CollectedItem
 from veilleur.core.ports.http import HttpClient
-from veilleur.core.ports.plugins import FilterItem, Plugins, ReportView, RoundCounts
+from veilleur.core.ports.plugins import FilterItem, NotificationTarget, Plugins, ReportView, RoundCounts
 
 START = datetime(2026, 11, 17, 6, 0, 0, tzinfo=UTC)
 
@@ -90,10 +91,10 @@ class TextRenderer:
 @dataclass
 class RecordingNotifier:
     name: str = "recording"
-    sent: list[RoundCounts] = field(default_factory=list)
+    sent: list[tuple[NotificationTarget, RoundCounts]] = field(default_factory=list)
 
-    def notify(self, counts: RoundCounts) -> None:
-        self.sent.append(counts)
+    def notify(self, target: NotificationTarget, counts: RoundCounts) -> None:
+        self.sent.append((target, counts))
 
 
 @dataclass
@@ -121,5 +122,7 @@ def make_world(state_dir: Path, config: Config | None = None) -> World:
     url_collector = FakeCollector(name="fetch", follows_client_urls=True)
     notifier = RecordingNotifier()
     config = config or Config(state_dir=state_dir, public_url="https://veille.example.org")
-    app = open_app(config, plugins=plugins(collector, url_collector), clock=clock, notifiers=[notifier])
+    app = open_app(
+        config, plugins=plugins(collector, url_collector), clock=clock, notifiers=[notifier], http=OfflineHttpClient()
+    )
     return World(app, clock, collector, url_collector, notifier)

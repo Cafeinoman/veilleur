@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: EUPL-1.2
 """HTTP client of the offline mode (cahier EF-06): every request fails with `network_unavailable`.
 
-The networked client, with its SSRF guard, comes with milestone G3.
+The networked client is `client.NetworkHttpClient`.
 """
 
 from __future__ import annotations
