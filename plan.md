@@ -14,7 +14,13 @@
 
 ## Questions en attente
 
-Aucune.
+1. **G3, filtre `regex` (écart bloquant B2', 2ᵉ passage du vérificateur).** Le refus statique des motifs à retour arrière catastrophique (cahier §10, 2026-11-18) ne tient pas : `.{0,100}` répété, `(?:.{0,50}){4}=`, classes hors latin (`[α-ω]+[α-ω]+[α-ω]+=`) passent et bloquent le tour plus de 10 s. Une analyse statique du moteur `re` restera incomplète, et le tour n'a pas de délai par filtre. Options :
+   - (a) **moteur en temps linéaire `google-re2`** (BSD-3, compatible EUPL) : plus de retour arrière du tout ; on perd références arrière et assertions avant/arrière ; nouvelle dépendance d'exécution, à inscrire au cahier ;
+   - (b) module `regex` (Apache-2.0) avec délai par recherche : syntaxe Python conservée, mais coût borné seulement par délai × nombre d'éléments ;
+   - (c) garder `re` et durcir l'analyse (bornes, intervalles de points de code) : sans dépendance, mais sans garantie ;
+   - (d) livrer G3 tel quel, B2' en réserve pour G4.
+
+   **Recommandation : (a)**, seule garantie réelle ; décision au cahier §10 et doc du filtre (syntaxe RE2).
 
 ## État
 
