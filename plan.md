@@ -14,7 +14,12 @@
 
 ## Questions en attente
 
-Aucune.
+Lot G5 arrêté le 18/11/2026 : le vérificateur a rendu `NON CONFORME` à ses deux passages autorisés (dernier commit vérifié : `e0bd35a`). Aucune PR n'est ouverte.
+
+1. **Écart bloquant B5 (ENF-03b) : quelle suite donner ?** `services.veilleur.port` n'est pas comparé aux ports publics pris par Caddy : avec `port = 8443`, l'évaluation accepte la configuration et `caddy.service` échoue au démarrage (`address already in use`). Les cas 80 et 443 sont acceptés de la même façon, en mode service comme en mode conteneur.
+   **Recommandation** : autoriser la correction (refuser `port` s'il figure parmi les ports TCP publics réellement pris, 8443 restant permis quand ntfy ne l'occupe pas) et un 3ᵉ passage du vérificateur limité à B5, par exception à la borne de deux passages.
+2. **Périmètre de « tout conflit de ports déclaré » (ENF-03b) : à ratifier.** Le commit `4987183` a ajouté au cahier (§10) une décision qui limite l'assertion aux redirections NAT et nspawn, aux ports publiés des conteneurs OCI et aux entrées `listen` explicites de nginx et Apache. Ce choix modifie le cahier et aurait dû être soumis avant d'être écrit. Restent non détectés : `services.openssh.ports`, les unités socket, `services.nginx.defaultHTTPListenPort`.
+   **Recommandation** : ratifier ce périmètre en y ajoutant `defaultHTTPListenPort` et `services.openssh.ports`, simples à lire ; les ports ouverts par des unités quelconques ne sont pas décidables à l'évaluation.
 
 ## État
 
