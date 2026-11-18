@@ -25,7 +25,7 @@ Aucune.
 | G2 | Cœur, stockage, administration, service HTTP | fait, avec réserves (PR à fusionner, puis étiquette `g2`) |
 | G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | fait, avec réserves (PR à fusionner, puis étiquette `g3`) |
 | G4 | Rendus, récepteur de référence | fait, avec réserves (étiquette `g4`) |
-| G5 | Déploiement NixOS et repli systemd | code écrit, à livrer (`/livrer`) |
+| G5 | Déploiement NixOS et repli systemd | fait, avec réserves (PR à fusionner, puis étiquette `g5`) |
 | G6 | Publication 0.1.0 | à faire |
 
 ## G0-R — Mise en route du dépôt
@@ -229,6 +229,20 @@ Réserves à la livraison (3 passages du vérificateur, le 3ᵉ autorisé par l'
   - jumelage, sauvegarde, mise à jour, retour arrière.
 
 Fini quand : `nix flake check` et les tests en VM sont verts, en local et dans la CI.
+
+Réserves à la livraison (3 passages du vérificateur, le 3ᵉ autorisé par l'utilisateur et limité à B5 ; B1 à B4 corrigés avant le 2ᵉ, B5 avant le 3ᵉ ; verdict final `CONFORME AVEC RÉSERVES`). Les écarts ont leur test en `xfail` strict dans `tests/verif/test_g5_*.py` :
+
+- [ ] Mineur (ENF-03b) : `services.veilleur.port = 2019` est accepté, alors que ce port est celui de l'administration de Caddy, qui ne démarre plus.
+- [ ] Mineur : `ntfy.listenAddress` en IPv6 donne à ntfy une adresse d'écoute sans crochets.
+- [ ] Mineur (ENF-03b) : d'autres écritures de l'adresse joker (`0`, `::0`, `0:0:0:0:0:0:0:0`) passent l'assertion.
+- [ ] Mineur (ENF-01) : `publicHost` admet des formes inutilisables (IPv6 sans crochets, port, `user@`).
+- [ ] Mineur (ENF-03) : la référence `builtins.getFlake` du guide, sans `rev`, est refusée en évaluation pure.
+- [ ] Hors spécification : une unité socket, `defaultSSLListenPort` de nginx et les ports de `services.openssh.listenAddresses` ne sont pas lus par l'assertion sur les conflits de ports.
+- [ ] Hors spécification : sshd lié à une autre adresse est refusé à tort sur le port interne (faux positif).
+- [ ] Hors spécification : l'unité qui tire les jetons ntfy tourne en root sans durcissement.
+- [ ] Hors spécification : `services.veilleur.backupPaths` liste des chemins quand le module est désactivé.
+- [ ] Hors spécification, non testé : le bloc de frontal proposé pour ntfy omet probablement `proxy_buffering off` et la mise à niveau WebSocket.
+- [ ] Non vérifié : charge de quelques centaines d'abonnements (ENF-07), émission réelle d'un certificat Let's Encrypt (ENF-01), construction et exécution sur `aarch64-linux`.
 
 ## G6 — Publication 0.1.0
 
