@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: EUPL-1.2
+# Veilleur HTTP service, for Linux distributions other than NixOS (cahier ENF-04, ENF-05).
+[Unit]
+Description=Veilleur watch server
+After=network.target
+
+[Service]
+ExecStart=/opt/veilleur/env/bin/veilleur serve
+Restart=on-failure
+RestartSec=5s
+
+User=veilleur
+Group=veilleur
+StateDirectory=veilleur
+StateDirectoryMode=0700
+WorkingDirectory=/var/lib/veilleur
+UMask=0077
+CapabilityBoundingSet=
+AmbientCapabilities=
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateUsers=yes
+PrivateMounts=yes
+DevicePolicy=closed
+ProtectClock=yes
+ProtectControlGroups=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RemoveIPC=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+SystemCallErrorNumber=EPERM
+
+[Install]
+WantedBy=multi-user.target

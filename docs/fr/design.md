@@ -99,6 +99,8 @@ Le code et son environnement Python (construit d'après `uv.lock` par uv2nix, av
 
 **Version verrouillée** : la configuration de l'hôte charge Veilleur depuis `github:Cafeinoman/veilleur/<étiquette>`, en entrée de flake (verrouillée dans son `flake.lock`) ou par `builtins.getFlake` avec `narHash` ; une archive déposée à la main (`tarball+file://…?narHash=…`) reste possible pour un hôte sans accès à GitHub. La configuration de l'hôte doit **s'évaluer sur n'importe quelle machine**, sans fichier propre au serveur.
 
+Le [guide d'administration](admin-guide.md) donne les procédures d'installation, de sauvegarde et de mise à jour.
+
 ### 7.2 Intégration dans une configuration d'hôte existante
 
 Pour un serveur personnel qui porte déjà d'autres services :

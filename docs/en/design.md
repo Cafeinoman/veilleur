@@ -99,6 +99,8 @@ The code and its Python environment (built from `uv.lock` by uv2nix, with nixpkg
 
 **Pinned version**: the host configuration loads Veilleur from `github:Cafeinoman/veilleur/<tag>`, either as a flake input (locked in its `flake.lock`) or through `builtins.getFlake` with `narHash`; a manually dropped archive (`tarball+file://…?narHash=…`) remains possible for a host without access to GitHub. The host configuration must **evaluate on any machine**, without any file specific to the server.
 
+The [administration guide](admin-guide.md) gives the installation, backup and update procedures.
+
 ### 7.2 Integration into an existing host configuration
 
 For a personal server that already runs other services:

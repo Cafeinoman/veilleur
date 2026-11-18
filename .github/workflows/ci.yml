@@ -36,3 +36,23 @@ jobs:
         run: uv run --locked mypy
       - name: Architecture
         run: uv run --locked lint-imports
+
+  nix:
+    name: NixOS modules and virtual machine tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Give the runner access to KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            system-features = nixos-test benchmark big-parallel kvm
+      - name: Flake checks (evaluation and virtual machines)
+        run: nix flake check -L

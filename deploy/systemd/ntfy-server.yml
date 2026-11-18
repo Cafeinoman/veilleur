@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: EUPL-1.2
+# Excerpt of ntfy's /etc/ntfy/server.yml for Veilleur. Accounts and tokens: see the administration guide.
+base-url: "https://ntfy.example.org"
+listen-http: "127.0.0.1:2586"
+behind-proxy: true
+auth-file: "/var/lib/ntfy/user.db"
+auth-default-access: "deny-all"
+enable-signup: false
+enable-login: false
+web-root: "disable"
+# Above this level, ntfy writes visitors' addresses.
+log-level: "error"

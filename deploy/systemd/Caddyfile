@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: EUPL-1.2
+# TLS front end of Veilleur. There is deliberately no `log` directive: members' addresses are never written down.
+{
+	email admin@example.org
+}
+
+watch.example.org {
+	reverse_proxy 127.0.0.1:8470 {
+		header_up -X-Forwarded-For
+	}
+}
+
+ntfy.example.org {
+	reverse_proxy 127.0.0.1:2586 {
+		header_up -X-Forwarded-For
+	}
+}

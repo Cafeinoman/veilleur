@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: EUPL-1.2
+# Example of /etc/veilleur/config.toml. No secret belongs here: tokens are given as paths to files.
+state_dir = "/var/lib/veilleur"
+public_url = "https://watch.example.org"
+language = "en"
+listen = "127.0.0.1"
+port = 8470
+
+[ntfy]
+url = "http://127.0.0.1:2586"
+public_url = "https://ntfy.example.org"
+token_file = "/etc/veilleur/secrets/ntfy-publish"
+client_token_file = "/etc/veilleur/secrets/ntfy-read"
