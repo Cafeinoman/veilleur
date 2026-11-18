@@ -14,7 +14,13 @@
 
 ## Questions en attente
 
-Aucune.
+**G4 — vérification NON CONFORME après 3 passages : faut-il corriger l'écart restant ou inscrire la limite au cahier ?**
+
+- **Écart bloquant.** Un membre revenu après une purge ne peut pas suivre deux rotations. Scénario : il lit le paquet 1 sur la clé A et manque le paquet 2 ; rotation A→B à J60 (paquet 3), rotation B→C à J80 (paquet 4), purge du paquet 2 à J95. Le `state` qui couvre le trou est signé par C et ne porte que B→C, donc illisible depuis A : `missing_package` par dossier, `bad_signature` par HTTP. Avec une seule rotation, le membre passe. Le refus est propre et rien n'est corrompu. Le cahier §10 et le protocole §6.3 promettent aujourd'hui le contraire, sans réserve.
+- **Recommandation : option 1, inscrire la limite.** Écrire au cahier §10 et au protocole §6.3 qu'un membre cumulant un trou purgé et deux rotations doit être rejumelé. Marquer les 5 tests concernés en `xfail` (ce sont des tests du vérificateur : il faut l'accord de l'utilisateur), reporter l'écart en réserve et ouvrir la PR, sans 4ᵉ passage. Le cas est rare, et chacune des corrections précédentes de la rotation a révélé un nouvel écart.
+- **Option 2, corriger.** Le récepteur ouvre les paquets conservés pour adopter leurs déclarations avant d'accepter le `state`, par dossier et par HTTP. Demande un 4ᵉ passage. Piste non testée, qui touche au code de confiance du récepteur.
+
+Les tests du vérificateur (`tests/verif/test_g4_verif.py`, `test_g4_verif_pass2.py`, `test_g4_verif_pass3.py`) sont conservés, non commités, dans le worktree `../.verif-veilleur`.
 
 ## État
 
@@ -24,7 +30,7 @@ Aucune.
 | G1 | Protocole 1.0 et `veilleur-protocol` | fait, avec réserves (étiquette `g1`) |
 | G2 | Cœur, stockage, administration, service HTTP | fait, avec réserves (PR à fusionner, puis étiquette `g2`) |
 | G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | fait, avec réserves (PR à fusionner, puis étiquette `g3`) |
-| G4 | Rendus, récepteur de référence | code écrit, à livrer (`/livrer`) |
+| G4 | Rendus, récepteur de référence | vérification non conforme, arbitrage attendu (voir « Questions en attente ») |
 | G5 | Déploiement NixOS et repli systemd | à faire |
 | G6 | Publication 0.1.0 | à faire |
 
