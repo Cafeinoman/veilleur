@@ -14,7 +14,8 @@
 
 ## Questions en attente
 
-Aucune.
+1. **Marque « Veilleur » (G6).** Les registres n'ont pas pu être interrogés automatiquement : INPI refusé (403), WIPO et TMview inutilisables sans navigateur. La recherche web ne trouve aucune marque, mais un projet homonyme existe (`veilleur.app`, agent d'astreinte). **Recommandation** : avant l'étiquette `v0.1.0`, chercher « Veilleur » dans les classes de Nice 9 et 42 sur [INPI](https://data.inpi.fr/), [TMview](https://www.tmdn.org/tmview/) et [WIPO](https://branddb.wipo.int/), puis noter le résultat ici.
+2. **Publication sur PyPI (G6).** Les noms `veilleur`, `veilleur-protocol` et `veilleur-receive` sont libres (18/11/2026). Une version publiée ne peut pas être republiée. **Recommandation** : ne pas publier la 0.1.0, l'installation passant par le flake, et décider à la première version au protocole stabilisé.
 
 ## État
 
@@ -26,7 +27,7 @@ Aucune.
 | G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | fait, avec réserves (PR à fusionner, puis étiquette `g3`) |
 | G4 | Rendus, récepteur de référence | fait, avec réserves (étiquette `g4`) |
 | G5 | Déploiement NixOS et repli systemd | fait, avec réserves (PR à fusionner, puis étiquette `g5`) |
-| G6 | Publication 0.1.0 | à faire |
+| G6 | Publication 0.1.0 | en cours : à livrer, deux questions en attente |
 
 ## G0-R — Mise en route du dépôt
 
@@ -114,7 +115,7 @@ Fini quand : vecteurs vérifiés par les deux implémentations ; tous les refus 
 
 Réserves à la livraison (7 passages du vérificateur ; le 8ᵉ, interrompu, n'a pas rendu de verdict) :
 - [ ] Les correctifs du 7ᵉ passage (`a48c755` : clés publiques d'ordre faible refusées, §6.1, §8 et §10.1 précisés, seconde implémentation alignée) n'ont pas été revus par un vérificateur indépendant. À faire lors d'une prochaine vérification, limitée au diff depuis `383b9ca`.
-- [ ] `SECURITY.md` (ES-13) : prévu en G6.
+- [x] `SECURITY.md` (ES-13) : fait en G6.
 - [x] Ordre des contrôles du §8 face à un `key_id` inconnu : vérifié en G2 par le service WSGI (`tests/server/test_api.py`).
 
 ## G2 — Cœur, stockage, administration, service (EF-01 à EF-14, EF-30 à EF-45, EF-60 à EF-72, §7)
@@ -246,8 +247,11 @@ Réserves à la livraison (3 passages du vérificateur, le 3ᵉ autorisé par l'
 
 ## G6 — Publication 0.1.0
 
-- [ ] Actions GitHub fixées par empreinte de commit ; Dependabot pour les actions et `uv.lock`.
-- [ ] `SECURITY.md` (signalement privé par GitHub), `CONTRIBUTING.md` et `CONTRIBUTING.fr.md` (branches, PR, traductions, contrôles).
-- [ ] Recherche de secrets dans tout l'historique (`gitleaks`).
-- [ ] Vérification du nom sur PyPI, et de l'absence de marque déposée.
-- [ ] Version 0.1.0 : étiquette `v0.1.0`, notes de version bilingues, release GitHub. La publication sur PyPI est un arbitrage de l'utilisateur, à poser en question en attente.
+- [x] Actions GitHub fixées par empreinte de commit ; Dependabot pour les actions et `uv.lock`.
+- [x] `SECURITY.md` (signalement privé par GitHub), `CONTRIBUTING.md` et `CONTRIBUTING.fr.md` (branches, PR, traductions, contrôles).
+- [x] Recherche de secrets dans tout l'historique (`gitleaks`) : 164 alertes, toutes dans les vecteurs de test publics, exclus par `.gitleaks.toml` ; aucune autre.
+- [x] Vérification du nom sur PyPI : `veilleur`, `veilleur-protocol` et `veilleur-receive` sont libres.
+- [ ] Vérification de l'absence de marque déposée (question 1).
+- [x] Version 0.1.0 préparée : numéros de version, notes de version bilingues.
+- [ ] Après la fusion : étiquette `v0.1.0` sur `main` et release GitHub.
+- [ ] Publication sur PyPI : arbitrage de l'utilisateur (question 2).
