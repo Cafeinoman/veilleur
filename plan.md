@@ -24,7 +24,7 @@ Aucune.
 | G1 | Protocole 1.0 et `veilleur-protocol` | fait, avec réserves (étiquette `g1`) |
 | G2 | Cœur, stockage, administration, service HTTP | fait, avec réserves (PR à fusionner, puis étiquette `g2`) |
 | G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | fait, avec réserves (PR à fusionner, puis étiquette `g3`) |
-| G4 | Rendus, récepteur de référence | à faire |
+| G4 | Rendus, récepteur de référence | fait, avec réserves (PR à fusionner, puis étiquette `g4`) |
 | G5 | Déploiement NixOS et repli systemd | à faire |
 | G6 | Publication 0.1.0 | à faire |
 
@@ -178,10 +178,19 @@ Réserves à la livraison (3 passages du vérificateur, le 3ᵉ autorisé par l'
 
 ## G4 — Rendus et récepteur de référence (EF-43, cahier §5)
 
-- [ ] Rendus `markdown` et `html` dans les deux langues (gabarits sans JavaScript ni ressource externe).
-- [ ] Récepteur de référence `veilleur-receive` : collage du code de jumelage, `pull --folder`, vérification, dépôt des rapports ; lecture d'un dossier exporté (EF-51).
+- [x] Rendus `markdown` et `html` dans les deux langues (gabarits sans JavaScript ni ressource externe).
+- [x] Récepteur de référence `veilleur-receive` : collage du code de jumelage, `pull --folder`, vérification, dépôt des rapports ; lecture d'un dossier exporté (EF-51).
 
 Fini quand : test de bout en bout serveur → récepteur, par HTTP (application WSGI) et par dossier.
+
+Réserves à la livraison (3 passages du vérificateur, le 3ᵉ autorisé par l'utilisateur, tous NON CONFORME ; l'écart bloquant du 3ᵉ est accepté par l'utilisateur comme limite inscrite au cahier §10 et au protocole §6.3, sans 4ᵉ passage). Les écarts ont leur test en `xfail` strict dans `tests/verif/test_g4_verif*.py` :
+- [ ] Limite admise (ES-05) : un membre à qui il manque un paquet purgé et qui a manqué au moins deux rotations doit être rejumelé. Piste : ouvrir les paquets conservés pour adopter leurs déclarations avant d'accepter le `state`.
+- [ ] L'inscription de cette limite et le passage en `xfail` de ses 5 cas n'ont pas été revus par un vérificateur indépendant.
+- [ ] Export : entre la fin des 90 jours et le tour suivant, aucun `state` n'accompagne un paquet de l'ancienne clé.
+- [ ] Export : un paquet est jugé sur sa date, pas sur sa clé ; signé par l'ancienne clé juste après la rotation, il n'entraîne pas de `state` avec `--after` (un export complet s'en sort).
+- [ ] Rendus : U+061C n'est retiré ni des valeurs ni des adresses ; les adresses ne comptent pas dans le plafond de 2 millions de caractères ; le texte d'un lien n'est pas abrégé à 4 000 caractères.
+- [ ] Récepteur : un code de jumelage non UTF-8 finit en trace d'appels.
+- [ ] Hors spécification : deux rotations sans paquet entre elles ne peuvent pas être suivies ; un paquet forgé couvert par un `state` valide est ignoré sans signalement ; le `state` reconstruit passe avant un `delta` lisible de même numéro ; une réponse JSON très profonde finit en `RecursionError` ; un code de jumelage passé en argument est répété sur stderr.
 
 ## G5 — Déploiement (ENF-01 à ENF-08)
 

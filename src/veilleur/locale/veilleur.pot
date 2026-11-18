@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Veilleur VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 00:42+0100\n"
+"POT-Creation-Date: 2026-11-18 12:08+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -38,7 +38,13 @@ msgstr ""
 msgid "A team subscription is managed by the administrator."
 msgstr ""
 
+msgid "Address"
+msgstr ""
+
 msgid "Administration of the Veilleur watch server."
+msgstr ""
+
+msgid "Changed items"
 msgstr ""
 
 #, python-brace-format
@@ -72,6 +78,9 @@ msgid ""
 "secret:"
 msgstr ""
 
+msgid "Gone items (last known content)"
+msgstr ""
+
 msgid "Internal error."
 msgstr ""
 
@@ -85,6 +94,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Invalid subscription document (member {member})."
+msgstr ""
+
+msgid "Key"
 msgstr ""
 
 #, python-brace-format
@@ -105,11 +117,20 @@ msgstr ""
 msgid "Missing or malformed X-Veilleur-Date header."
 msgstr ""
 
+msgid "New items"
+msgstr ""
+
+msgid "No item in this report."
+msgstr ""
+
 msgid "No notifier is configured."
 msgstr ""
 
 #, python-brace-format
 msgid "No pairing matches {reference}."
+msgstr ""
+
+msgid "No state could be made: only the stored packages were written."
 msgstr ""
 
 #, python-brace-format
@@ -121,6 +142,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Origin: {origin}"
+msgstr ""
+
+msgid "Packages signed by the previous server key: a state was written as well."
 msgstr ""
 
 #, python-brace-format
@@ -152,11 +176,35 @@ msgid "Parameters: {params}"
 msgstr ""
 
 #, python-brace-format
+msgid "Period: from {start} to {end}"
+msgstr ""
+
+#, python-brace-format
+msgid "Period: until {end}"
+msgstr ""
+
+#, python-brace-format
+msgid "Produced: {time}"
+msgstr ""
+
+#, python-brace-format
 msgid "Public address: {url}"
 msgstr ""
 
 #, python-brace-format
 msgid "Renderings: {renderings}"
+msgstr ""
+
+#, python-brace-format
+msgid "Report {seq}: catch-up since a date"
+msgstr ""
+
+#, python-brace-format
+msgid "Report {seq}: changes since the previous report"
+msgstr ""
+
+#, python-brace-format
+msgid "Report {seq}: everything currently in force"
 msgstr ""
 
 #, python-brace-format
@@ -169,6 +217,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Several pairings match {reference}; use its key_id."
+msgstr ""
+
+msgid "Sources"
 msgstr ""
 
 #, python-brace-format
@@ -253,6 +304,11 @@ msgid "Unknown rendering: {name}."
 msgstr ""
 
 msgid "Unsupported protocol version."
+msgstr ""
+
+msgid ""
+"Values may be shortened here: items.jsonl, the authoritative data, holds "
+"them in full."
 msgstr ""
 
 #, python-brace-format
@@ -410,6 +466,9 @@ msgid "local address to listen on"
 msgstr ""
 
 msgid "manage the server's signing key"
+msgstr ""
+
+msgid "never"
 msgstr ""
 
 msgid "no"
@@ -640,6 +699,36 @@ msgstr ""
 
 msgid "yes"
 msgstr ""
+
+#, python-brace-format
+msgid "{collector}: failing ({code}), last success {time}"
+msgstr ""
+
+#, python-brace-format
+msgid "{collector}: not collected yet"
+msgstr ""
+
+#, python-brace-format
+msgid "{collector}: working, last success {time}"
+msgstr ""
+
+#, python-brace-format
+msgid "{count} changed item"
+msgid_plural "{count} changed items"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} gone item"
+msgid_plural "{count} gone items"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} more item is only in items.jsonl."
+msgid_plural "{count} more items are only in items.jsonl."
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-brace-format
 msgid "{count} new item"

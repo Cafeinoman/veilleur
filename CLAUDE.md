@@ -45,7 +45,7 @@ Toute évolution met à jour le cahier d'abord, puis la documentation dans les d
 
 ```bash
 uv sync --locked
-uv run pytest && uv run ruff check src tests tools protocol && uv run mypy && uv run lint-imports
+uv run pytest && uv run ruff check src tests tools protocol receiver && uv run mypy && uv run lint-imports
 uv run python tools/i18n.py all          # extraire, fusionner, compiler les traductions
 uv run python tools/protocol_vectors.py  # régénérer les vecteurs du protocole (--check pour comparer)
 uv run python tools/check_vectors.py     # vérification indépendante des vecteurs (libsodium)

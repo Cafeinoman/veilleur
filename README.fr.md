@@ -2,7 +2,7 @@
 
 *[English version](README.md)*
 
-Veilleur est un **serveur de veille** auto-hébergé. Il collecte des informations depuis des sources branchables (flux RSS/Atom, API JSON, pages web, ou toute source écrite comme greffon), repère ce qui est nouveau ou a changé d'un tour à l'autre, en fait des **rapports** et les livre, **signés et chiffrés**, à des outils de réception. Ces outils sont hors du périmètre du projet ; un petit récepteur de référence montrera comment en écrire un.
+Veilleur est un **serveur de veille** auto-hébergé. Il collecte des informations depuis des sources branchables (flux RSS/Atom, API JSON, pages web, ou toute source écrite comme greffon), repère ce qui est nouveau ou a changé d'un tour à l'autre, en fait des **rapports** et les livre, **signés et chiffrés**, à des outils de réception. Ces outils sont hors du périmètre du projet ; un petit récepteur de référence (`receiver/`) montre comment en écrire un.
 
 > **État : début du développement.** Seul le squelette du projet existe ; rien n'est encore utilisable. La conception et la feuille de route sont dans [docs/fr/design.md](docs/fr/design.md).
 
@@ -21,7 +21,7 @@ Il faut [uv](https://docs.astral.sh/uv/) et Python 3.12 ou plus récent.
 ```bash
 uv sync
 uv run pytest
-uv run ruff check src tests tools protocol
+uv run ruff check src tests tools protocol receiver
 uv run mypy
 uv run lint-imports
 uv run veilleur --lang fr version

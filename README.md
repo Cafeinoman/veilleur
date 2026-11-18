@@ -2,7 +2,7 @@
 
 *[Version française](README.fr.md)*
 
-Veilleur is a self-hosted **watch server**. It collects information from pluggable sources (RSS/Atom feeds, JSON APIs, web pages, or any source written as a plugin), detects what is new or has changed between two rounds, turns it into **reports**, and delivers them, **signed and encrypted**, to receiving tools. Receiving tools are out of the project's scope; a small reference receiver will show how to write one.
+Veilleur is a self-hosted **watch server**. It collects information from pluggable sources (RSS/Atom feeds, JSON APIs, web pages, or any source written as a plugin), detects what is new or has changed between two rounds, turns it into **reports**, and delivers them, **signed and encrypted**, to receiving tools. Receiving tools are out of the project's scope; a small reference receiver (`receiver/`) shows how to write one.
 
 > **Status: early development.** Only the project skeleton exists. Nothing is usable yet. The design and the roadmap are in [docs/en/design.md](docs/en/design.md).
 
@@ -21,7 +21,7 @@ Requires [uv](https://docs.astral.sh/uv/) and Python 3.12 or later.
 ```bash
 uv sync
 uv run pytest
-uv run ruff check src tests tools protocol
+uv run ruff check src tests tools protocol receiver
 uv run mypy
 uv run lint-imports
 uv run veilleur --lang fr version

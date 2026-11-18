@@ -1,0 +1,172 @@
+# Translations template for Veilleur.
+# Copyright (C) 2026 Veilleur contributors
+# This file is distributed under the same license as the Veilleur project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Veilleur VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-11-18 12:08+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#, python-format
+msgid "%(heading)s:"
+msgstr ""
+
+#, python-format
+msgid "%(prog)s: error: %(message)s\n"
+msgstr ""
+
+msgid "A file or folder cannot be read or written."
+msgstr ""
+
+msgid "Another veilleur-receive command is running on this state."
+msgstr ""
+
+#, python-brace-format
+msgid "Paired for delivery by folder ({key_id})."
+msgstr ""
+
+#, python-brace-format
+msgid "Paired with {server} ({key_id})."
+msgstr ""
+
+msgid "Pairing code: "
+msgstr ""
+
+msgid "Reference receiver of Veilleur reports."
+msgstr ""
+
+msgid "The destination folder cannot be used safely."
+msgstr ""
+
+msgid "The folder to read does not exist."
+msgstr ""
+
+msgid "The receiver's state file cannot be read."
+msgstr ""
+
+msgid "The receiver's state is not private to this user; nothing was done."
+msgstr ""
+
+msgid ""
+"The server's key changed: the new key is now trusted, the old one no "
+"longer is."
+msgstr ""
+
+msgid "This pairing code is not valid."
+msgstr ""
+
+msgid ""
+"This pairing is for delivery by folder: give the folder to read with "
+"--from."
+msgstr ""
+
+msgid ""
+"This receiver is already paired; use another state directory for another "
+"pairing."
+msgstr ""
+
+msgid "This receiver is not paired yet: run “veilleur-receive pair” first."
+msgstr ""
+
+#, python-format
+msgid "argument %(argument_name)s: %(message)s"
+msgstr ""
+
+msgid "command"
+msgstr ""
+
+#, python-brace-format
+msgid "error: {message}"
+msgstr ""
+
+msgid "expected one argument"
+msgstr ""
+
+msgid "fetch, check and file the new reports"
+msgstr ""
+
+#, python-brace-format
+msgid "file {file}: refused ({code})"
+msgstr ""
+
+msgid "folder"
+msgstr ""
+
+#, python-format
+msgid "invalid choice: %(value)r (choose from %(choices)s)"
+msgstr ""
+
+msgid "language of messages (default: from the system)"
+msgstr ""
+
+msgid "options"
+msgstr ""
+
+msgid "positional arguments"
+msgstr ""
+
+msgid "read a pairing code from the terminal or standard input"
+msgstr ""
+
+msgid "read the packages of this folder instead of the server"
+msgstr ""
+
+msgid "show the version"
+msgstr ""
+
+msgid "show this help message and exit"
+msgstr ""
+
+#, python-brace-format
+msgid "subscription {uid}, package {seq}: refused ({code})"
+msgstr ""
+
+#, python-brace-format
+msgid "subscription {uid}: stopped ({code})"
+msgstr ""
+
+#, python-brace-format
+msgid "subscription {uid}: the server is preparing a report, pull again later"
+msgstr ""
+
+#, python-format
+msgid "the following arguments are required: %s"
+msgstr ""
+
+#, python-brace-format
+msgid "the server refused or failed ({code})"
+msgstr ""
+
+#, python-format
+msgid "unrecognized arguments: %s"
+msgstr ""
+
+msgid "usage: "
+msgstr ""
+
+#, python-brace-format
+msgid "veilleur-receive {version}"
+msgstr ""
+
+msgid "where the pairing is kept"
+msgstr ""
+
+msgid "where to file the reports"
+msgstr ""
+
+#, python-brace-format
+msgid "{count} report filed in {folder}"
+msgid_plural "{count} reports filed in {folder}"
+msgstr[0] ""
+msgstr[1] ""
+

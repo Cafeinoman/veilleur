@@ -17,7 +17,7 @@ Then, from the repository root:
 uv run python tools/i18n.py all
 ```
 
-This extracts the strings into `src/veilleur/locale/veilleur.pot`, merges them into `src/veilleur/locale/fr/LC_MESSAGES/veilleur.po` and compiles `veilleur.mo`. Translate the new entries in the `.po` file (empty `msgstr`), then run `uv run python tools/i18n.py compile`. Both the `.po` and the `.mo` files are committed.
+This extracts the strings into `src/veilleur/locale/veilleur.pot`, merges them into `src/veilleur/locale/fr/LC_MESSAGES/veilleur.po` and compiles `veilleur.mo`. Translate the new entries in the `.po` file (empty `msgstr`), then run `uv run python tools/i18n.py compile`. Both the `.po` and the `.mo` files are committed. The reference receiver has its own catalogue, handled by the same command, in `receiver/src/veilleur_receive/locale/`: it does not depend on the server.
 
 The tests fail when a message has no French translation, when a translation is fuzzy or obsolete, when a placeholder is lost and when the `.mo` file is out of date.
 

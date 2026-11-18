@@ -53,7 +53,7 @@ Principe de confidentialité : *le serveur connaît ce qu'il collecte, jamais ce
 
 ## 3. Rapports
 
-Un paquet contient `manifest.json` (version du protocole, abonnement, numéro, genre, période, empreinte de chaque autre fichier, état des collectes), `manifest.sig`, `items.jsonl` (JSON Lines, un élément par ligne, trié par clé : `{key, change: new|changed|gone, hash, fields, fetched_at, url}`) et les rendus demandés (`report.md`, `report.html`) dans la langue de l'abonnement. Les rendus sont **facultatifs** et **dérivés** : `items.jsonl` fait foi.
+Un paquet contient `manifest.json` (version du protocole, abonnement, numéro, genre, période, empreinte de chaque autre fichier, état des collectes), `manifest.sig`, `items.jsonl` (JSON Lines, un élément par ligne, trié par clé : `{key, change: new|changed|gone, hash, fields, fetched_at, url}`) et les rendus demandés (`report.md`, `report.html`) dans la langue de l'abonnement. Les rendus sont **facultatifs** et **dérivés** : `items.jsonl` fait foi. Les valeurs collectées sont traitées comme hostiles : elles sont échappées pour chaque format, seules les adresses `http(s)` deviennent des liens, les valeurs longues sont abrégées, et un paquet trop gros avec ses rendus est scellé sans eux.
 
 Genres : `delta` (depuis le paquet précédent), `state` (tout ce qui est en vigueur, pour un récepteur revenu après la purge des paquets), `history` (rattrapage depuis une date, préparé en tâche de fond). Chaque abonnement garde ce qu'il a rapporté en dernier : un rapport compare à cela les éléments courants, filtrés, de sa collecte, de sorte que les changements s'accumulent jusqu'à ce que le rapport soit dû. Périodicité par abonnement (quotidienne par défaut, hebdomadaire, à chaque tour) ; un rapport vide n'est pas produit ; un abonnement neuf reçoit d'abord un `state`, puis des `delta`. Les paquets sont numérotés sans trou et gardés 90 jours ; un paquet purgé répond `410`, et le récepteur demande alors un `state`.
 
@@ -81,7 +81,7 @@ Livrables de sécurité : spécification du protocole (**normative en anglais**,
 
 L'outil de réception est hors périmètre. Veilleur fournit :
 - `veilleur-protocol`, une bibliothèque autonome (code de jumelage, signature des requêtes, ouverture et vérification d'un paquet ; dépendance unique `pycryptodomex`) ;
-- un **récepteur de référence** minimal (`veilleur-receive pull --folder …`) qui récupère, vérifie et dépose les rapports dans un dossier. Il sert aux tests de bout en bout et d'exemple.
+- un **récepteur de référence** minimal (`veilleur-receive`, paquet dans `receiver/`, qui ne dépend que de `veilleur-protocol`) : `pair` lit le code de jumelage au terminal ou sur l'entrée standard, jamais sur la ligne de commande ; `pull --folder …` récupère, vérifie et dépose les rapports dans `<dossier>/<uid>/<numéro>-<genre>/`, réservé à l'utilisateur courant ; `pull --folder … --from …` lit un dossier écrit par `veilleur export`. Un trou de numérotation n'est accepté que s'il est couvert par un `state`. Il sert aux tests de bout en bout et d'exemple.
 
 ## 6. Interface HTTP `/v1`
 

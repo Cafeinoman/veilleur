@@ -10,6 +10,7 @@ resolution-markers = [
 members = [
     "veilleur",
     "veilleur-protocol",
+    "veilleur-receive",
 ]
 
 [[package]]
@@ -716,6 +717,7 @@ dev = [
     { name = "pynacl" },
     { name = "pytest" },
     { name = "ruff" },
+    { name = "veilleur-receive" },
 ]
 
 [package.metadata]
@@ -732,6 +734,7 @@ dev = [
     { name = "pynacl", specifier = ">=1.5" },
     { name = "pytest", specifier = ">=8" },
     { name = "ruff", specifier = ">=0.6" },
+    { name = "veilleur-receive", editable = "receiver" },
 ]
 
 [[package]]
@@ -744,3 +747,14 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [{ name = "pycryptodomex", specifier = ">=3.20" }]
+
+[[package]]
+name = "veilleur-receive"
+version = "0.0.0"
+source = { editable = "receiver" }
+dependencies = [
+    { name = "veilleur-protocol" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "veilleur-protocol", editable = "protocol" }]

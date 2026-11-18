@@ -31,6 +31,10 @@ keywords = "veilleur.adapters.filters:KeywordsFilter"
 regex = "veilleur.adapters.filters:RegexFilter"
 dedup = "veilleur.adapters.filters:DedupFilter"
 
+[project.entry-points."veilleur.renderers"]
+markdown = "veilleur.adapters.renderers:MarkdownRenderer"
+html = "veilleur.adapters.renderers:HtmlRenderer"
+
 [dependency-groups]
 dev = [
     "pytest>=8",
@@ -40,13 +44,16 @@ dev = [
     "babel>=2.16",
     # Independent check of the protocol test vectors (libsodium); never a run-time dependency.
     "pynacl>=1.5",
+    # The end-to-end tests run the reference receiver against the server.
+    "veilleur-receive",
 ]
 
 [tool.uv.workspace]
-members = ["protocol"]
+members = ["protocol", "receiver"]
 
 [tool.uv.sources]
 veilleur-protocol = { workspace = true }
+veilleur-receive = { workspace = true }
 
 [build-system]
 requires = ["hatchling>=1.27"]
@@ -62,22 +69,22 @@ addopts = "-q"
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-src = ["src", "tests", "protocol/src", "protocol/tests"]
+src = ["src", "tests", "protocol/src", "protocol/tests", "receiver/src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
 
 [tool.mypy]
-files = ["src", "tests", "tools", "protocol/src", "protocol/tests", "examples/veilleur-example-collector/src"]
+files = ["src", "tests", "tools", "protocol/src", "protocol/tests", "receiver/src", "examples/veilleur-example-collector/src"]
 strict = true
-mypy_path = "src:protocol/src:examples/veilleur-example-collector/src"
+mypy_path = "src:protocol/src:receiver/src:examples/veilleur-example-collector/src"
 
 [[tool.mypy.overrides]]
 module = ["babel.*"]
 ignore_missing_imports = true
 
 [tool.importlinter]
-root_packages = ["veilleur", "veilleur_protocol"]
+root_packages = ["veilleur", "veilleur_protocol", "veilleur_receive"]
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
@@ -109,4 +116,10 @@ layers = [
 name = "The protocol library is standalone"
 type = "forbidden"
 source_modules = ["veilleur_protocol"]
+forbidden_modules = ["veilleur", "veilleur_receive"]
+
+[[tool.importlinter.contracts]]
+name = "The reference receiver depends on the protocol library, never on the server"
+type = "forbidden"
+source_modules = ["veilleur_receive"]
 forbidden_modules = ["veilleur"]

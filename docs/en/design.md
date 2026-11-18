@@ -53,7 +53,7 @@ Subscription parameters are encrypted in transit and readable by the server in i
 
 ## 3. Reports
 
-A package contains `manifest.json` (protocol version, subscription, number, kind, period, hash of every other file, status of the collections), `manifest.sig`, `items.jsonl` (JSON Lines, one item per line, sorted by key: `{key, change: new|changed|gone, hash, fields, fetched_at, url}`) and the requested renderings (`report.md`, `report.html`) in the subscription's language. Renderings are **optional** and **derived**: `items.jsonl` is authoritative.
+A package contains `manifest.json` (protocol version, subscription, number, kind, period, hash of every other file, status of the collections), `manifest.sig`, `items.jsonl` (JSON Lines, one item per line, sorted by key: `{key, change: new|changed|gone, hash, fields, fetched_at, url}`) and the requested renderings (`report.md`, `report.html`) in the subscription's language. Renderings are **optional** and **derived**: `items.jsonl` is authoritative. Collected values are treated as hostile: they are escaped for each format, only `http(s)` addresses become links, long values are shortened, and a package too large with its renderings is sealed without them.
 
 Kinds: `delta` (since the previous package), `state` (everything currently valid, for a receiver back after packages were purged), `history` (catch-up from a date, prepared in the background). Each subscription keeps what it last reported: a report compares the filtered current items of its collection with that, so changes accumulate until the report is due. Frequency per subscription (daily by default, weekly, every round); an empty report is not produced; a new subscription first receives a `state`, then `delta`s. Packages are numbered without gaps and kept 90 days; a purged package answers `410`, and the receiver then asks for a `state`.
 
@@ -81,7 +81,7 @@ Security deliverables: the protocol specification (**normative in English**, inf
 
 The receiving tool is out of scope. Veilleur provides:
 - `veilleur-protocol`, a standalone library (pairing code, request signing, opening and checking a package; single dependency `pycryptodomex`);
-- a minimal **reference receiver** (`veilleur-receive pull --folder …`) that fetches, checks and writes reports in a folder. It is used for end-to-end tests and as an example.
+- a minimal **reference receiver** (`veilleur-receive`, package in `receiver/`, depending on `veilleur-protocol` alone): `pair` reads the pairing code from the terminal or standard input, never from the command line; `pull --folder …` fetches, checks and files reports in `<folder>/<uid>/<number>-<kind>/`, readable by the current user only; `pull --folder … --from …` reads a folder written by `veilleur export`. A gap in the numbers is accepted only when a `state` covers it. It is used for end-to-end tests and as an example.
 
 ## 6. HTTP interface `/v1`
 
