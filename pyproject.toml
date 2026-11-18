@@ -6,7 +6,10 @@ readme = "README.md"
 license = "EUPL-1.2"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
-dependencies = ["veilleur-protocol"]
+dependencies = [
+    "google-re2>=1.1.20251105",
+    "veilleur-protocol",
+]
 classifiers = [
     "Development Status :: 1 - Planning",
     "Natural Language :: English",

@@ -36,7 +36,7 @@ Collections are **shared**: two subscriptions asking for the same feed cause a s
 | `veilleur.renderers` | `render(report, language) -> dict[file_name, bytes]` | `markdown`, `html` (simple template, no JavaScript) |
 | `veilleur.notifiers` | `notify(target, counts)`, the target being a pairing's random topic | `ntfy`, `webhook` (HMAC-signed body) |
 
-Filters apply after change detection and before the report; they never modify stored items. A collector or a filter may also check its parameters beyond its schema (`check_params`), when a subscription is received: the `regex` filter refuses patterns that can backtrack catastrophically, the `page` collector unsupported selectors. A feed (`rss`) shows only its latest entries: its collections are never complete, so an entry that leaves the feed is not reported as gone.
+Filters apply after change detection and before the report; they never modify stored items. A collector or a filter may also check its parameters beyond its schema (`check_params`), when a subscription is received: the `regex` filter refuses patterns RE2 does not support (back-references, look-around), the `page` collector unsupported selectors. Patterns of the `regex` filter follow RE2 syntax and are searched in time linear in the text, so none can stall the round; `\w`, `\d` and `\b` are ASCII only (`\pL` matches any letter). A feed (`rss`) shows only its latest entries: its collections are never complete, so an entry that leaves the feed is not reported as gone.
 
 Notifications go to each pairing that received reports in the round, on a random topic drawn at pairing time and given in its pairing code; they carry counts only (reports, new items, sources failing for more than two days).
 

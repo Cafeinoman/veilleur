@@ -10,10 +10,9 @@ an entry published again under another key is reported once.
 from __future__ import annotations
 
 import importlib
-import re
 import unicodedata
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any
+from typing import Any, Protocol
 
 from veilleur.core.ports.plugins import FilterItem
 
@@ -83,154 +82,33 @@ class KeywordsFilter:
         return item if matched != params.get("exclude", False) else None
 
 
-_parser: Any = importlib.import_module("re._parser")
-_constants: Any = importlib.import_module("re._constants")
-_REPEATS = {_constants.MAX_REPEAT, _constants.MIN_REPEAT, getattr(_constants, "POSSESSIVE_REPEAT", None)} - {None}
-_REFERENCES = {_constants.GROUPREF, _constants.GROUPREF_EXISTS}
+class Pattern(Protocol):
+    def search(self, text: str) -> object | None: ...
 
 
-def _risky(pattern: Any, outer: str = "") -> bool:
-    """True for what may backtrack catastrophically: a back-reference; a repetition inside another repetition when
-    either is unbounded (`(a+)+`, `(.*a){20}`); an alternation inside an unbounded repetition (`(a|ab)*`).
-    `outer` is "" outside any repetition, otherwise "bounded" or "unbounded"."""
-    for op, argument in pattern:
-        if op in _REFERENCES:
-            return True
-        if op in _REPEATS:
-            _low, high, body = argument
-            unbounded = high == _constants.MAXREPEAT or high > 100
-            if high > 1 and (outer == "unbounded" or (outer == "bounded" and unbounded)):
-                return True
-            inner = outer if high <= 1 else ("unbounded" if unbounded or outer == "unbounded" else "bounded")
-            if _risky(body, inner):
-                return True
-        elif op is _constants.BRANCH:
-            if outer == "unbounded" or any(_risky(branch, outer) for branch in argument[1]):
-                return True
-        elif op is _constants.SUBPATTERN:
-            if _risky(argument[-1], outer):
-                return True
-        elif op is getattr(_constants, "ATOMIC_GROUP", object()):
-            if _risky(argument, outer):
-                return True
-        elif op in (_constants.ASSERT, _constants.ASSERT_NOT) and _risky(argument[1], outer):
-            return True
-    return False
+_re2: Any = importlib.import_module("re2")  # google-re2 ships no type information
 
 
-_SAMPLE = frozenset(chr(code) for code in range(0x300)) | frozenset("\u00a0\u2028\u2019\u20ac\u4e2d")
-"""Characters on which the character sets of the pattern are compared (an approximation: enough to tell `\\d`
-from `-` or `\\s` from `\\w`)."""
-_CATEGORIES = {
-    _constants.CATEGORY_DIGIT: r"\d",
-    _constants.CATEGORY_NOT_DIGIT: r"\D",
-    _constants.CATEGORY_SPACE: r"\s",
-    _constants.CATEGORY_NOT_SPACE: r"\S",
-    _constants.CATEGORY_WORD: r"\w",
-    _constants.CATEGORY_NOT_WORD: r"\W",
-}
-_ATOMS = {_constants.LITERAL, _constants.NOT_LITERAL, _constants.ANY, _constants.IN}
-
-
-def _folded(char: str) -> set[str]:
-    return {c for c in (char, char.lower(), char.upper()) if len(c) == 1}
-
-
-def _atom_chars(op: Any, argument: Any) -> frozenset[str]:
-    """Characters (among `_SAMPLE`, case folded) a single-character atom may consume."""
-    if op is _constants.LITERAL:
-        return frozenset(_folded(chr(argument)))
-    if op is _constants.NOT_LITERAL:
-        return _SAMPLE - {chr(argument)}
-    if op is _constants.ANY:
-        return _SAMPLE
-    negate, chars = False, set()
-    for kind, value in argument:
-        if kind is _constants.NEGATE:
-            negate = True
-        elif kind is _constants.LITERAL:
-            chars |= _folded(chr(value))
-        elif kind is _constants.RANGE:
-            chars |= {c for c in _SAMPLE if any(value[0] <= ord(f) <= value[1] for f in _folded(c))}
-        elif kind is _constants.CATEGORY and value in _CATEGORIES:
-            matcher = re.compile(_CATEGORIES[value])
-            chars |= {c for c in _SAMPLE if matcher.fullmatch(c)}
-        else:
-            return _SAMPLE
-    return frozenset(_SAMPLE - chars if negate else chars)
-
-
-def _chars(pattern: Any) -> frozenset[str]:
-    """Every character (among `_SAMPLE`) a (sub)pattern may consume."""
-    found: frozenset[str] = frozenset()
-    for op, argument in pattern:
-        if op in _ATOMS:
-            found |= _atom_chars(op, argument)
-        elif op in _REPEATS:
-            found |= _chars(argument[2])
-        elif op is _constants.SUBPATTERN:
-            found |= _chars(argument[-1])
-        elif op is _constants.BRANCH:
-            for branch in argument[1]:
-                found |= _chars(branch)
-        elif op is getattr(_constants, "ATOMIC_GROUP", object()):
-            found |= _chars(argument)
-    return found
-
-
-def _successive(pattern: Any, live: frozenset[str] = frozenset()) -> tuple[bool, frozenset[str]]:
-    """Polynomial backtracking: two unbounded repetitions in sequence that may consume the same characters, with
-    nothing mandatory between them that the first one cannot consume (`.*.*=`, `a*a*b`, `.*x.*y`). `\\d+-\\d+` or
-    `\\w+\\s+\\w+` stay accepted. `live` holds the characters of the unbounded repetitions that the next element may
-    compete with; returns (risky, live after the pattern)."""
-    for op, argument in pattern:
-        if op in _ATOMS:
-            if not live & _atom_chars(op, argument):
-                live = frozenset()  # a mandatory character the previous repetitions cannot take: they stop there
-        elif op in _REPEATS:
-            low, high, body = argument
-            if high == _constants.MAXREPEAT or high > 100:
-                chars = _chars(body)
-                if live & chars:
-                    return True, live
-                live = chars if low >= 1 else live | chars  # a mandatory one the previous ones cannot enter separates
-            elif low >= 1:
-                risky, live = _successive(body, live)
-                if risky:
-                    return True, live
-        elif op is _constants.SUBPATTERN or op is getattr(_constants, "ATOMIC_GROUP", object()):
-            risky, live = _successive(argument[-1] if op is _constants.SUBPATTERN else argument, live)
-            if risky:
-                return True, live
-        elif op is _constants.BRANCH:
-            after: frozenset[str] = frozenset()
-            for branch in argument[1]:
-                risky, branch_live = _successive(branch, live)
-                if risky:
-                    return True, live
-                after |= branch_live
-            live = after
-    return False, live
-
-
-def compile_pattern(pattern: str, *, case: bool) -> re.Pattern[str]:
-    """Compile a pattern of the `regex` filter; raise `ValueError` for a malformed or risky one."""
+def compile_pattern(pattern: str, *, case: bool) -> Pattern:
+    """Compile a pattern of the `regex` filter with RE2, whose search time is linear in the text: no pattern can
+    backtrack, catastrophically or not. Raise `ValueError` for a malformed one, or one RE2 does not support
+    (back-references, look-around)."""
     if len(pattern) > 500:
         raise ValueError("pattern too long")
+    options = _re2.Options()
+    options.case_sensitive = case
+    options.log_errors = False
+    options.max_mem = 8 << 20
     try:
-        parsed = _parser.parse(pattern)
-        if _risky(parsed) or _successive(parsed)[0]:
-            raise ValueError("risky pattern")
-        return re.compile(pattern, 0 if case else re.IGNORECASE)
-    except (re.error, RecursionError, OverflowError) as exc:
+        compiled: Pattern = _re2.compile(pattern, options)
+    except _re2.error as exc:
         raise ValueError("malformed pattern") from exc
+    return compiled
 
 
 class RegexFilter:
-    """Regular expressions (Python syntax). Patterns that may backtrack catastrophically are refused (see `_risky`):
-    back-references, nested repetitions when one is unbounded (`(a+)+`), an alternation inside an unbounded
-    repetition (`(a|b)*`: write `[ab]*`), successive unbounded repetitions that compete for the same characters
-    (`.*.*=`, `.*a.*b`: write `a.*b`)."""
+    """Regular expressions in RE2 syntax (Python's, without back-references nor look-around), searched in linear
+    time: a receiving tool cannot stall the round with a pattern."""
 
     name = "regex"
     schema: Mapping[str, Any] = {
@@ -248,7 +126,7 @@ class RegexFilter:
     }
 
     def __init__(self) -> None:
-        self._compiled: dict[tuple[str, bool, bool], re.Pattern[str]] = {}
+        self._compiled: dict[tuple[str, bool, bool], Pattern] = {}
 
     def check_params(self, params: Mapping[str, Any]) -> str | None:
         try:
@@ -257,7 +135,7 @@ class RegexFilter:
             return "/pattern"
         return None
 
-    def _pattern(self, params: Mapping[str, Any]) -> re.Pattern[str]:
+    def _pattern(self, params: Mapping[str, Any]) -> Pattern:
         case, accents = params.get("case_sensitive", False), params.get("accent_sensitive", True)
         key = (params["pattern"], case, accents)
         if key not in self._compiled:

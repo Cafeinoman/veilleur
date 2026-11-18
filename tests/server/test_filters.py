@@ -52,28 +52,32 @@ def test_regex() -> None:
 
 @pytest.mark.parametrize(
     "pattern",
-    [
-        r"(a+)+$",
-        r"(a*)*b",
-        r"(a|a)*c",
-        r"(a|ab)+",
-        r"(\w+\s?)+$",
-        r"(.*a){20}",
-        r"(a)\1",
-        r"(?P<x>a)(?P=x)",
-        r".*.*=",
-        r"a*a*b",
-        r".*x.*y",
-        r"\w+\s*\w+",
-        r"(?:\d+)(?:\d+)z",
-        "(",
-        "x" * 501,
-    ],
+    [r"(a)\1", r"(?P<x>a)(?P=x)", r"foo(?=bar)", r"(?<!x)y", "(", "[a-", r"(?:a{1000}){1000}", "x" * 501],
 )
-def test_risky_or_malformed_patterns_are_refused(pattern: str) -> None:
+def test_unsupported_or_malformed_patterns_are_refused(pattern: str) -> None:
     with pytest.raises(ValueError):
         compile_pattern(pattern, case=False)
     assert RegexFilter().check_params({"pattern": pattern}) == "/pattern"
+
+
+_HOSTILE = [
+    (r"(a+)+$", "a" * 19_999 + "!"),
+    (r"(a|ab)*c", "ab" * 10_000),
+    (r".*.*.*.*=", "lorem ipsum " * 1_700),
+    (r".{0,100}.{0,100}.{0,100}.{0,100}=", "a" * 20_000),
+    (r"(?:.{0,50}){4}=", "a" * 20_000),
+    ("[\u03b1-\u03c9]+[\u03b1-\u03c9]+[\u03b1-\u03c9]+=", "\u03bb" * 20_000),
+    (r"\w+\s*\w+!", "word " * 4_000),
+]
+
+
+@pytest.mark.parametrize(("pattern", "text"), _HOSTILE)
+def test_no_pattern_backtracks(pattern: str, text: str) -> None:
+    """RE2 searches in linear time: patterns that would backtrack catastrophically with `re` are harmless."""
+    item = FilterItem("k", {"t": text}, None)
+    start = time.monotonic()
+    assert RegexFilter().apply(item, {"pattern": pattern}) is None
+    assert time.monotonic() - start < 1
 
 
 @pytest.mark.parametrize(
@@ -87,15 +91,21 @@ def test_risky_or_malformed_patterns_are_refused(pattern: str) -> None:
         r"a{2,5}",
         r"\d+-\d+",
         r"\w+\s+\w+",
-        r"\w+@\w+\.\w+",
+        r"[\w.-]+@[\w.-]+\.\w+",
         r"https?://\S+",
         r"[^,]+,[^,]+",
-        r"foo.*bar",
+        r".*foo.*bar",
+        r"\pL+",
     ],
 )
 def test_usual_patterns_are_accepted(pattern: str) -> None:
     compile_pattern(pattern, case=False)
     assert RegexFilter().check_params({"pattern": pattern}) is None
+
+
+def test_case_folding_covers_accented_letters() -> None:
+    assert compile_pattern("ÉLECTION", case=False).search("l'élection")
+    assert not compile_pattern("ÉLECTION", case=True).search("l'élection")
 
 
 def test_long_text_is_cut() -> None:
@@ -123,7 +133,7 @@ def test_filter_parameters_are_checked_on_reception(world: World) -> None:
     document = {
         "collector": "fake",
         "params": {"topic": "t"},
-        "filters": [{"name": "regex", "params": {"pattern": "(a+)+"}}],
+        "filters": [{"name": "regex", "params": {"pattern": r"(a)\1"}}],
     }
     with pytest.raises(VeilleurError) as caught:
         parse_spec(document, plugins)
