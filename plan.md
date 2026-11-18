@@ -14,8 +14,7 @@
 
 ## Questions en attente
 
-1. **Marque « Veilleur » (G6).** Les registres n'ont pas pu être interrogés automatiquement : INPI refusé (403), WIPO et TMview inutilisables sans navigateur. La recherche web ne trouve aucune marque, mais un projet homonyme existe (`veilleur.app`, agent d'astreinte). **Recommandation** : avant l'étiquette `v0.1.0`, chercher « Veilleur » dans les classes de Nice 9 et 42 sur [INPI](https://data.inpi.fr/), [TMview](https://www.tmdn.org/tmview/) et [WIPO](https://branddb.wipo.int/), puis noter le résultat ici.
-2. **Publication sur PyPI (G6).** Les noms `veilleur`, `veilleur-protocol` et `veilleur-receive` sont libres (18/11/2026). Une version publiée ne peut pas être republiée. **Recommandation** : ne pas publier la 0.1.0, l'installation passant par le flake, et décider à la première version au protocole stabilisé.
+Aucune.
 
 ## État
 
@@ -27,7 +26,7 @@
 | G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | fait, avec réserves (PR à fusionner, puis étiquette `g3`) |
 | G4 | Rendus, récepteur de référence | fait, avec réserves (étiquette `g4`) |
 | G5 | Déploiement NixOS et repli systemd | fait, avec réserves (PR à fusionner, puis étiquette `g5`) |
-| G6 | Publication 0.1.0 | en cours : à livrer, deux questions en attente |
+| G6 | Publication 0.1.0 | en cours : à livrer |
 
 ## G0-R — Mise en route du dépôt
 
@@ -251,7 +250,7 @@ Réserves à la livraison (3 passages du vérificateur, le 3ᵉ autorisé par l'
 - [x] `SECURITY.md` (signalement privé par GitHub), `CONTRIBUTING.md` et `CONTRIBUTING.fr.md` (branches, PR, traductions, contrôles).
 - [x] Recherche de secrets dans tout l'historique (`gitleaks`) : 164 alertes, toutes dans les vecteurs de test publics, exclus par `.gitleaks.toml` ; aucune autre.
 - [x] Vérification du nom sur PyPI : `veilleur`, `veilleur-protocol` et `veilleur-receive` sont libres.
-- [ ] Vérification de l'absence de marque déposée (question 1).
+- [x] Vérification de l'absence de marque déposée : aucun dépôt à l'INPI (recherche de l'utilisateur) ; le nom est conservé (cahier §10).
 - [x] Version 0.1.0 préparée : numéros de version, notes de version bilingues.
 - [ ] Après la fusion : étiquette `v0.1.0` sur `main` et release GitHub.
-- [ ] Publication sur PyPI : arbitrage de l'utilisateur (question 2).
+- [x] Publication sur PyPI : écartée par l'utilisateur (cahier §10).
