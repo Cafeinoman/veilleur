@@ -31,6 +31,10 @@ keywords = "veilleur.adapters.filters:KeywordsFilter"
 regex = "veilleur.adapters.filters:RegexFilter"
 dedup = "veilleur.adapters.filters:DedupFilter"
 
+[project.entry-points."veilleur.renderers"]
+markdown = "veilleur.adapters.renderers:MarkdownRenderer"
+html = "veilleur.adapters.renderers:HtmlRenderer"
+
 [dependency-groups]
 dev = [
     "pytest>=8",

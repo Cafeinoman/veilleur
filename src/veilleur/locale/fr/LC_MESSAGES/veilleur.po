@@ -40,8 +40,14 @@ msgstr ""
 msgid "A team subscription is managed by the administrator."
 msgstr "Un abonnement d'équipe est géré par l'administrateur."
 
+msgid "Address"
+msgstr "Adresse"
+
 msgid "Administration of the Veilleur watch server."
 msgstr "Administration du serveur de veille Veilleur."
+
+msgid "Changed items"
+msgstr "Éléments modifiés"
 
 #, python-brace-format
 msgid "Collector {name} is not allowed for this pairing."
@@ -76,6 +82,9 @@ msgstr ""
 "Remettez ce code à l'outil de réception. Il n'est montré qu'une fois et "
 "contient un secret :"
 
+msgid "Gone items (last known content)"
+msgstr "Éléments disparus (dernier contenu connu)"
+
 msgid "Internal error."
 msgstr "Erreur interne."
 
@@ -90,6 +99,9 @@ msgstr "Paramètres invalides en {path} (règle {keyword})."
 #, python-brace-format
 msgid "Invalid subscription document (member {member})."
 msgstr "Document d'abonnement invalide (membre {member})."
+
+msgid "Key"
+msgstr "Clé"
 
 #, python-brace-format
 msgid "Language: {language}"
@@ -108,6 +120,12 @@ msgstr "Authentification absente ou invalide."
 
 msgid "Missing or malformed X-Veilleur-Date header."
 msgstr "En-tête X-Veilleur-Date absent ou mal formé."
+
+msgid "New items"
+msgstr "Nouveaux éléments"
+
+msgid "No item in this report."
+msgstr "Aucun élément dans ce rapport."
 
 msgid "No notifier is configured."
 msgstr "Aucun notificateur n'est configuré."
@@ -158,12 +176,36 @@ msgid "Parameters: {params}"
 msgstr "Paramètres : {params}"
 
 #, python-brace-format
+msgid "Period: from {start} to {end}"
+msgstr "Période : du {start} au {end}"
+
+#, python-brace-format
+msgid "Period: until {end}"
+msgstr "Période : jusqu'au {end}"
+
+#, python-brace-format
+msgid "Produced: {time}"
+msgstr "Produit le : {time}"
+
+#, python-brace-format
 msgid "Public address: {url}"
 msgstr "Adresse publique : {url}"
 
 #, python-brace-format
 msgid "Renderings: {renderings}"
 msgstr "Rendus : {renderings}"
+
+#, python-brace-format
+msgid "Report {seq}: catch-up since a date"
+msgstr "Rapport {seq} : rattrapage depuis une date"
+
+#, python-brace-format
+msgid "Report {seq}: changes since the previous report"
+msgstr "Rapport {seq} : changements depuis le rapport précédent"
+
+#, python-brace-format
+msgid "Report {seq}: everything currently in force"
+msgstr "Rapport {seq} : tout ce qui est en vigueur"
 
 #, python-brace-format
 msgid "Round finished: {collections} collections, {failed} failed."
@@ -176,6 +218,9 @@ msgstr "Clé du serveur : {key}"
 #, python-brace-format
 msgid "Several pairings match {reference}; use its key_id."
 msgstr "Plusieurs jumelages correspondent à {reference} ; indiquez son key_id."
+
+msgid "Sources"
+msgstr "Sources"
 
 #, python-brace-format
 msgid "State directory: {path}"
@@ -264,6 +309,13 @@ msgstr "Rendu inconnu : {name}."
 
 msgid "Unsupported protocol version."
 msgstr "Version du protocole non prise en charge."
+
+msgid ""
+"Values may be shortened here: items.jsonl, the authoritative data, holds "
+"them in full."
+msgstr ""
+"Les valeurs peuvent être abrégées ici : items.jsonl, qui fait foi, les "
+"contient en entier."
 
 #, python-brace-format
 msgid "Veilleur {version}"
@@ -421,6 +473,9 @@ msgstr "adresse locale d'écoute"
 
 msgid "manage the server's signing key"
 msgstr "gère la clé de signature du serveur"
+
+msgid "never"
+msgstr "jamais"
 
 msgid "no"
 msgstr "non"
@@ -656,6 +711,36 @@ msgstr "écrit les paquets d'un abonnement dans un dossier"
 
 msgid "yes"
 msgstr "oui"
+
+#, python-brace-format
+msgid "{collector}: failing ({code}), last success {time}"
+msgstr "{collector} : en panne ({code}), dernière réussite {time}"
+
+#, python-brace-format
+msgid "{collector}: not collected yet"
+msgstr "{collector} : pas encore collecté"
+
+#, python-brace-format
+msgid "{collector}: working, last success {time}"
+msgstr "{collector} : en service, dernière réussite {time}"
+
+#, python-brace-format
+msgid "{count} changed item"
+msgid_plural "{count} changed items"
+msgstr[0] "{count} élément modifié"
+msgstr[1] "{count} éléments modifiés"
+
+#, python-brace-format
+msgid "{count} gone item"
+msgid_plural "{count} gone items"
+msgstr[0] "{count} élément disparu"
+msgstr[1] "{count} éléments disparus"
+
+#, python-brace-format
+msgid "{count} more item is only in items.jsonl."
+msgid_plural "{count} more items are only in items.jsonl."
+msgstr[0] "{count} autre élément figure seulement dans items.jsonl."
+msgstr[1] "{count} autres éléments figurent seulement dans items.jsonl."
 
 #, python-brace-format
 msgid "{count} new item"

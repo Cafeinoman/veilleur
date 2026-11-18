@@ -159,11 +159,17 @@ def _seal(
         raise ReportSkipped("pairing_revoked")
     status = sources(core, subscription)
     view = ReportView(subscription.uid, seq, kind, now, period_from, now, items, status)
-    spec = PackageSpec(
-        subscription.uid, seq, kind, now, period_from, now, items, status, _renderings(core, subscription, view)
-    )
+    renderings = _renderings(core, subscription, view)
+    spec = PackageSpec(subscription.uid, seq, kind, now, period_from, now, items, status, renderings)
     try:
-        return core.sealer.seal_package(pairing.secret, spec)
+        try:
+            return core.sealer.seal_package(pairing.secret, spec)
+        except PackageTooLarge:
+            if not renderings:
+                raise
+            # Renderings are optional (EF-43): they never cost a report its authoritative data.
+            log.warning("package too large with its renderings: sealed without them")
+            return core.sealer.seal_package(pairing.secret, replace(spec, renderings={}))
     except PackageTooLarge as exc:
         raise ReportSkipped("package_too_large") from exc
 
