@@ -7,10 +7,11 @@ No proxy from the environment is used.
 
 from __future__ import annotations
 
+import contextlib
 import http.client
 import socket
 import ssl
-import time
+import threading
 from collections.abc import Mapping
 
 from .client import RawResponse
@@ -33,7 +34,9 @@ class _TlsConnection(http.client.HTTPSConnection):
 
     def connect(self) -> None:
         sock = socket.create_connection((self._address, self.port), self.timeout)
-        self.sock = self._tls.wrap_socket(sock, server_hostname=self.host)
+        # handshake after `self.sock` is set, so that the watchdog of `SocketTransport.request` can cut it too
+        self.sock = self._tls.wrap_socket(sock, server_hostname=self.host, do_handshake_on_connect=False)
+        self.sock.do_handshake()
 
 
 class SocketTransport:
@@ -57,25 +60,45 @@ class SocketTransport:
         timeout: float,
         max_bytes: int,
     ) -> RawResponse:
-        deadline = time.monotonic() + timeout
         connection = self.connection(scheme, address, host, port, timeout)
+        expired = threading.Event()
+
+        def cut() -> None:  # the whole request is capped: TLS handshake, status line and headers included
+            expired.set()
+            if connection.sock is not None:
+                with contextlib.suppress(OSError):
+                    socket.socket.shutdown(connection.sock, socket.SHUT_RDWR)
+
+        watchdog = threading.Timer(timeout, cut)
+        watchdog.daemon = True
+        watchdog.start()
         try:
+            connection.connect()
+            if expired.is_set():
+                raise TimeoutError
             connection.request("GET", target, headers=dict(headers))
             response = connection.getresponse()
             chunks: list[bytes] = []
             size = 0
-            while size <= max_bytes:  # read in chunks, so that a slow source cannot hold the round past `timeout`
-                if time.monotonic() > deadline:
-                    raise TimeoutError
+            while size <= max_bytes:
                 chunk = response.read1(min(65536, max_bytes + 1 - size))
                 if not chunk:
                     break
                 chunks.append(chunk)
                 size += len(chunk)
+            if expired.is_set():
+                raise TimeoutError
             body = b"".join(chunks)
             received = {name.lower(): value for name, value in response.getheaders()}
             return RawResponse(response.status, received, body)
         except (http.client.HTTPException, ssl.SSLError, ValueError) as exc:
+            if expired.is_set():
+                raise TimeoutError from exc
             raise OSError(type(exc).__name__) from exc
+        except OSError:
+            if expired.is_set():
+                raise TimeoutError from None
+            raise
         finally:
+            watchdog.cancel()
             connection.close()
