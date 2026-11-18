@@ -514,3 +514,61 @@ def test_a_report_filed_before_a_crash_is_filed_again_whole(bench: Bench) -> Non
     (partial / "leftover").write_text("from an earlier attempt")
     assert bench.pull() == 0
     assert sorted(p.name for p in partial.iterdir()) == ["items.jsonl", "manifest.json"]
+
+
+def _export_command(bench: Bench, monkeypatch: pytest.MonkeyPatch, target: Path, uid: str, *options: str) -> None:
+    monkeypatch.setattr(bench.world.app.store, "close", lambda: None)
+    state_dir = str(bench.world.app.config.state_dir)
+    argv = ["--lang", "en", "--state-dir", state_dir, "export", uid, "--folder", str(target), *options]
+    assert server_cli.main(argv, opener=lambda config: bench.world.app) == 0
+
+
+def test_an_export_replaces_the_packages_of_the_old_key_by_a_state(
+    bench: Bench, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A folder cannot ask for a `state` (protocol §6.3): a member who adopted the new key still gets past it."""
+    bench.world.collector.set("news", ("a", {"title": "A"}))
+    bench.world.collector.set("other", ("x", {"title": "X"}))
+    bench.subscribe(UID, "news")
+    bench.subscribe(OTHER, "other")
+    bench.round()
+    bench.core = _rotate(bench)
+    bench.world.collector.set("news", ("a", {"title": "A"}), ("b", {"title": "B"}))
+    bench.round()
+    _export_command(bench, monkeypatch, tmp_path / "first", UID)
+    assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(tmp_path / "first")) == 0
+    _export_command(bench, monkeypatch, tmp_path / "second", OTHER)
+    assert [path.name for path in (tmp_path / "second").iterdir()] == [f"{OTHER}-00000001-state.veil"]
+    assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(tmp_path / "second")) == 0
+    assert bench.last(OTHER) == 1
+
+
+def test_an_export_of_packages_newer_than_the_rotation_is_left_as_it_is(
+    bench: Bench, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _two_reports(bench)
+    bench.core = _rotate(bench)
+    bench.world.clock.advance(days=1)
+    bench.world.collector.set("news", ("z", {"title": "Z"}))
+    bench.round()
+    _export_command(bench, monkeypatch, tmp_path / "usb", UID, "--after", "2")
+    assert [path.name for path in (tmp_path / "usb").iterdir()] == [f"{UID}-00000003-delta.veil"]
+
+
+def test_a_package_of_the_old_key_is_skipped_only_when_a_later_state_covers_it(
+    bench: Bench, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _two_reports(bench)
+    assert bench.pull() == 0
+    old = _server_key(bench)
+    bench.core = _rotate(bench)
+    bench.world.collector.set("news", ("z", {"title": "Z"}))
+    bench.round()
+    assert bench.pull() == 0, "the new key is adopted"
+    source = tmp_path / "usb"
+    _export(source, "1.veil", _sealed(bench, 1, Kind.STATE, uid=OTHER, key=old))
+    assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(source)) == 1
+    assert "bad_signature" in capsys.readouterr().err and bench.last(OTHER) == 0
+    _export(source, "2.veil", _sealed(bench, 2, Kind.STATE, uid=OTHER, key=_server_key(bench)))
+    assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(source)) == 0
+    assert bench.filed(OTHER) == ["00000002-state"]

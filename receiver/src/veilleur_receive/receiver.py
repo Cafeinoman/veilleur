@@ -297,6 +297,8 @@ def _read_subscription(filing: _Filing, uid: str, packages: list[_Found]) -> Non
                 raise _Stop("too_large", seq)
             opened = filing.open(package.path.read_bytes(), uid, seq=seq)
         except ProtocolError as exc:
+            if exc.code == "bad_signature" and filing.state.rotated and newest_state > seq:
+                continue  # signed by the key given up since: the later `state`, signed by the new one, covers it
             raise _Stop(exc.code, seq) from exc
         except OSError as exc:
             raise _Stop("unreadable_file", seq) from exc

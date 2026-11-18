@@ -145,6 +145,11 @@ msgstr "Rien ici."
 msgid "Origin: {origin}"
 msgstr "Origine : {origin}"
 
+msgid "Packages signed by the previous server key: a state was written instead."
+msgstr ""
+"Paquets signés par la clé précédente du serveur : un état a été écrit à "
+"leur place."
+
 #, python-brace-format
 msgid "Packages up to {seq} are purged: a state was written instead."
 msgstr ""

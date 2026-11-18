@@ -9,11 +9,13 @@ from __future__ import annotations
 import argparse
 import sys
 from collections.abc import Callable, Sequence
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
 from veilleur import __version__, i18n
 from veilleur.adapters import keys
+from veilleur.adapters.sealer import ProtocolSealer
 from veilleur.apps.server import argparse_i18n
 from veilleur.core.domain import errors
 from veilleur.core.domain.errors import VeilleurError
@@ -298,13 +300,28 @@ def _cmd_export(app: App, args: argparse.Namespace) -> None:
     args.folder.mkdir(parents=True, exist_ok=True)
     written = 0
     bounds = app.store.package_bounds(s.key_id, s.uid)
-    if args.after < bounds.purged_through:
-        built = reports.build_state(app.core, s)
+    packages = app.store.list_packages(s.key_id, s.uid, max(args.after, bounds.purged_through))
+    signing_key = keys.load_signing_key(app.config.state_dir)
+    rotation = keys.current_rotation(app.config.state_dir, signing_key, app.core.clock.now())
+    # A member who adopted the new key refuses the packages signed by the old one (protocol §6.3), and a folder
+    # offers no way to ask for a `state`: it has to be there already. It accounts for every package listed.
+    outdated = rotation is not None and any(info.created_at <= rotation.issued_at for info in packages)
+    if args.after < bounds.purged_through or outdated:
+        core = replace(app.core, sealer=ProtocolSealer(signing_key, rotation))
+        built = reports.build_state(core, s)
         if built is not None:
             (args.folder / f"{s.uid}-{built[0]:08d}-state.veil").write_bytes(built[1])
             written += 1
-            print(_("Packages up to {seq} are purged: a state was written instead.").format(seq=bounds.purged_through))
-    for info in app.store.list_packages(s.key_id, s.uid, max(args.after, bounds.purged_through)):
+            if outdated:
+                packages = []
+                print(_("Packages signed by the previous server key: a state was written instead."))
+            else:
+                print(
+                    _("Packages up to {seq} are purged: a state was written instead.").format(
+                        seq=bounds.purged_through
+                    )
+                )
+    for info in packages:
         data = app.store.get_package(s.key_id, s.uid, info.seq)
         if data is not None:
             (args.folder / f"{s.uid}-{info.seq:08d}-{info.kind.value}.veil").write_bytes(data)
