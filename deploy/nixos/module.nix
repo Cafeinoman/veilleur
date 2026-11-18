@@ -219,11 +219,12 @@ let
 
   # Every port Veilleur takes, against those the rest of the configuration declares (ENF-03b).
   publicNtfyPort = optional (useCaddy && builtinNtfy && cfg.ntfy.host == null) 8443;
+  publicTcpPorts = optionals useCaddy [
+    80
+    443
+  ] ++ publicNtfyPort;
   portConflicts = (import ./ports.nix { inherit config lib; }).conflicts {
-    tcp = optionals useCaddy [
-      80
-      443
-    ] ++ publicNtfyPort;
+    tcp = publicTcpPorts;
     udp = optional useCaddy 443 ++ publicNtfyPort;
     internal = [
       {
@@ -466,6 +467,13 @@ in
             "services.veilleur needs ports that the configuration also declares: "
             + lib.concatStringsSep ", " portConflicts
             + ".";
+        }
+        {
+          # Caddy binds its public ports on every address, the internal one included.
+          assertion = !builtins.elem cfg.port publicTcpPorts;
+          message = "services.veilleur.port conflicts with the public ports of Caddy: ${
+            lib.concatMapStringsSep ", " toString publicTcpPorts
+          }.";
         }
         {
           assertion = !builtins.elem cfg.listenAddress wildcardAddresses;

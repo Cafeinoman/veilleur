@@ -211,6 +211,50 @@ let
         };
       } { proxy = "external"; ntfy.mode = "none"; }
     );
+    "the internal port cannot be a public port of Caddy" =
+      refused "public ports of Caddy" (named { port = 443; })
+      && refused "public ports of Caddy" (named { port = 8443; })
+      && refused "public ports of Caddy" (container { port = 8443; }).containers.veilleur.config;
+    "port 8443 is free when ntfy has its own name" = accepted (
+      named {
+        port = 8443;
+        ntfy.host = "ntfy.example.org";
+      }
+    );
+    "port 8443 is free without the built-in ntfy" = accepted (
+      named {
+        port = 8443;
+        ntfy.mode = "none";
+      }
+    );
+    "sshd on a public port conflicts" = refused "443/tcp (services.openssh.ports)" (
+      withHost {
+        services.openssh = {
+          enable = true;
+          ports = [ 443 ];
+        };
+      } { }
+    );
+    "sshd on its usual port is fine" = accepted (withHost { services.openssh.enable = true; } { });
+    "the default port of nginx on the internal port conflicts" = refused "8470/tcp (services.nginx.defaultHTTPListenPort)" (
+      withHost {
+        services.nginx = {
+          enable = true;
+          defaultHTTPListenPort = 8470;
+          virtualHosts.other = { };
+        };
+      } { proxy = "external"; ntfy.mode = "none"; }
+    );
+    "the default port of nginx on another address is fine" = accepted (
+      withHost {
+        services.nginx = {
+          enable = true;
+          defaultHTTPListenPort = 8470;
+          defaultListenAddresses = [ "192.0.2.10" ];
+          virtualHosts.other = { };
+        };
+      } { proxy = "external"; ntfy.mode = "none"; }
+    );
     "the container reports a redirection of a public port" = refused "443/tcp (networking.nat.forwardPorts)" (
       evaluate [
         containerModule

@@ -101,7 +101,7 @@ server {
 
 The built-in ntfy server behind an external proxy needs `ntfy.publicUrl`, and a block of the same form towards `127.0.0.1:2586` (in container mode, `containerAddress` on port 2586).
 
-The modules refuse a configuration that declares a port Veilleur needs: redirections (`networking.nat.forwardPorts`, `containers.<name>.forwardPorts`), published ports of OCI containers, and explicit `listen` entries of nginx and Apache virtual hosts. A port opened any other way cannot be seen at evaluation.
+The modules refuse a configuration that declares a port Veilleur needs: redirections (`networking.nat.forwardPorts`, `containers.<name>.forwardPorts`), published ports of OCI containers, explicit `listen` entries of nginx and Apache virtual hosts, the default port of nginx (`defaultHTTPListenPort`) and `services.openssh.ports`. `port` cannot be one of the public ports Caddy takes either. A port opened any other way, such as by a socket unit, is not detected at evaluation.
 
 ## 6. Notifications and secrets
 

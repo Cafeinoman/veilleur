@@ -101,7 +101,7 @@ server {
 
 Le ntfy intégré derrière un frontal externe demande `ntfy.publicUrl`, et un bloc de même forme vers `127.0.0.1:2586` (en mode conteneur, `containerAddress` sur le port 2586).
 
-Les modules refusent une configuration qui déclare un port dont Veilleur a besoin : redirections (`networking.nat.forwardPorts`, `containers.<nom>.forwardPorts`), ports publiés par des conteneurs OCI et entrées `listen` explicites des hôtes virtuels nginx et Apache. Un port ouvert autrement ne peut pas être détecté à l'évaluation.
+Les modules refusent une configuration qui déclare un port dont Veilleur a besoin : redirections (`networking.nat.forwardPorts`, `containers.<nom>.forwardPorts`), ports publiés par des conteneurs OCI, entrées `listen` explicites des hôtes virtuels nginx et Apache, port par défaut de nginx (`defaultHTTPListenPort`) et `services.openssh.ports`. `port` ne peut pas non plus être l'un des ports publics pris par Caddy. Un port ouvert autrement, par exemple par une unité socket, n'est pas détecté à l'évaluation.
 
 ## 6. Notifications et secrets
 

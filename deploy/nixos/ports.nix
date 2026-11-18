@@ -82,10 +82,52 @@ let
       )
     );
 
+  # Virtual hosts of nginx without a `listen` entry take its default port, on their addresses or the default ones.
+  nginxDefaultListeners =
+    let
+      nginx = lib.attrByPath [ "services" "nginx" ] { } config;
+      addressesOf =
+        site:
+        if (site.listenAddresses or [ ]) != [ ] then
+          site.listenAddresses
+        else
+          nginx.defaultListenAddresses or [ null ];
+    in
+    lib.optionals (nginx.enable or false) (
+      lib.concatMap (
+        site:
+        lib.optionals ((site.listen or [ ]) == [ ]) (
+          map (address: {
+            first = nginx.defaultHTTPListenPort;
+            last = nginx.defaultHTTPListenPort;
+            inherit address;
+            proto = "tcp";
+            origin = "services.nginx.defaultHTTPListenPort";
+          }) (addressesOf site)
+        )
+      ) (builtins.attrValues (nginx.virtualHosts or { }))
+    );
+
+  opensshListeners =
+    let
+      openssh = lib.attrByPath [ "services" "openssh" ] { } config;
+    in
+    lib.optionals (openssh.enable or false) (
+      map (port: {
+        first = port;
+        last = port;
+        address = null;
+        proto = "tcp";
+        origin = "services.openssh.ports";
+      }) (openssh.ports or [ ])
+    );
+
   listeners =
     ociListeners
     ++ webListeners "nginx" (listen: listen.addr or null)
-    ++ webListeners "httpd" (listen: listen.ip or null);
+    ++ webListeners "httpd" (listen: listen.ip or null)
+    ++ nginxDefaultListeners
+    ++ opensshListeners;
 
   anyAddress = [
     null
@@ -94,6 +136,7 @@ let
     "0.0.0.0"
     "::"
     "[::]"
+    "[::0]"
   ];
 
   covers = port: entry: entry.first <= port && port <= entry.last;
