@@ -61,6 +61,11 @@ def test_regex() -> None:
         r"(.*a){20}",
         r"(a)\1",
         r"(?P<x>a)(?P=x)",
+        r".*.*=",
+        r"a*a*b",
+        r".*x.*y",
+        r"\w+\s*\w+",
+        r"(?:\d+)(?:\d+)z",
         "(",
         "x" * 501,
     ],
@@ -72,7 +77,21 @@ def test_risky_or_malformed_patterns_are_refused(pattern: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "pattern", [r"\bbudget\b", r"[ab]+c", r"^\d{4}-\d{2}$", r"foo|bar", r"(?:é|e)lection", r"a{2,5}"]
+    "pattern",
+    [
+        r"\bbudget\b",
+        r"[ab]+c",
+        r"^\d{4}-\d{2}$",
+        r"foo|bar",
+        r"(?:é|e)lection",
+        r"a{2,5}",
+        r"\d+-\d+",
+        r"\w+\s+\w+",
+        r"\w+@\w+\.\w+",
+        r"https?://\S+",
+        r"[^,]+,[^,]+",
+        r"foo.*bar",
+    ],
 )
 def test_usual_patterns_are_accepted(pattern: str) -> None:
     compile_pattern(pattern, case=False)
