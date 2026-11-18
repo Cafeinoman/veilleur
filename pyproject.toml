@@ -18,6 +18,16 @@ classifiers = [
 [project.scripts]
 veilleur = "veilleur.apps.server.cli:main"
 
+[project.entry-points."veilleur.collectors"]
+rss = "veilleur.adapters.collectors.rss:RssCollector"
+json_api = "veilleur.adapters.collectors.json_api:JsonApiCollector"
+page = "veilleur.adapters.collectors.page:PageCollector"
+
+[project.entry-points."veilleur.filters"]
+keywords = "veilleur.adapters.filters:KeywordsFilter"
+regex = "veilleur.adapters.filters:RegexFilter"
+dedup = "veilleur.adapters.filters:DedupFilter"
+
 [dependency-groups]
 dev = [
     "pytest>=8",

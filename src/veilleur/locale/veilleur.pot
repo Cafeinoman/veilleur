@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Veilleur VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 00:32+0100\n"
+"POT-Creation-Date: 2026-11-18 00:42+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -552,17 +552,63 @@ msgid ""
 "deleted"
 msgstr ""
 
+msgid "the CSS selector is not supported"
+msgstr ""
+
+msgid "the CSS selector matches nothing on the page"
+msgstr ""
+
+msgid "the address is not a valid http or https address"
+msgstr ""
+
+msgid "the address leads to a private or reserved network"
+msgstr ""
+
+msgid "the answer could not be read"
+msgstr ""
+
+msgid "the answer is not of the expected type"
+msgstr ""
+
+msgid "the answer is too large"
+msgstr ""
+
 msgid "the collector failed"
 msgstr ""
 
 msgid "the collector is not installed"
 msgstr ""
 
+msgid "the connection failed"
+msgstr ""
+
 #, python-format
 msgid "the following arguments are required: %s"
 msgstr ""
 
+msgid "the host name could not be resolved"
+msgstr ""
+
 msgid "the network is unavailable"
+msgstr ""
+
+msgid "the site's robots.txt could not be read"
+msgstr ""
+
+msgid "the site's robots.txt forbids this address"
+msgstr ""
+
+#, python-brace-format
+msgid "the source answered with HTTP status {status}"
+msgstr ""
+
+msgid "the source took too long to answer"
+msgstr ""
+
+msgid "too many redirections"
+msgstr ""
+
+msgid "too many requests to this host in one round"
 msgstr ""
 
 msgid "uid"

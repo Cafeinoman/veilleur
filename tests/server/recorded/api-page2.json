@@ -1,0 +1,9 @@
+{
+  "meta": {"next": null},
+  "data": {
+    "items": [
+      {"id": 103, "title": "Notice three", "href": "ftp://api.example.org/notices/103", "body": "Third"},
+      {"title": "Notice without id", "body": "Fourth"}
+    ]
+  }
+}

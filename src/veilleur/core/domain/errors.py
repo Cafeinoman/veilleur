@@ -53,6 +53,7 @@ ROBOTS_DISALLOWED = "robots_disallowed"
 ROBOTS_UNAVAILABLE = "robots_unavailable"
 HOST_QUOTA_EXCEEDED = "host_quota_exceeded"
 SELECTOR_NO_MATCH = "selector_no_match"
+BAD_SELECTOR = "bad_selector"
 
 CODES = frozenset(
     {
@@ -95,6 +96,7 @@ CODES = frozenset(
         ROBOTS_UNAVAILABLE,
         HOST_QUOTA_EXCEEDED,
         SELECTOR_NO_MATCH,
+        BAD_SELECTOR,
     }
 )
 

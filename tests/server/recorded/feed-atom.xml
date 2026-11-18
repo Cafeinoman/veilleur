@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Example releases</title>
+  <id>urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6</id>
+  <updated>2026-11-17T10:00:00Z</updated>
+  <entry>
+    <title type="html">Version 2.0 &amp; more</title>
+    <link rel="self" href="https://releases.example.net/feed/2"/>
+    <link rel="alternate" href="https://releases.example.net/2.0"/>
+    <id>tag:releases.example.net,2026:2.0</id>
+    <published>2026-11-16T09:00:00+02:00</published>
+    <updated>2026-11-17T10:00:00Z</updated>
+    <author><name>Release team</name></author>
+    <summary>Second major version.</summary>
+    <category term="release"/>
+  </entry>
+  <entry>
+    <title>Version 1.9</title>
+    <link href="https://releases.example.net/1.9"/>
+    <id>tag:releases.example.net,2026:1.9</id>
+    <updated>2026-10-01T00:00:00Z</updated>
+    <content type="text">Maintenance version.</content>
+  </entry>
+</feed>

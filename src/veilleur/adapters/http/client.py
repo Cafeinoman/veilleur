@@ -131,6 +131,8 @@ def _accepted(media_type: str, accept: Sequence[str]) -> bool:
     for wanted in accept:
         if wanted == media_type or (wanted.endswith("/*") and media_type.startswith(wanted[:-1])):
             return True
+        if wanted.startswith("*+") and "/" in media_type and media_type.endswith(wanted[1:]):  # `*+json`
+            return True
     return False
 
 

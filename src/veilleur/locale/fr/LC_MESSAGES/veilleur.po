@@ -568,18 +568,64 @@ msgstr ""
 "abonnements d'équipe : {created} créés, {updated} modifiés, {deleted} "
 "supprimés"
 
+msgid "the CSS selector is not supported"
+msgstr "le sélecteur CSS n'est pas pris en charge"
+
+msgid "the CSS selector matches nothing on the page"
+msgstr "le sélecteur CSS ne désigne rien dans la page"
+
+msgid "the address is not a valid http or https address"
+msgstr "l'adresse n'est pas une adresse http ou https valide"
+
+msgid "the address leads to a private or reserved network"
+msgstr "l'adresse mène à un réseau privé ou réservé"
+
+msgid "the answer could not be read"
+msgstr "la réponse n'a pas pu être lue"
+
+msgid "the answer is not of the expected type"
+msgstr "la réponse n'est pas du type attendu"
+
+msgid "the answer is too large"
+msgstr "la réponse est trop volumineuse"
+
 msgid "the collector failed"
 msgstr "le collecteur a échoué"
 
 msgid "the collector is not installed"
 msgstr "le collecteur n'est pas installé"
 
+msgid "the connection failed"
+msgstr "la connexion a échoué"
+
 #, python-format
 msgid "the following arguments are required: %s"
 msgstr "arguments requis manquants : %s"
 
+msgid "the host name could not be resolved"
+msgstr "le nom d'hôte n'a pas pu être résolu"
+
 msgid "the network is unavailable"
 msgstr "le réseau est indisponible"
+
+msgid "the site's robots.txt could not be read"
+msgstr "le robots.txt du site n'a pas pu être lu"
+
+msgid "the site's robots.txt forbids this address"
+msgstr "le robots.txt du site interdit cette adresse"
+
+#, python-brace-format
+msgid "the source answered with HTTP status {status}"
+msgstr "la source a répondu avec le statut HTTP {status}"
+
+msgid "the source took too long to answer"
+msgstr "la source a mis trop longtemps à répondre"
+
+msgid "too many redirections"
+msgstr "trop de redirections"
+
+msgid "too many requests to this host in one round"
+msgstr "trop de requêtes vers cet hôte en un tour"
 
 msgid "uid"
 msgstr "uid"

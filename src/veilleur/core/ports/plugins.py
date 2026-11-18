@@ -7,7 +7,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
 from veilleur.core.domain.model import Collected, CollectedItem, ItemChange, Kind, SourceStatus
 
@@ -39,6 +39,16 @@ class Collector(Protocol):
         ...
 
 
+@runtime_checkable
+class ParamsCheck(Protocol):
+    """Optional for a collector or a filter: a check of its parameters that a schema cannot express (a CSS selector,
+    a regular expression). Run after the schema, when a subscription is received (EF-12)."""
+
+    def check_params(self, params: Mapping[str, Any]) -> str | None:
+        """None if the parameters are acceptable, otherwise the JSON pointer of the faulty one (`/pattern`)."""
+        ...
+
+
 @dataclass(frozen=True)
 class FilterItem:
     """What a filter sees of an item; it never modifies stored items (EF-21)."""
@@ -59,6 +69,15 @@ class Filter(Protocol):
 
     def apply(self, item: FilterItem, params: Mapping[str, Any]) -> FilterItem | None:
         """The item to report (possibly transformed), or None to leave it out."""
+        ...
+
+
+@runtime_checkable
+class SetFilter(Protocol):
+    """Optional for a filter that needs every item at once (deduplication): `select` is then used, not `apply`."""
+
+    def select(self, items: Sequence[FilterItem], params: Mapping[str, Any]) -> Sequence[FilterItem]:
+        """The items to report, among `items` (sorted by key), possibly transformed."""
         ...
 
 
