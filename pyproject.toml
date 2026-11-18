@@ -65,9 +65,9 @@ src = ["src", "tests", "protocol/src", "protocol/tests"]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
 
 [tool.mypy]
-files = ["src", "tests", "tools", "protocol/src", "protocol/tests"]
+files = ["src", "tests", "tools", "protocol/src", "protocol/tests", "examples/veilleur-example-collector/src"]
 strict = true
-mypy_path = "src:protocol/src"
+mypy_path = "src:protocol/src:examples/veilleur-example-collector/src"
 
 [[tool.mypy.overrides]]
 module = ["babel.*"]

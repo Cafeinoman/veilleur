@@ -23,7 +23,7 @@ Aucune.
 | G0-R | Dépôt git, environnement, contrôles, création du dépôt GitHub | fait |
 | G1 | Protocole 1.0 et `veilleur-protocol` | fait, avec réserves (étiquette `g1`) |
 | G2 | Cœur, stockage, administration, service HTTP | fait, avec réserves (PR à fusionner, puis étiquette `g2`) |
-| G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | en cours (branche `claude/g3-collectors`) |
+| G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | écrit, à livrer (branche `claude/g3-collectors`) |
 | G4 | Rendus, récepteur de référence | à faire |
 | G5 | Déploiement NixOS et repli systemd | à faire |
 | G6 | Publication 0.1.0 | à faire |
@@ -156,15 +156,16 @@ Reste hors de G2, prévu plus loin : client HTTP réel (G3 ; G2 fournit le mode 
 
 ## G3 — Client HTTP, collecteurs, filtres, notificateurs (EF-02 à EF-06, EF-20, EF-52, ES-08)
 
-- [ ] Client HTTP :
+- [x] Client HTTP :
   - cache, délais, quotas par hôte ;
   - `robots.txt`, `User-Agent` ;
   - mode hors ligne ;
   - **garde SSRF** : résolution DNS puis contrôle de chaque adresse, à chaque redirection, en IPv4 et IPv6.
-- [ ] Collecteurs `rss`, `json_api`, `page`, avec leurs schémas ; tests sur réponses enregistrées.
-- [ ] Filtres : mots-clés, expressions régulières, dédoublonnage.
-- [ ] Notificateurs `ntfy` et `webhook` (signé).
-- [ ] Guide « écrire un collecteur » (`docs/{en,fr}/writing-a-collector.md`) et greffon d'exemple hors du paquet principal.
+- [x] Collecteurs `rss`, `json_api`, `page`, avec leurs schémas ; tests sur réponses enregistrées.
+- [x] Filtres : mots-clés, expressions régulières, dédoublonnage.
+- [x] Notificateurs `ntfy` et `webhook` (signé).
+- [x] `GET /v1/subscriptions` (réponse à la question 1 de G2), spécification du protocole en anglais et en français.
+- [x] Guide « écrire un collecteur » (`docs/{en,fr}/writing-a-collector.md`) et greffon d'exemple hors du paquet principal.
 
 Fini quand : tentatives SSRF (adresses privées, DNS piégé, redirection) refusées par les tests ; les trois collecteurs passent sur leurs réponses enregistrées.
 
