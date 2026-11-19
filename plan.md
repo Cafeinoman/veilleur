@@ -4,7 +4,7 @@
 
 ## Mode de travail
 
-- Claude **enchaîne les étapes sans demander de confirmation**. Il ne s'arrête que sur une **erreur qu'il ne sait pas résoudre** ou un **arbitrage impératif** : choix qui modifierait le cahier des charges, contradiction entre documents, action irréversible hors de ce plan.
+- Claude s'arrête sur une **erreur qu'il ne sait pas résoudre** ou un **arbitrage impératif** : choix qui modifierait le cahier des charges, contradiction entre documents, action irréversible hors de ce plan.
 - Dans ce cas, il écrit la question dans la section « Questions en attente » ci-dessous, avec sa recommandation, et la reprend dans la description de la *pull request* en cours, puis s'arrête.
 - **Une branche par lot ou par fonctionnalité** : `claude/<lot>-<sujet>` (par exemple `claude/g1-protocol-spec`), créée depuis `main` à jour.
 - **Un lot = une ou plusieurs *pull requests*.** Claude pousse la branche et ouvre la PR avec `gh pr create`. La description, en anglais, contient le résumé, les étapes du plan couvertes et ce qui a été vérifié. Claude attend que la CI soit verte et corrige si besoin. **La fusion est faite par l'utilisateur.**
