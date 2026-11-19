@@ -4,7 +4,7 @@
 
 Veilleur is a self-hosted **watch server**. It collects information from pluggable sources (RSS/Atom feeds, JSON APIs, web pages, or any source written as a plugin), detects what is new or has changed between two rounds, turns it into **reports**, and delivers them, **signed and encrypted**, to receiving tools. Receiving tools are out of the project's scope; a small reference receiver (`receiver/`) shows how to write one.
 
-> **Status: early development.** Only the project skeleton exists. Nothing is usable yet. The design and the roadmap are in [docs/en/design.md](docs/en/design.md).
+> **Status: alpha (0.1.0).** The protocol and the data formats may still change. See the [release notes](docs/en/release-notes.md) for what is included and the known limitations, and the [administration guide](docs/en/admin-guide.md) to install it.
 
 ## Principles
 
@@ -27,7 +27,7 @@ uv run lint-imports
 uv run veilleur --lang fr version
 ```
 
-Translations: see [docs/en/translating.md](docs/en/translating.md).
+Translations: see [docs/en/translating.md](docs/en/translating.md). Contributions: see [CONTRIBUTING.md](CONTRIBUTING.md). Vulnerabilities: see [SECURITY.md](SECURITY.md).
 
 ## Licence
 

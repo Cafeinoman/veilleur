@@ -1,6 +1,6 @@
 [project]
 name = "veilleur"
-version = "0.0.0"
+version = "0.1.0"
 description = "Self-hosted watch server: pluggable collectors, signed and encrypted reports."
 readme = "README.md"
 license = "EUPL-1.2"
@@ -11,7 +11,7 @@ dependencies = [
     "veilleur-protocol",
 ]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 3 - Alpha",
     "Natural Language :: English",
     "Natural Language :: French",
     "Operating System :: POSIX :: Linux",
