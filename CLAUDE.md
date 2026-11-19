@@ -10,10 +10,10 @@ Serveur de veille auto-hébergé et générique : collecteurs branchables (RSS/A
 
 Toute évolution met à jour le cahier d'abord, puis la documentation dans les deux langues.
 
-## Fonctionnement autonome
+## Questions et arrêts
 
-- Enchaîner les étapes du plan **sans demander de confirmation**, y compris commits, envois de branches et ouverture de *pull requests*.
-- S'arrêter seulement sur une **erreur qu'on ne sait pas résoudre** ou un **arbitrage impératif** :
+- Un lot par session, clos par `/clear` puis `/livrer` (consignes communes).
+- S'arrêter sur une **erreur qu'on ne sait pas résoudre** ou un **arbitrage impératif** :
   - un choix qui modifierait le cahier des charges ;
   - une contradiction entre documents ;
   - une action irréversible hors du plan (publication PyPI, suppression de données, réécriture de l'historique publié).
@@ -54,10 +54,6 @@ uv run veilleur --lang fr --help
 
 Les quatre contrôles doivent passer avant tout commit. Sur le serveur de développement (NixOS), `uv`, `gh` et direnv sont installés ; à partir de G5, `nix develop` (ou direnv) fournit l'environnement.
 
-Lancement sans surveillance :
-```bash
-claude -p "Poursuis plan.md." --permission-mode acceptEdits
-```
 Les commandes permises et interdites sont dans `.claude/settings.json`.
 
 ## Git et GitHub
