@@ -46,7 +46,7 @@
 
 ## D6. Étiquettes : lesquelles, et qui les pose ?
 - Contexte : le `CLAUDE.md` du projet dit « étiquette par lot fusionné (`g0`, `g1`…), puis versions », posées par
-  Claude ; la règle commune interdit toute écriture publique sans demande explicite. Avec 26 lots, une étiquette par
+  Claude ; la règle commune interdit toute écriture publique sans demande explicite. Avec 27 lots, une étiquette par
   lot devient du bruit.
 - Options : (a) une étiquette par jalon (`j7`…) et par version (`v0.2.0`), posée par l'utilisateur ; (b) même chose,
   posée par Claude sur demande explicite au moment voulu ; (c) versions seulement.
