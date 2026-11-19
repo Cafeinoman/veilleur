@@ -22,11 +22,11 @@ Aucune.
 |---|---|---|
 | G0-R | Dépôt git, environnement, contrôles, création du dépôt GitHub | fait |
 | G1 | Protocole 1.0 et `veilleur-protocol` | fait, avec réserves (étiquette `g1`) |
-| G2 | Cœur, stockage, administration, service HTTP | fait, avec réserves (PR à fusionner, puis étiquette `g2`) |
-| G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | fait, avec réserves (PR à fusionner, puis étiquette `g3`) |
+| G2 | Cœur, stockage, administration, service HTTP | fait, avec réserves (étiquette `g2`) |
+| G3 | Client HTTP sûr, collecteurs, filtres, notificateurs | fait, avec réserves (étiquette `g3`) |
 | G4 | Rendus, récepteur de référence | fait, avec réserves (étiquette `g4`) |
-| G5 | Déploiement NixOS et repli systemd | fait, avec réserves (PR à fusionner, puis étiquette `g5`) |
-| G6 | Publication 0.1.0 | fait, avec réserves (PR à fusionner, puis étiquette `v0.1.0` et release GitHub) |
+| G5 | Déploiement NixOS et repli systemd | fait, avec réserves (étiquette `g5`) |
+| G6 | Publication 0.1.0 | fait, avec réserves (étiquettes `g6` et `v0.1.0`, release GitHub en préversion) |
 
 ## G0-R — Mise en route du dépôt
 
@@ -252,7 +252,7 @@ Réserves à la livraison (3 passages du vérificateur, le 3ᵉ autorisé par l'
 - [x] Vérification du nom sur PyPI : `veilleur`, `veilleur-protocol` et `veilleur-receive` sont libres.
 - [x] Vérification de l'absence de marque déposée : aucun dépôt à l'INPI (recherche de l'utilisateur) ; le nom est conservé (cahier §10).
 - [x] Version 0.1.0 préparée : numéros de version, notes de version bilingues.
-- [ ] Après la fusion : étiquette `v0.1.0` sur `main` et release GitHub.
+- [x] Après la fusion : étiquettes `g6` et `v0.1.0` sur `main` (commit de fusion de la PR #7, CI verte) et release GitHub, marquée préversion puisque 0.1.0 est une alpha.
 - [x] Publication sur PyPI : écartée par l'utilisateur (cahier §10).
 
 Réserves à la livraison (1 passage du vérificateur, verdict `CONFORME` ; aucun écart bloquant ni mineur). Les trois points ci-dessous sont hors spécification et ne sont pas corrigés dans ce lot :
