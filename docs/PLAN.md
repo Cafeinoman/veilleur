@@ -79,7 +79,7 @@ test.
 - **Références.** ADR-0029, ADR-0002 ; SPEC §9 ; `docs/REPRISE.md` §2.8, §2.10.
 - **Risques.** `nix develop` en CI allonge la durée ; Python 3.12 seul dans ce travail (la matrice garde 3.13).
 - **Effort.** M
-- **Statut.** fait (réserves R27 à R30)
+- **Statut.** fait (réserves R27 à R31)
 
 ### J7-L2 — Retrait des anciens documents de pilotage
 
@@ -573,4 +573,5 @@ confort. Les tests cités sont dans `tests/verif/`. `/livrer` ajoute les réserv
 | R27 | P4 | J7-L1 | `tools/ci_load.py` : l'alerte « plus de 20 minutes » ne nomme pas le travail en cause (ADR-0029) | `test_j7_l1_standard.py::test_a_workflow_above_20_minutes_names_the_job_in_cause` | à planifier (J14) |
 | R28 | P4 | J7-L1 | `tools/ci_load.py` ne mesure que les exécutions réussies : une CI qui dépasse `timeout-minutes` n'est jamais comptée | `test_j7_l1_standard.py::test_runs_that_timed_out_still_count` | à planifier (J14) |
 | R29 | P4 | J7-L1 | Non vérifié : flux `CI load` sur GitHub (`actions/checkout` avec seulement `actions: read`, médiane réelle du travail Nix sous 20 min) ; GitHub désactive un flux `schedule` après 60 jours sans activité | aucun | vérification de l'utilisateur (premier `workflow_dispatch`) |
+| R31 | P4 | J7-L1 (PR #13) | Seuil D16 « deux fois la matrice » probablement dépassé : sur la PR #13, `just test (nix develop)` dure 5 min 35 s contre 1 min 26 s pour la matrice la plus lente (≈ 3,9 fois) ; le flux `CI load` échouerait chaque semaine | aucun | à planifier (J14) : revoir le seuil de D16 ou la mesure |
 | R30 | P4 | J7-L1 | `LD_LIBRARY_PATH` (libstdc++) posé sur tout le shell de développement ; `xfail_tests` ne voit ni `pytestmark`, ni `pytest.param(marks=…)`, ni `pytest.xfail()` | aucun | à planifier (J14) |
