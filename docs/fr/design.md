@@ -2,7 +2,7 @@
 
 *[English version](../en/design.md)*
 
-Ce document décrit ce que sera Veilleur. Le squelette (jalon G0), le protocole (G1 : [spécification](protocol.md), [modèle de menace](threat-model.md), bibliothèque `veilleur-protocol`) et le cœur avec son stockage, sa ligne de commande d'administration et son service HTTP (G2) existent aujourd'hui (§9).
+Ce document décrit la conception de Veilleur et ses jalons. La version 0.1.0, issue des jalons G0 à G6 (§9), est publiée en préversion ; les exigences sont dans la spécification du projet (`docs/SPEC.md`), les décisions dans `docs/adr/`.
 
 ## 1. Objet
 
@@ -146,6 +146,7 @@ Le cœur ne dépend ni du stockage, ni du réseau, ni de la traduction ; `lint-i
 | G4 | Rendus `markdown` et `html` ; récepteur de référence | de bout en bout, serveur → récepteur |
 | G5 | Déploiement : flake, module NixOS, conteneur, test en VM NixOS, repli systemd, livrable versionné ; guide d'administration | `nix flake check` et test en VM verts |
 | G6 | Passe de publication : recherche de secrets, `SECURITY.md`, version 0.1.0 | publication |
+| Suite | Les jalons J7 et suivants (versions 0.2.0 et 0.3.0) sont planifiés dans `docs/PLAN.md` | voir le plan |
 
 ## 10. Décisions
 
