@@ -107,7 +107,7 @@ test.
 - **Références.** ADR-0029 ; `docs/REPRISE.md` §3 (E7, E8, E9).
 - **Risques.** Affaiblir sans le voir un test redirigé : le critère 3 l'empêche.
 - **Effort.** S
-- **Statut.** à faire
+- **Statut.** fait (PR #14, réserves R32 à R34)
 
 ### J7-L3 — Surface de l'API des greffons et remise au propre du code
 
@@ -575,3 +575,6 @@ confort. Les tests cités sont dans `tests/verif/`. `/livrer` ajoute les réserv
 | R29 | P4 | J7-L1 | Non vérifié : flux `CI load` sur GitHub (`actions/checkout` avec seulement `actions: read`, médiane réelle du travail Nix sous 20 min) ; GitHub désactive un flux `schedule` après 60 jours sans activité | aucun | vérification de l'utilisateur (premier `workflow_dispatch`) |
 | R31 | P4 | J7-L1 (PR #13) | Seuil D16 « deux fois la matrice » probablement dépassé : sur la PR #13, `just test (nix develop)` dure 5 min 35 s contre 1 min 26 s pour la matrice la plus lente (≈ 3,9 fois) ; le flux `CI load` échouerait chaque semaine | aucun | à planifier (J14) : revoir le seuil de D16 ou la mesure |
 | R30 | P4 | J7-L1 | `LD_LIBRARY_PATH` (libstdc++) posé sur tout le shell de développement ; `xfail_tests` ne voit ni `pytestmark`, ni `pytest.param(marks=…)`, ni `pytest.xfail()` | aucun | à planifier (J14) |
+| R32 | P4 | J7-L2 (PR #14) | L'assertion de `test_j7_l1_standard.py` remplacée par D17 ne lit que les chemins `.md` entre accents graves du premier paragraphe « Documents qui font foi » : une mention sans accents graves de l'ancien cahier passerait | aucun | à planifier (J14) |
+| R33 | P4 | J7-L2 (PR #14) | `deploy/nixos/module.nix` : les deux messages d'assertion `listenAddress` lus par l'administrateur changent de libellé (« spec ES-09 ») ; aucun test ne les lit | aucun | à planifier (J13-L5) |
+| R34 | P4 | J7-L2 (PR #14) | Les tests comparés à `main` ou à `c576de4` sont ignorés sur un clone superficiel (CI, `actions/checkout` sans `fetch-depth`) : constantes figées de D17 et critère 3 non rejoués en CI | aucun | à planifier (J14) |
