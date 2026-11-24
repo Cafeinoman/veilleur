@@ -3,7 +3,7 @@
 > Questions ouvertes de la reprise. Répondre sous chaque **Réponse**, puis passer les ADR concernés en `Accepté` ou
 > `Rejeté`. Les ADR 0001 à 0021 (rétrospectifs) sont déjà `Accepté`.
 >
-> **État au 2026-11-24** : D1 à D15 répondues ; ADR 0022 à 0029 `Accepté`. Seule D16 reste ouverte.
+> **État au 2026-11-24** : D1 à D16 répondues ; ADR 0022 à 0029 `Accepté`. Aucune décision ouverte.
 
 ## D1. Accepter le changement de politique `robots.txt` (passer outre avec alerte par défaut) ?
 - Contexte : seul engagement public que la reprise change (README, guides, cahier §10 du 2026-11-18). Arguments, pratique
@@ -139,4 +139,4 @@
   utilisateur (secret ntfy hors dépôt ; ntfy peu fiable sur le téléphone en 5G) ; (c) autre sens de « charge »
   (par exemple la charge de NixKS pendant `nix flake check` en local) : à préciser.
 - Recommandation : (a) ; aucun secret, rien à installer, et rien ne s'écrit publiquement.
-- **Réponse :** _à remplir_
+- **Réponse :** (a)

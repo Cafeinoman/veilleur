@@ -30,7 +30,7 @@ Le dépôt a été construit avant le standard `/architecte` : pilotage dans `ca
   et `gh run view --json jobs`) qui mesure, sur les 20 dernières exécutions du flux de CI sur `main`, la durée
   médiane de chaque travail et du flux entier ; il sort avec un code non nul et un message nommant le travail en
   cause si le flux dépasse 20 minutes ou si le travail `just test` dure plus de deux fois le plus long travail de
-  la matrice [Suppose, D16]. Recette `just ci-load`. Alerte : flux GitHub planifié chaque semaine (`schedule`)
+  la matrice (D16). Recette `just ci-load`. Alerte : flux GitHub planifié chaque semaine (`schedule`)
   qui lance le script ; son échec est notifié par GitHub au propriétaire du dépôt [Probable], sans secret ni
   écriture publique. Une alerte qui se répète déclenche la question de l'option (b) de D3 (remplacer la matrice).
 - **`CLAUDE.md`** réécrit au format de `/nouveau-projet` : documents qui font foi, commande `just test`, règle « un
