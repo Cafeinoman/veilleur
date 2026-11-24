@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Third pass on batch G4: a folder export holds the `state` beside the packages (protocol §6.3, cahier §10)."""
+"""Third pass on batch G4: a folder export holds the `state` beside the packages (protocol §6.3, spec §10)."""
 
 from __future__ import annotations
 
@@ -333,12 +333,12 @@ def _absent_member(bench: Bench) -> None:
     assert bench.core.store.package_bounds(bench.pairing.key_id, UID).purged_through == 2
 
 
-@pytest.mark.xfail(strict=True, reason="accepted limit (cahier §10, protocol §6.3): purged gap and two rotations")
+@pytest.mark.xfail(strict=True, reason="accepted limit (spec §10, protocol §6.3): purged gap and two rotations")
 @pytest.mark.parametrize("after", ["0", "1", "2", "3"])
 def test_a_member_back_after_a_purge_follows_two_rotations_from_a_folder(
     bench: Bench, tmp_path: Path, after: str
 ) -> None:
-    """Blocking. Cahier §10, ES-05, protocol §6.3: both statements are in their 90 days and in the folder.
+    """Blocking. Spec §10, ES-05, protocol §6.3: both statements are in their 90 days and in the folder.
 
     The reader passes over package 3, which holds the statement from A to B, because a later `state` "covers" it; that
     `state` only vouches for C. No selection of packages gets the member through.
@@ -360,7 +360,7 @@ def test_the_statement_the_member_needs_is_in_the_folder(bench: Bench, tmp_path:
     ]
 
 
-@pytest.mark.xfail(strict=True, reason="accepted limit (cahier §10, protocol §6.3): purged gap and two rotations")
+@pytest.mark.xfail(strict=True, reason="accepted limit (spec §10, protocol §6.3): purged gap and two rotations")
 def test_a_member_back_after_a_purge_follows_two_rotations_over_http(bench: Bench) -> None:
     """Blocking, the same defect: the `state` asked for first is signed by a key the member cannot reach yet."""
     _absent_member(bench)

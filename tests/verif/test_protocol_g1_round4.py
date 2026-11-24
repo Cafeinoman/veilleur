@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: EUPL-1.2
 """Independent check of milestone G1, fourth round.
 
-Written from docs/en/protocol.md (normative) and the cahier (ES-07, ES-13, §7.3). Targets: writers that still produce
+Written from docs/en/protocol.md (normative) and the spec (ES-07, ES-13, §7.3). Targets: writers that still produce
 what readers refuse, rules of §2, §3 and §8 read literally, and the agreement of the two implementations (§12) outside
 the cases the vectors cover. No network, no disk.
 """

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""The networked HTTP client of the collectors (cahier EF-06, ES-08).
+"""The networked HTTP client of the collectors (spec EF-06, ES-08).
 
 Every request goes through the same steps:
 1. the address is checked: `http` or `https`, a host, no credentials;

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Provided filters (cahier EF-20): `keywords`, `regex` and `dedup`.
+"""Provided filters (spec EF-20): `keywords`, `regex` and `dedup`.
 
 `keywords` and `regex` look at designated fields (by default every text field), insensitive to case and, at will,
 to accents; they keep the matching items, or leave them out with `"exclude": true`. `dedup` keeps one item per value

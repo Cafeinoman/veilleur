@@ -1,5 +1,5 @@
 -- SPDX-License-Identifier: EUPL-1.2
--- Initial schema (cahier §7.2); `source_status` holds one row per shared collection. Times are UTC, `YYYY-MM-DDTHH:MM:SSZ`; JSON columns hold canonical JSON.
+-- Initial schema (spec §7.2); `source_status` holds one row per shared collection. Times are UTC, `YYYY-MM-DDTHH:MM:SSZ`; JSON columns hold canonical JSON.
 
 CREATE TABLE pairing (
     key_id      TEXT PRIMARY KEY,

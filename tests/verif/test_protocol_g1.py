@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Independent check of milestone G1 (protocol 1.0), written from docs/en/protocol.md and the cahier (ES-02 to ES-07).
+"""Independent check of milestone G1 (protocol 1.0), written from docs/en/protocol.md and the spec (ES-02 to ES-07).
 
 Every test states the specification clause it checks. No network, no disk writes by the reader.
 """

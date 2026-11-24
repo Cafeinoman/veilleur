@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Notifiers `ntfy` and `webhook` (cahier EF-52) and their configuration: counts only, never content."""
+"""Notifiers `ntfy` and `webhook` (spec EF-52) and their configuration: counts only, never content."""
 
 from __future__ import annotations
 

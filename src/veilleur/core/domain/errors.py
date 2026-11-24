@@ -2,7 +2,7 @@
 """Errors of the core, identified by stable codes.
 
 The core never translates: it raises `VeilleurError` with a stable English code and named parameters, and the
-applications turn them into translated messages (cahier EF-82). Codes are part of the HTTP interface (protocol
+applications turn them into translated messages (spec EF-82). Codes are part of the HTTP interface (protocol
 specification §9.2) and of the administration command line: they never change meaning.
 """
 
@@ -39,7 +39,7 @@ COLLECTOR_FAILED = "collector_failed"
 COLLECTOR_MISSING = "collector_missing"
 BAD_ITEM = "bad_item"
 NETWORK_UNAVAILABLE = "network_unavailable"
-# Collections through the HTTP client (cahier ES-08) and the provided collectors; `http_<status>` for an HTTP error.
+# Collections through the HTTP client (spec ES-08) and the provided collectors; `http_<status>` for an HTTP error.
 BAD_URL = "bad_url"
 ADDRESS_REFUSED = "address_refused"
 DNS_FAILED = "dns_failed"

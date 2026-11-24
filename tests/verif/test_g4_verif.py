@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Independent checks of batch G4: renderings (EF-43) and the reference receiver (EF-50, EF-51, cahier §10)."""
+"""Independent checks of batch G4: renderings (EF-43) and the reference receiver (EF-50, EF-51, spec §10)."""
 
 from __future__ import annotations
 
@@ -115,7 +115,7 @@ def _parsed(text: str) -> _Page:
 
 @pytest.mark.parametrize("mark", ["‮", "‭", "⁦", "‏", "\x90", "\x9b"])
 def test_an_address_keeps_no_control_or_direction_character(mark: str) -> None:
-    """Cahier §10 (G4): every collected value loses its control and direction characters, the address included."""
+    """Spec §10 (G4): every collected value loses its control and direction characters, the address included."""
     report = _view(_item(url=f"https://example.org/{mark}gnp.exe", title="T"))
     assert mark not in _md(report)
     assert mark not in _html(report)
@@ -128,7 +128,7 @@ def test_the_arabic_letter_mark_is_removed() -> None:
 
 @pytest.mark.xfail(strict=True, reason="minor: an address is neither shortened nor counted against the rendering cap")
 def test_addresses_count_against_the_cap_of_a_rendering() -> None:
-    """Cahier §10 (G4): a rendering is capped at 2 million characters of items."""
+    """Spec §10 (G4): a rendering is capped at 2 million characters of items."""
     items = [_item(f"k{n}", url="https://example.org/" + "a" * 200_000) for n in range(30)]
     assert len(_html(_view(*items))) < 2 * MAX_TEXT + 100_000
 

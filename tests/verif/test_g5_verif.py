@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Independent checks of batch G5 (deployment), written from cahier ENF-01 to ENF-08 and plan.md.
+"""Independent checks of batch G5 (deployment), written from spec ENF-01 to ENF-08 and plan.md.
 
 The NixOS modules are evaluated by `nix eval`, offline, when Nix and the locked inputs are available. No test opens a
 port or reaches the network.

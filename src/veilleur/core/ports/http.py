@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""The server's HTTP client, the only way a collector reaches the network (cahier EF-06, ES-08)."""
+"""The server's HTTP client, the only way a collector reaches the network (spec EF-06, ES-08)."""
 
 from __future__ import annotations
 

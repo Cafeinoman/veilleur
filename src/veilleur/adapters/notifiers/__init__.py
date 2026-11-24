@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Provided notifiers (cahier EF-52): `ntfy` and `webhook`. A notification carries counts, never content.
+"""Provided notifiers (spec EF-52): `ntfy` and `webhook`. A notification carries counts, never content.
 
 Notifiers post to addresses set by the administrator (a local ntfy server is usual), so they do not go through the
 collectors' SSRF guard; they never follow redirections.

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-# Consistent copy of the Veilleur state in /var/lib/veilleur/snapshot: start it before the backup (cahier ENF-08).
+# Consistent copy of the Veilleur state in /var/lib/veilleur/snapshot: start it before the backup (spec ENF-08).
 [Unit]
 Description=Consistent copy of the Veilleur state
 After=veilleur.service

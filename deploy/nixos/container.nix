@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: EUPL-1.2
 # `services.veilleur-container`: the watch server in a systemd-nspawn container with private users and a private
-# network, reaching the Internet only (cahier ENF-01, ENF-03b).
+# network, reaching the Internet only (spec ENF-01, ENF-03b).
 { serviceModule }:
 {
   config,

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Collectors `rss`, `json_api` and `page` (cahier EF-02) on recorded responses, through the networked client."""
+"""Collectors `rss`, `json_api` and `page` (spec EF-02) on recorded responses, through the networked client."""
 
 from __future__ import annotations
 

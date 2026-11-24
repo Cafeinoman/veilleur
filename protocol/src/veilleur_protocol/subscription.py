@@ -15,7 +15,7 @@ from .envelope import OVERHEAD, Header, Kind, open_envelope, seal
 from .errors import BAD_SUBSCRIPTION, ProtocolError
 
 MAX_SUBSCRIPTION = 1_000_000
-"""Largest subscription envelope: the request body limit of the HTTP interface (cahier ES-11)."""
+"""Largest subscription envelope: the request body limit of the HTTP interface (spec ES-11)."""
 MAX_DOCUMENT = MAX_SUBSCRIPTION - OVERHEAD
 
 

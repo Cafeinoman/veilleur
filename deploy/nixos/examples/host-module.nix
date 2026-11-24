@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-# Example: Veilleur inside an existing host configuration (cahier ENF-03, ENF-03b).
+# Example: Veilleur inside an existing host configuration (spec ENF-03, ENF-03b).
 #
 # Copy this file next to your configuration, then import it:
 #

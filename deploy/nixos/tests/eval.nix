@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-# What can be decided without booting a machine: inert modules, assertions, examples (cahier ENF-03, ENF-03b).
+# What can be decided without booting a machine: inert modules, assertions, examples (spec ENF-03, ENF-03b).
 {
   nixpkgs,
   self,

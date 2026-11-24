@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Configuration file (TOML): where the state lives, the public address, team subscriptions (cahier EF-10).
+"""Configuration file (TOML): where the state lives, the public address, team subscriptions (spec EF-10).
 
     state_dir = "/var/lib/veilleur"
     public_url = "https://veille.example.org"     # or "folder:" for delivery by folder only

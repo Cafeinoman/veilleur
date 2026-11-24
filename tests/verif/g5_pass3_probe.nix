@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-# Third pass of the verifier of batch G5: the internal port against Caddy's, and the scope of cahier section 10.
+# Third pass of the verifier of batch G5: the internal port against Caddy's, and the scope of spec section 10.
 # Read by tests/verif/test_g5_pass3.py.
 { root }:
 let

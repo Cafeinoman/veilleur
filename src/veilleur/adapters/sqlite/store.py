@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""SQLite store (cahier §7.2, EF-72): WAL mode for two processes (service and round), numbered SQL migrations run
+"""SQLite store (spec §7.2, EF-72): WAL mode for two processes (service and round), numbered SQL migrations run
 at opening after a backup of the database, one connection per process used under a lock."""
 
 from __future__ import annotations

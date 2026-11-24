@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""`veilleur serve`: the WSGI application on a threaded server, and the worker thread for long jobs (cahier EF-71,
+"""`veilleur serve`: the WSGI application on a threaded server, and the worker thread for long jobs (spec EF-71,
 §7.5). It listens on a local address, behind the TLS reverse proxy; it logs no request (ES-09)."""
 
 from __future__ import annotations

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Translated messages for the stable codes of the core and of the protocol (cahier EF-80 to EF-82).
+"""Translated messages for the stable codes of the core and of the protocol (spec EF-80 to EF-82).
 
 The texts are marked with `N_` for extraction and translated when shown, in the language of the process (command
 line) or of the request (HTTP interface).

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""HTTP interface `/v1` (cahier §7.4, protocol specification §8 and §9), as a WSGI application.
+"""HTTP interface `/v1` (spec §7.4, protocol specification §8 and §9), as a WSGI application.
 
 Routing works on the **raw** request target, the one the client signs (protocol §8): `REQUEST_URI` (or `RAW_URI`),
 never a decoded or normalised path. Without either, the target is rebuilt from `PATH_INFO` and `QUERY_STRING`, and
@@ -35,7 +35,7 @@ from .messages import error_message
 log = logging.getLogger(__name__)
 
 MAX_BODY = 1_000_000
-"""Largest request body (cahier ES-11), enforced here even if the reverse proxy lets more through."""
+"""Largest request body (spec ES-11), enforced here even if the reverse proxy lets more through."""
 RETRY_AFTER = 5
 RATE_LIMIT = 120
 RATE_WINDOW = 60.0

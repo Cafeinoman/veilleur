@@ -16,7 +16,7 @@ What Veilleur protects, against whom, how, and what it does not protect. Protoco
 | **Members' identity and activity** | never collected: no account, no name (a pairing label is a marker such as "desk 3"), no IP address in the logs |
 | **The server itself** | a host on the Internet that makes outbound requests on behalf of its users |
 
-Principle (cahier ES-01): *the server knows what it collects, never what receivers do with it.*
+Principle (specification ES-01): *the server knows what it collects, never what receivers do with it.*
 
 ## 2. Adversaries
 
@@ -50,7 +50,7 @@ Principle (cahier ES-01): *the server knows what it collects, never what receive
 
 ## 4. Accepted risks
 
-These are known and documented; they follow from the design choices of the cahier des charges.
+These are known and documented; they follow from the design choices of the specification.
 
 - **No forward secrecy** (ES-12): a stolen pairing secret opens every package of that pairing, past and future, that
   the thief can obtain. Revoking the pairing stops future packages; rotating a pairing means pairing again.

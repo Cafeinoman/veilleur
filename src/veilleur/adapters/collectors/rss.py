@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Collector `rss`: RSS 2.0 and Atom feeds (cahier EF-02).
+"""Collector `rss`: RSS 2.0 and Atom feeds (spec EF-02).
 
 A feed shows its latest entries only: an entry that leaves it has not disappeared from the source. The collection
 is therefore never complete (EF-31): no item becomes `gone` because it left the feed.

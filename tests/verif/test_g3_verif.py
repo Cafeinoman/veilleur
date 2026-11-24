@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Independent check of milestone G3 (cahier EF-02 to EF-06, EF-20, EF-52, ES-08, ES-09, §10 of 2026-11-18;
+"""Independent check of milestone G3 (spec EF-02 to EF-06, EF-20, EF-52, ES-08, ES-09, §10 of 2026-11-18;
 protocol §9 for `GET /v1/subscriptions`).
 
 No network: answers come from `tests.server.http_fakes.FakeWeb`; the socket transport is fed through a

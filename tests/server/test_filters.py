@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Filters `keywords`, `regex` and `dedup` (cahier EF-20, EF-21), alone and in a round."""
+"""Filters `keywords`, `regex` and `dedup` (spec EF-20, EF-21), alone and in a round."""
 
 from __future__ import annotations
 

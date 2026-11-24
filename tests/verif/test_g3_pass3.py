@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Independent check of milestone G3, third pass: the `regex` filter searches with RE2 (cahier §10 of 2026-11-18,
+"""Independent check of milestone G3, third pass: the `regex` filter searches with RE2 (spec §10 of 2026-11-18,
 user's decision): linear search, no pattern can stall the round; RE2 syntax (no back-references nor look-around,
 refused on reception); `\\w`, `\\d`, `\\b` ASCII only, `\\pL` for any letter.
 

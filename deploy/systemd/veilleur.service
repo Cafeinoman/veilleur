@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-# Veilleur HTTP service, for Linux distributions other than NixOS (cahier ENF-04, ENF-05).
+# Veilleur HTTP service, for Linux distributions other than NixOS (spec ENF-04, ENF-05).
 [Unit]
 Description=Veilleur watch server
 After=network.target

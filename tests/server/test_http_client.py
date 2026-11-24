@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""The networked HTTP client (cahier EF-06, ES-08): SSRF guard, redirections, limits, cache, robots.txt."""
+"""The networked HTTP client (spec EF-06, ES-08): SSRF guard, redirections, limits, cache, robots.txt."""
 
 from __future__ import annotations
 

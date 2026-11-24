@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-# `services.veilleur`: the watch server on the host (cahier ENF-01 to ENF-04, ENF-03b, ENF-08).
+# `services.veilleur`: the watch server on the host (spec ENF-01 to ENF-04, ENF-03b, ENF-08).
 { packages }:
 {
   config,
@@ -477,11 +477,11 @@ in
         }
         {
           assertion = !builtins.elem cfg.listenAddress wildcardAddresses;
-          message = "services.veilleur.listenAddress must be an internal address, not a wildcard (cahier ES-09).";
+          message = "services.veilleur.listenAddress must be an internal address, not a wildcard (spec ES-09).";
         }
         {
           assertion = !builtinNtfy || !builtins.elem cfg.ntfy.listenAddress wildcardAddresses;
-          message = "services.veilleur.ntfy.listenAddress must be an internal address, not a wildcard (cahier ES-09).";
+          message = "services.veilleur.ntfy.listenAddress must be an internal address, not a wildcard (spec ES-09).";
         }
         {
           assertion = !builtinNtfy || cfg.port != ntfyPort;

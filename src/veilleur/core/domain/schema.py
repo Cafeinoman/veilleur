@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Validation of plugin parameters against their schema (cahier EF-01, EF-12).
+"""Validation of plugin parameters against their schema (spec EF-01, EF-12).
 
 Schemas are written in a subset of JSON Schema (draft 2020-12), enough for plugin parameters and without a
 dependency: `type`, `properties`, `required`, `additionalProperties`, `enum`, `const`, `minLength`, `maxLength`,

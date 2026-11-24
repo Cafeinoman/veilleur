@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Collector `page`: the content of a web page, or of the parts a CSS selector designates (cahier EF-02).
+"""Collector `page`: the content of a web page, or of the parts a CSS selector designates (spec EF-02).
 
 The page is one item, keyed by its address, whose field `content` is the visible text, normalised (white space
 collapsed, scripts and styles left out): a change of that text is a changed item.

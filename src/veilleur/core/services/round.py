@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""A round (cahier §4): due collections, change detection, reports, purge, notification."""
+"""A round (spec §4): due collections, change detection, reports, purge, notification."""
 
 from __future__ import annotations
 

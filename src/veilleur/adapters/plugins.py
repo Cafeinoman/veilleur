@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Installed plugins, found through entry points (cahier EF-01, EF-20, EF-43, EF-52)."""
+"""Installed plugins, found through entry points (spec EF-01, EF-20, EF-43, EF-52)."""
 
 from __future__ import annotations
 

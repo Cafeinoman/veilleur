@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Independent check of milestone G2 (core, storage, administration), written from the cahier and protocol §9."""
+"""Independent check of milestone G2 (core, storage, administration), written from the spec and protocol §9."""
 
 from __future__ import annotations
 

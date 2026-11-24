@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Collector `json_api`: items of a JSON API (cahier EF-02).
+"""Collector `json_api`: items of a JSON API (spec EF-02).
 
 Parameters: the address, the path of the item list in the response (`data.items`; empty for the response itself),
 the field that serves as key, an optional field holding the item's address, the fields to keep, and simple paging

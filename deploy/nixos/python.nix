@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-# The Python environment of Veilleur, built from uv.lock by uv2nix with nixpkgs' Python (cahier ENF-02).
+# The Python environment of Veilleur, built from uv.lock by uv2nix with nixpkgs' Python (spec ENF-02).
 {
   pkgs,
   uv2nix,

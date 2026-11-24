@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Cache of conditional requests (cahier EF-06): the last response of an address with an `ETag` or a
+"""Cache of conditional requests (spec EF-06): the last response of an address with an `ETag` or a
 `Last-Modified`, so that an unchanged source answers `304 Not Modified` and costs it almost nothing.
 
 The cache lives in its own SQLite file of the state directory; it holds collected content (never a secret) and can
