@@ -18,7 +18,7 @@ Veilleur est générique : une source propre à un domaine métier relève d'un 
 
 ## Contrôles
 
-Ils doivent passer avant chaque commit :
+Ils doivent passer avant chaque commit. Dans l'environnement de développement Nix (`nix develop`, ou direnv), `just test` les lance tous, comme la CI :
 
 ```bash
 uv sync --locked
@@ -26,6 +26,8 @@ uv run pytest
 uv run ruff check src tests tools protocol receiver
 uv run mypy
 uv run lint-imports
+uv run python tools/check_vectors.py
+uv run python tools/protocol_vectors.py --check
 ```
 
 Les tests n'utilisent jamais le réseau : servez-vous de réponses enregistrées et appelez directement l'application WSGI.

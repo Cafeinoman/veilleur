@@ -18,7 +18,7 @@ Veilleur is generic: a source tied to a particular business domain belongs in a 
 
 ## Checks
 
-These must pass before every commit:
+These must pass before every commit. In the Nix development shell (`nix develop`, or direnv), `just test` runs them all, as the CI does:
 
 ```bash
 uv sync --locked
@@ -26,6 +26,8 @@ uv run pytest
 uv run ruff check src tests tools protocol receiver
 uv run mypy
 uv run lint-imports
+uv run python tools/check_vectors.py
+uv run python tools/protocol_vectors.py --check
 ```
 
 Tests never use the network: use recorded responses and call the WSGI application directly.
