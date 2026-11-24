@@ -1,6 +1,6 @@
 # ADR-0025 — Limites réglables par hôte et remise à zéro du quota (DV-03)
 
-- **Statut :** Proposé
+- **Statut :** Accepté
 - **Date :** 2026-11-19
 - **Exigences :** DV-03 ; réserve R26 (quota jamais remis à zéro dans `serve`)
 
@@ -34,7 +34,7 @@ service `serve` jamais. DV-03 parle d'un quota « par tour » : écart entre la 
   ```
 
 - Hôte : nom exact, en minuscules, IDNA ; une adresse IP est admise telle qu'écrite.
-- **Intervalle minimal imposé : 1,0 s** ; **quota maximal imposé : 10 000** [Suppose] ; une valeur hors bornes est
+- **Intervalle minimal imposé : 1,0 s** ; **quota maximal imposé : 10 000** (D12) ; une valeur hors bornes est
   refusée au chargement de la configuration (`invalid_config`, avec le nom du membre).
 - **Quota par tour** : le compteur est remis à zéro au début de chaque tour (`veilleur round`, minuterie) et de
   chaque tâche du fil de travail de `serve` qui collecte. La limite de débit de l'API (120 requêtes par minute et

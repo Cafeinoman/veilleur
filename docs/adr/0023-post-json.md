@@ -1,6 +1,6 @@
 # ADR-0023 — Requêtes POST à corps JSON (DV-01)
 
-- **Statut :** Proposé
+- **Statut :** Accepté
 - **Date :** 2026-11-19
 - **Exigences :** DV-01, EF-06, ES-08, ES-09
 

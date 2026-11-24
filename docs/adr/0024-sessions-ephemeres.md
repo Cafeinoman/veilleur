@@ -1,6 +1,6 @@
 # ADR-0024 — Sessions éphémères sur pages publiques (DV-02)
 
-- **Statut :** Proposé
+- **Statut :** Accepté
 - **Date :** 2026-11-19
 - **Exigences :** DV-02, EF-06, ES-08, ES-09 ; périmètre §3
 
@@ -35,7 +35,8 @@ frontière. [Probable]
 - `http.session()` rend une `HttpSession`, gestionnaire de contexte, liée au **premier hôte** demandé :
   `get(url, accept=…)`, `form(response, selector=None) -> Form` (champs, cachés compris, et action, lus par
   l'analyseur HTML de `page`), `submit(form, changes, accept=…)` (POST `application/x-www-form-urlencoded`, ou GET
-  si la méthode du formulaire l'est). [Suppose] `post_form(url, fields)` n'est pas fourni (décision D9).
+  si la méthode du formulaire l'est). `post_form(url, fields)` n'est pas fourni (D9) ; la forme est à confirmer avec le greffon `veilleur-marches`
+  avant J12-L1.
 - Un formulaire qui contient un champ `type=password` est refusé (`password_form_refused`).
 - Cookies en mémoire, propres à la session, **jamais écrits sur disque** et **jamais envoyés à un autre hôte** :
   `Domain=` ignoré (cookie lié à l'hôte exact), `Secure` respecté, `Path` ignoré (tout le site) ; 50 cookies de

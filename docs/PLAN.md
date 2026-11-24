@@ -49,14 +49,16 @@ test.
   2. `flake.nix` : `just` dans `devShells.default`.
   3. CI : nouveau travail « `just test` (nix develop) » qui lance `nix develop -c just test` ; la matrice uv et le
      travail Nix restent tels quels (D3).
-  4. `CLAUDE.md` réécrit au format de `/nouveau-projet` : objet ; documents qui font foi (`docs/PLAN.md`,
-     `docs/SPEC.md`, `docs/adr/`) ; commande de contrôle `just test` ; règle « un lot = un identifiant `J<n>-L<m>` de
+  4. Surveillance de la charge de la CI (D3, ADR-0029) : `tools/ci_load.py`, recette `just ci-load`, flux planifié
+     chaque semaine qui lance le script ; seuils 20 minutes et deux fois la matrice (D16).
+  5. `CLAUDE.md` réécrit au format de `/nouveau-projet` : objet ; étiquettes de version seulement (D6) ; documents
+     qui font foi (`docs/PLAN.md`, `docs/SPEC.md`, `docs/adr/`) ; commande de contrôle `just test` ; règle « un lot = un identifiant `J<n>-L<m>` de
      `docs/PLAN.md`, sur une branche `claude/<identifiant>-<sujet>` » ; questions ouvertes dans `docs/DECISIONS.md` ;
      règles propres conservées (généricité, architecture, langues et i18n, licence, sécurité, tests sans réseau,
      données, droits du jeton GitHub repris de l'ancien `plan.md` G0-R étape 0) ; règles communes non recopiées.
-  5. `.claude/settings.json` : ajouter `Bash(just:*)`.
-  6. `CONTRIBUTING.md` et `CONTRIBUTING.fr.md` : citer `just test` et `tools/check_vectors.py` (lève R22, premier point).
-  7. `tests/test_pilot_documents.py` (voir `docs/TEST-STRATEGY.md` §4).
+  6. `.claude/settings.json` : ajouter `Bash(just:*)`.
+  7. `CONTRIBUTING.md` et `CONTRIBUTING.fr.md` : citer `just test` et `tools/check_vectors.py` (lève R22, premier point).
+  8. `tests/test_pilot_documents.py` (voir `docs/TEST-STRATEGY.md` §4).
 - **Critères d'acceptation.**
   1. `nix develop -c just test` réussit sur la branche ; `just --dry-run test` affiche les six commandes de l'étape 1.
   2. Un contrôle qui échoue (par exemple une erreur `ruff` introduite à la main) fait échouer `just test` avec un code
@@ -71,6 +73,9 @@ test.
      `docs/SPEC.md`, un fichier d'ADR cité, une réserve `Rnn` de ce plan, ou si un `xfail` de `tests/verif/` n'est
      cité dans aucune réserve.
   7. Hors le marqueur retiré au critère 5, aucun fichier de test existant n'est modifié.
+  8. `tools/ci_load.py` a ses tests (réponses de `gh` enregistrées, sans réseau) : code nul sous les seuils, non nul
+     avec le nom du travail au-delà ; le flux planifié n'a que le droit `actions: read` et ses actions sont fixées
+     par empreinte.
 - **Références.** ADR-0029, ADR-0002 ; SPEC §9 ; `docs/REPRISE.md` §2.8, §2.10.
 - **Risques.** `nix develop` en CI allonge la durée ; Python 3.12 seul dans ce travail (la matrice garde 3.13).
 - **Effort.** M
@@ -110,8 +115,8 @@ test.
 - **Étapes.**
   1. `tests/test_plugin_api.py` : surface publique de l'ADR-0028 (noms ; champs, ordre et défauts des objets de
      données ; méthodes des protocoles ; membres des énumérations `Kind` et `Change` ; groupes d'*entry points*).
-  2. Si D5 est accepté : `adapters/filters`, `adapters/renderers`, `adapters/notifiers` découpés en un module par
-     greffon (comme `adapters/collectors`), avec réexport depuis `__init__.py`.
+  2. `adapters/filters`, `adapters/renderers`, `adapters/notifiers` découpés en un module par
+     greffon (comme `adapters/collectors`), avec réexport depuis `__init__.py` (D5).
   3. `docs/{en,fr}/writing-a-collector.md` : liste de la surface publique et règle de compatibilité.
 - **Critères d'acceptation.**
   1. `tests/test_plugin_api.py` passe, et échoue si l'on renomme un champ de `CollectedItem`, retire une méthode de
@@ -178,7 +183,7 @@ Produit : Veilleur 0.1.x sans réserve de sécurité ouverte. À faire avant d'e
 - **Objectif.** Lever R04 et R08.
 - **Étapes.**
   1. Contrôler en-tête, date et `key_id` avant de lire le corps ; lire le corps seulement pour vérifier l'empreinte.
-  2. Limiter les réponses `401` : au plus 300 par minute pour le processus [Suppose, D12], au-delà `429 rate_limited`
+  2. Limiter les réponses `401` : au plus 300 par minute pour le processus (D12), au-delà `429 rate_limited`
      sans lecture du corps ; les requêtes authentifiées ne sont pas comptées.
   3. Créer `veilleur.db` (et ses fichiers WAL) en 0600 quel que soit le masque du processus.
 - **Critères d'acceptation.**
@@ -226,7 +231,7 @@ Produit : un Veilleur qui lit `robots.txt` selon RFC 9309, respecte `Crawl-delay
   1. Module `veilleur.adapters.http.robots` : analyse (groupes, agents insensibles à la casse, règle la plus longue,
      `Allow` gagne à égalité, `*`, `$`, encodage `%`, 500 Kio au plus), rend « permis ou non », la règle en cause et
      `Crawl-delay`.
-  2. Si D8 est accepté : Protego en dépendance de développement et test différentiel sur un corpus de fichiers
+  2. Protego en dépendance de développement (D8) et test différentiel sur un corpus de fichiers
      `robots.txt` et d'adresses.
   3. Délai par hôte = max(intervalle, `Crawl-delay`) ; plafond 60 s (`crawl_delay_too_long`) ; l'attente hors des 30 s.
   4. `Retry-After` sur `429` et `503` (secondes ou date HTTP), plafonné à la fin du processus.
@@ -393,7 +398,7 @@ DV-02.
      `tests/verif/test_g4_verif.py::test_a_very_deep_answer_is_a_refusal` passent sans `xfail`.
   2. Un motif `regex` dont le programme RE2 dépasse la borne choisie est refusé à la réception (`invalid_params`) ; le
      plus lent des motifs acceptés d'un corpus de test met moins d'1 s sur un champ de 20 000 caractères.
-  3. Au plus 4 tâches `history` en attente par jumelage [Suppose, D12] ; la suivante reçoit `429`.
+  3. Au plus 4 tâches `history` en attente par jumelage (D12) ; la suivante reçoit `429`.
   4. Une réponse qui envoie son corps goutte à goutte est coupée au plus 1 s après la limite de 30 s.
 - **Références.** R13 ; ADR-0016, ADR-0014 ; SPEC EF-20, ES-11, §7.5.
 - **Risques.** Bornes trop basses qui refusent des motifs utiles : corpus de motifs réels dans les tests.
@@ -407,7 +412,7 @@ Produit : Veilleur 0.3.0, avec lequel le greffon lit les sites publics à formul
 ### J12-L1 — Sessions éphémères (DV-02)
 
 - **Objectif.** Ajouter `http.session()` (ADR-0024).
-- **Étapes.** Session liée à un hôte ; cookies en mémoire ; lecture et soumission de formulaires (forme selon D9) ;
+- **Étapes.** Session liée à un hôte ; cookies en mémoire ; `form(page)` puis `submit(form, changes)`, sans `post_form` (D9, forme confirmée avec `veilleur-marches` avant le lot) ;
   refus des champs `password` ; fermeture par la portée de collecte ; guide d'écriture d'un collecteur ; surface.
 - **Critères d'acceptation.**
   1. DV-02, critères 1 à 7 (SPEC §11).

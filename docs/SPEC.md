@@ -433,7 +433,8 @@ façon générique. Les critères d'acceptation sont ceux de la demande, révis�
 - **Besoin.** Des sites publics, consultables sans compte, ne servent une liste complète ou paginée qu'à travers un
   formulaire et un cookie de session.
 - **Forme.** Session éphémère, limitée à une collecte et à un seul hôte (ADR-0024) : `session = http.session()`,
-  `page = session.get(url)`, puis soumission d'un formulaire lu dans une page de la session (**forme à trancher, D9**).
+  `page = session.get(url)`, puis soumission d'un formulaire lu dans une page de la session : `session.form(page)` puis
+  `session.submit(form, changes)`, sans `post_form` libre (D9).
 - **Sécurité.** Cookies en mémoire, propres à une session, jamais écrits sur disque ni envoyés à un autre hôte ; aucun
   champ de mot de passe ; aucune authentification ; mêmes contrôles que `get` (**politique `robots.txt` de
   l'administrateur**) ; ni cookie ni valeur de formulaire dans les journaux ; requêtes par session plafonnées.

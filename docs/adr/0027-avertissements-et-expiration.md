@@ -1,6 +1,6 @@
 # ADR-0027 — Avertissements de collecte (DV-05), expiration des éléments (DV-06), portée de collecte
 
-- **Statut :** Proposé
+- **Statut :** Accepté
 - **Date :** 2026-11-19
 - **Exigences :** DV-05, DV-06, EF-07 (alerte `robots.txt`), EF-05, EF-31, EF-52
 
@@ -24,9 +24,9 @@ par `veilleur sources`. Les deux doivent donc être livrés ensemble, DV-05 en p
 ## Décision
 
 - **DV-05.** `Collected` gagne `warnings: tuple[str, ...] = ()` (champ final, avec défaut : compatible). Au plus 8
-  codes gardés par collecte [Suppose] ; un code invalide est écarté et remplacé par `bad_warning`, sans faire échouer
+  codes gardés par collecte (D12) ; un code invalide est écarté et remplacé par `bad_warning`, sans faire échouer
   la collecte. Les codes sont gardés dans `source_status` (migration) et affichés, traduits si connus, par
-  `veilleur sources`. Ils ne figurent **pas** dans le manifeste en 0.2.0 (protocole inchangé) [Suppose, D10].
+  `veilleur sources`. Ils ne figurent **pas** dans le manifeste en 0.2.0 (protocole inchangé) (D10).
 - **Portée de collecte.** Le cœur appelle le collecteur dans une portée ouverte par un port serveur
   (`ServerHttp.collection(collection_id)`, distinct du port `HttpClient` que voient les greffons) : à la sortie, même
   après une exception, le client rend ses avertissements (`robots_ignored` avec hôte et règle) et ferme les sessions

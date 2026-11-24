@@ -1,7 +1,7 @@
 # ADR-0028 — Surface publique de l'API des greffons, compatibilité et versions
 
-- **Statut :** Proposé
-- **Date :** 2026-11-19
+- **Statut :** Accepté
+- **Date :** 2026-11-19 ; accepté le 2026-11-24 (D7)
 - **Exigences :** EF-01, EF-20, EF-43, EF-52 ; brief §2.3
 
 ## Contexte

@@ -1,6 +1,6 @@
 # ADR-0022 — Politique `robots.txt` : passer outre avec alerte, `enforce` au choix
 
-- **Statut :** Proposé
+- **Statut :** Accepté
 - **Date :** 2026-11-19
 - **Révise :** ADR-0014 (partie `robots.txt`), décision du cahier §10 du 2026-11-18 (« `robots.txt` illisible (5xx)
   refuse la requête »), EF-06 (« respect de `robots.txt` »)
@@ -89,7 +89,7 @@ Option 3.
    interdite, `robots_unavailable` pour un `robots.txt` injoignable (5xx ou panne réseau).
 6. **`robots.txt` absent ou illisible** en `warn` : la collecte continue, sans alerte (aucune règle connue) ;
    `Crawl-delay` inconnu, le délai par défaut s'applique ; l'état « illisible » est gardé 1 heure avant une nouvelle
-   lecture [Suppose], pour ne pas redemander le fichier à chaque requête.
+   lecture (D12), pour ne pas redemander le fichier à chaque requête.
 7. **Ce qui reste dû, quelle que soit la politique** : `User-Agent` honnête avec l'adresse du serveur, délai et quota
    par hôte (ADR-0025), `Crawl-delay` (ADR-0026), `Retry-After` sur `429` et `503` (ADR-0026), garde SSRF. Aucun
    contournement d'une protection technique : `401`, `403`, `429` et toute page de défi restent des pannes

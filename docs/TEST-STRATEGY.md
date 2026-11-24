@@ -13,7 +13,7 @@
   réserve est levée (le lot retire le marqueur, jamais le test).
 - **Un test existant ne s'affaiblit pas en silence** : toute modification d'assertion est dite dans la PR.
 - **Une bibliothèque tierce peut servir d'oracle** en développement (PyNaCl pour les vecteurs, ADR-0009 ; Protego
-  pour `robots.txt` si D8 est accepté), jamais en exécution.
+  pour `robots.txt`, D8), jamais en exécution.
 
 ## 2. Niveaux existants (0.1.0)
 
@@ -41,6 +41,7 @@ Total au 2026-11-19 : 1 314 tests collectés par `pytest`.
 | Tests du POST | J10-L1 | corps, redirections, quota, hors ligne, absence du corps dans les journaux |
 | Tests des sessions | J12-L1 | cookies liés à l'hôte, redirection vers un autre hôte, isolement des sessions, fermeture après exception, aucun fichier écrit |
 | Tests de migration | J9-L2, J9-L3, J12-L2 | une base 0.1.0 (puis 0.2.0) fixée dans `tests/server/fixtures/` est migrée, avec sauvegarde, sans perte |
+| Tests de `tools/ci_load.py` | J7-L1 | seuils de durée de la CI, sur réponses de `gh` enregistrées (D3) |
 | Test de charge `slow` | J14-L3 | ENF-07 : 300 abonnements, un tour, mémoire et durée |
 
 ## 4. Cohérence des documents de pilotage
@@ -79,7 +80,7 @@ de correspondance contre `cahier_des_charges.MD`.
 
 - `pytest` (avec `caplog` et capture des sorties), `ruff`, `mypy` strict, `import-linter`, Babel pour les catalogues,
   PyNaCl pour la seconde implémentation, `gitleaks` dans l'environnement de développement.
-- Ajouts proposés : `just` (commande unique), Protego en dépendance de développement (D8), marqueur `slow` (J14-L3).
+- Ajouts : `just` (commande unique), Protego en dépendance de développement (D8), marqueur `slow` (J14-L3).
 - Faux du client HTTP (`tests/server/http_fakes.py`) étendus : POST, sessions, `Retry-After`, horloge simulée.
 
 ## 7. Ce que la CI lance
@@ -89,6 +90,7 @@ de correspondance contre `cahier_des_charges.MD`.
 | Matrice uv, Python 3.12 et 3.13 (contrôles requis de `main`) | `uv sync --locked`, puis pytest, `check_vectors.py`, ruff, mypy, lint-imports | chaque PR et `main` |
 | **`just test`** (nouveau, J7-L1) | `nix develop -c just test` (mêmes contrôles plus `protocol_vectors.py --check`) | chaque PR et `main` |
 | Nix | `nix flake check -L` (évaluation et VM) | chaque PR et `main` |
+| **Charge de la CI** (nouveau, J7-L1) | `python tools/ci_load.py` | chaque semaine (`schedule`) ; échec = alerte (D3) |
 
 Les tests `slow` ne tournent pas en CI par défaut [Suppose].
 

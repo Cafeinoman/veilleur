@@ -1,6 +1,6 @@
 # ADR-0026 — `Crawl-delay` et `Retry-After` (DV-04)
 
-- **Statut :** Proposé
+- **Statut :** Accepté
 - **Date :** 2026-11-19
 - **Exigences :** DV-04, EF-06 (révisée)
 
@@ -25,8 +25,8 @@ deviendrait un `timeout`.
 - **L'attente ne compte pas dans la limite de 30 s** : le délai de la requête court après l'attente imposée.
 - `Retry-After` : sur une réponse `429` ou `503`, la requête échoue (`http_429`, `http_503`) et l'hôte n'est plus
   demandé pendant la durée indiquée, plafonnée à la fin du tour ; les requêtes suivantes vers cet hôte échouent avec
-  le même code sans partir. [Suppose : la reprise relève que le client ne lit pas `Retry-After`, bien que le brief le
-  compte dans « ce qui reste dû »]
+  le même code sans partir. Exigence ajoutée à EF-06 (D14) : la reprise relève que le client ne lit pas
+  `Retry-After`, bien que le brief le compte dans « ce qui reste dû ».
 - Les tests utilisent une horloge simulée (pas d'attente réelle).
 
 ## Conséquences
