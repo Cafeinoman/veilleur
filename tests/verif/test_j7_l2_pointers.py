@@ -2,7 +2,7 @@
 """Independent check of lot J7-L2 (docs/PLAN.md): the former pilot documents become pointers, nothing is lost.
 
 Written from the acceptance criteria of J7-L2 and decision D17 of docs/DECISIONS.md. The checks that compare with
-`main` or with commit c576de4 need the git history; they are skipped on a shallow clone (the CI checks out one commit).
+commits c576de4 and c307a5c need the git history; they are skipped on a shallow clone (the CI checks out one commit).
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ REQUIREMENT = re.compile(r"\b(?:EF|ES|ENF)-\d{2}[a-z]?\b")
 WORD = "ca" + "hier"
 FORMER_SPEC = f"{WORD}_des_charges.MD"
 BASE = "c576de4"  # main when the lot started; the former documents are whole there.
+END = "c307a5c"  # last commit of the lot; later lots may change the tests freely.
 
 
 def read(relative: str) -> str:
@@ -170,21 +171,24 @@ def _shape(source: str) -> str:
 
 
 def test_tests_changed_only_in_docstrings_comments_and_the_redirected_paths() -> None:
-    if git("rev-parse", "--verify", "--quiet", "main") is None:
-        pytest.skip("branch main is not in this clone")
-    changed = git("diff", "--name-only", "main...HEAD", "--", "tests")
+    for commit in (BASE, END):
+        if git("rev-parse", "--verify", "--quiet", f"{commit}^{{commit}}") is None:
+            pytest.skip(f"commit {commit} is not in this clone")
+    changed = git("diff", "--name-only", f"{BASE}...{END}", "--", "tests")
     assert changed is not None
     unexpected = []
     for path in changed.split():
         if not path.endswith(".py") or path in EXEMPT or Path(path).name.startswith("test_j7_l2_"):
             continue
-        before = git("show", f"main:{path}")
+        before = git("show", f"{BASE}:{path}")
         if before is None:  # new file
             unexpected.append(f"{path}: new")
             continue
         for old, new in ALLOWED.get(path, []):
             assert old in before, (path, old)
             before = before.replace(old, new)
-        if _shape(before) != _shape(read(path)):
+        after = git("show", f"{END}:{path}")
+        assert after is not None, path
+        if _shape(before) != _shape(after):
             unexpected.append(path)
     assert unexpected == []
