@@ -81,3 +81,33 @@ et que les paramètres de vos exemples le respectent (`veilleur.core.domain.sche
 Les filtres (`veilleur.filters`) suivent le même modèle : `name`, `schema`, `apply(item, params)` qui rend
 l'élément (éventuellement transformé) ou `None`, et au besoin `select(items, params)` pour un filtre qui a besoin
 de tous les éléments à la fois.
+
+## 7. API publique et compatibilité
+
+Un greffon ne peut compter que sur ces noms (version 1 de l'API des greffons, ADR-0028) :
+
+| Module ou groupe | Noms publics |
+|---|---|
+| groupes d'*entry points* | `veilleur.collectors`, `veilleur.filters`, `veilleur.renderers`, `veilleur.notifiers` |
+| `veilleur.core.ports.plugins` | `Collector`, `ParamsCheck`, `FilterItem`, `Filter`, `SetFilter`, `ReportView`, `Renderer`, `RoundCounts`, `NotificationTarget`, `Notifier`, `Plugins` |
+| `veilleur.core.ports.http` | `HttpClient`, `HttpResponse` |
+| `veilleur.core.domain.model` | `Collected`, `CollectedItem`, `ItemChange`, `SourceStatus`, `Kind`, `Change` |
+| `veilleur.core.domain.errors` | `CollectorError` |
+| `veilleur.core.domain.schema` | `validate` |
+| `veilleur` | `__version__` |
+
+Tout le reste, `veilleur.adapters` compris, est interne et peut changer à chaque version ; l'outil
+`veilleur.adapters.plugins.validated` de la section précédente ne sert qu'aux tests.
+
+La règle de compatibilité, en versions 0.x :
+
+- une version mineure ne fait qu'ajouter : un champ final avec une valeur par défaut à un objet de données, une
+  méthode, un membre d'énumération, un nom public ;
+- un retrait ou un renommage garde un alias pendant au moins une version mineure, annoncé par un
+  `DeprecationWarning` et les notes de version ;
+- aucun module de cette liste ne change de chemin.
+
+Les noms, les champs des objets de données (ordre et valeurs par défaut), les méthodes des protocoles et les membres
+des énumérations sont figés par `tests/test_plugin_api.py`. Un greffon qui utilise un ajout vérifie
+`veilleur.__version__` à son chargement. Le faux client HTTP des tests d'un greffon n'implémente que les méthodes
+que le greffon appelle.
