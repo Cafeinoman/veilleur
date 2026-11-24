@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Long jobs (cahier §7.5): first `state` of a subscription and `history` packages, run by the worker thread."""
+"""Long jobs (spec §7.5): first `state` of a subscription and `history` packages, run by the worker thread."""
 
 from __future__ import annotations
 

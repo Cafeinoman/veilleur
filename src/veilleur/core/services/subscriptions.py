@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Subscriptions (cahier EF-10 to EF-14): documents sent by receiving tools, team subscriptions, versions."""
+"""Subscriptions (spec EF-10 to EF-14): documents sent by receiving tools, team subscriptions, versions."""
 
 from __future__ import annotations
 

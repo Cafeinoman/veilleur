@@ -2,7 +2,7 @@
 
 *[Version française](../fr/design.md)*
 
-This document describes what Veilleur will be. The skeleton (milestone G0), the protocol (G1: [specification](protocol.md), [threat model](threat-model.md), `veilleur-protocol` library) and the core with its storage, administration command line and HTTP service (G2) exist today (§9).
+This document describes the design of Veilleur and its milestones. Version 0.1.0, the outcome of milestones G0 to G6 (§9), is published as a pre-release; the requirements are in the project specification (`docs/SPEC.md`), the decisions in `docs/adr/`.
 
 ## 1. Purpose
 
@@ -146,6 +146,7 @@ The core depends on no storage, network or translation; this is checked by `lint
 | G4 | `markdown` and `html` renderings; reference receiver | end to end, server → receiver |
 | G5 | Deployment: flake, NixOS module, container, NixOS VM test, systemd fallback, versioned release; administration guide | `nix flake check` and VM test green |
 | G6 | Publication pass: secret scanning, `SECURITY.md`, release 0.1.0 | publication |
+| Next | Milestones J7 onwards (versions 0.2.0 and 0.3.0) are planned in `docs/PLAN.md` | see the plan |
 
 ## 10. Decisions
 

@@ -129,7 +129,7 @@ def test_every_former_requirement_is_in_the_specification() -> None:
 
 
 def test_every_requirement_of_the_former_specification_is_in_the_new_one() -> None:
-    former = ROOT / "cahier_des_charges.MD"
+    former = ROOT / "docs" / "REPRISE.md"
     identifiers = set(REQUIREMENT.findall(read(former)))
     assert identifiers
     assert missing_requirements(identifiers, SPECIFICATION) == []

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-# The units of deploy/systemd, as another distribution would install them (cahier ENF-05).
+# The units of deploy/systemd, as another distribution would install them (spec ENF-05).
 {
   pkgs,
   server,

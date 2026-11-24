@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Sealing with `veilleur-protocol` (cahier ES-02 to ES-05, §7.3)."""
+"""Sealing with `veilleur-protocol` (spec ES-02 to ES-05, §7.3)."""
 
 from __future__ import annotations
 

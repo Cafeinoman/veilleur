@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Sealing (cahier ES-02 to ES-05): the core describes packages, the sealer encrypts and signs them."""
+"""Sealing (spec ES-02 to ES-05): the core describes packages, the sealer encrypts and signs them."""
 
 from __future__ import annotations
 

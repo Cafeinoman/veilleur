@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Domain objects (cahier §4): pairings, subscriptions, collections, items, reports, jobs."""
+"""Domain objects (spec §4): pairings, subscriptions, collections, items, reports, jobs."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from typing import Any
 
 LANGUAGES = ("en", "fr")
 RETENTION_DAYS = 90
-"""Packages, gone items and finished jobs are kept 90 days (cahier EF-45)."""
+"""Packages, gone items and finished jobs are kept 90 days (spec EF-45)."""
 
 
 def canonical_json(value: Any) -> bytes:
@@ -253,7 +253,7 @@ class JobStatus(Enum):
 
 @dataclass(frozen=True)
 class Job:
-    """A long task run by the service's worker thread (cahier §7.5)."""
+    """A long task run by the service's worker thread (spec §7.5)."""
 
     id: int
     kind: JobKind

@@ -96,13 +96,13 @@ def test_the_internal_port_cannot_be_a_public_port_of_caddy(probe: dict[str, Any
 
 @pytest.mark.parametrize("case", ["sshd on 443", "nginx default port on the internal port"])
 def test_other_declared_forms_are_reported(probe: dict[str, Any], case: str) -> None:
-    """Cahier section 10 lists both forms since the decision of 18/11/2026."""
+    """Spec section 10 lists both forms since the decision of 18/11/2026."""
     assert probe["otherForms"][case], f"no assertion for: {case}"
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="outside the specification: cahier section 10 leaves ports opened by arbitrary units out of the assertion",
+    reason="outside the specification: spec section 10 leaves ports opened by arbitrary units out of the assertion",
 )
 def test_a_socket_unit_is_reported(probe: dict[str, Any]) -> None:
     assert probe["otherForms"]["socket unit on 443"], "no assertion for: socket unit on 443"

@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 EN = (ROOT / "docs/en/design.md").read_text(encoding="utf-8")
 FR = (ROOT / "docs/fr/design.md").read_text(encoding="utf-8")
-SPEC = (ROOT / "cahier_des_charges.MD").read_text(encoding="utf-8")
+SPEC = (ROOT / "docs/SPEC.md").read_text(encoding="utf-8")
 
 
 def _shape(text: str) -> tuple[list[str], int, int]:

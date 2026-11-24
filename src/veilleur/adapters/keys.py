@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""The server's signing key and its rotation (cahier ES-05, ES-10), kept in the state directory, never elsewhere."""
+"""The server's signing key and its rotation (spec ES-05, ES-10), kept in the state directory, never elsewhere."""
 
 from __future__ import annotations
 

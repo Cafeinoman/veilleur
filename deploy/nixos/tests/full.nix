@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-# Complete installation behind Caddy: pairing, round on a local source, fetching a package (cahier ENF-06).
+# Complete installation behind Caddy: pairing, round on a local source, fetching a package (spec ENF-06).
 {
   pkgs,
   serviceModule,

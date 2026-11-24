@@ -16,7 +16,7 @@ Ce que Veilleur protège, contre qui, comment, et ce qu'il ne protège pas. Le d
 | **Identité et activité des membres** | jamais recueillies : ni compte, ni nom (le libellé d'un jumelage est un repère comme « poste 3 »), ni adresse IP dans les journaux |
 | **Le serveur lui-même** | une machine sur Internet qui émet des requêtes pour le compte de ses utilisateurs |
 
-Principe (cahier ES-01) : *le serveur connaît ce qu'il collecte, jamais ce que les destinataires en font.*
+Principe (spécification ES-01) : *le serveur connaît ce qu'il collecte, jamais ce que les destinataires en font.*
 
 ## 2. Adversaires
 
@@ -50,7 +50,7 @@ Principe (cahier ES-01) : *le serveur connaît ce qu'il collecte, jamais ce que 
 
 ## 4. Risques acceptés
 
-Connus et documentés, ils découlent des choix du cahier des charges.
+Connus et documentés, ils découlent des choix de la spécification.
 
 - **Pas de confidentialité persistante** (ES-12) : un secret de jumelage volé ouvre tous les paquets de ce jumelage,
   passés et futurs, que le voleur peut obtenir. Révoquer le jumelage arrête les paquets futurs ; changer le secret

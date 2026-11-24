@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Fetching, checking and filing reports, over HTTPS or from a folder (cahier EF-50, EF-51).
+"""Fetching, checking and filing reports, over HTTPS or from a folder (spec EF-50, EF-51).
 
 Nothing is used before `open_package` has checked it. The numbers of a subscription must follow each other: a gap is
 only accepted when a `state` covers it (protocol §7.3). The state is saved after each report, so an interrupted pull

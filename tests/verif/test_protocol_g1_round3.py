@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: EUPL-1.2
 """Independent check of milestone G1, third round.
 
-Written from docs/en/protocol.md (normative), docs/en/threat-model.md and the cahier (ES-03, ES-07, ES-11, ES-13).
+Written from docs/en/protocol.md (normative), docs/en/threat-model.md and the spec (ES-03, ES-07, ES-11, ES-13).
 Targets: what the writers produce (a server must not make packages its own reader refuses), the agreement of the two
 implementations (§12), and the consistency of the documents. No network, no disk.
 """
@@ -196,7 +196,7 @@ def test_the_subscription_limits_agree() -> None:
         seal_subscription(SECRET, UID, 0, {"x": document["x"] + "a"})
 
 
-# --- Documents must not contradict each other (CLAUDE.md, cahier §6) ------------------------------------------------
+# --- Documents must not contradict each other (CLAUDE.md, spec §6) ------------------------------------------------
 
 
 def test_protocol_and_threat_model_agree_on_replays() -> None:
@@ -248,7 +248,7 @@ def test_pairing_server_host_is_a_host(server: str) -> None:
     [
         "https://veille.example.org",
         "https://veille.example.org:8443/",
-        "https://[2001:db8::1]",  # cahier ENF-03b: the public address may be an IP address
+        "https://[2001:db8::1]",  # spec ENF-03b: the public address may be an IP address
         "https://[2001:db8::1]:8443",
         "https://veille.example.org:99999",
         "https://veille.example.org:0",

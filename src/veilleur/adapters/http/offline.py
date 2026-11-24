@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""HTTP client of the offline mode (cahier EF-06): every request fails with `network_unavailable`.
+"""HTTP client of the offline mode (spec EF-06): every request fails with `network_unavailable`.
 
 The networked client is `client.NetworkHttpClient`.
 """

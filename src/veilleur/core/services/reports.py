@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Reports of a subscription (cahier EF-21, EF-32, EF-40 to EF-44).
+"""Reports of a subscription (spec EF-21, EF-32, EF-40 to EF-44).
 
 Each subscription keeps what it last reported about every item. A report compares the filtered current items of its
 collection with that: new, changed or gone. Frequencies and filters thus stay consistent: changes accumulate until

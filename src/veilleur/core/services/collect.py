@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Shared collections and change detection at the source (cahier EF-03 to EF-05, EF-30, EF-31)."""
+"""Shared collections and change detection at the source (spec EF-03 to EF-05, EF-30, EF-31)."""
 
 from __future__ import annotations
 

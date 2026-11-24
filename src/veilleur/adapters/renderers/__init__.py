@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Provided renderings (cahier EF-43): `markdown` and `html`, in the subscription's language.
+"""Provided renderings (spec EF-43): `markdown` and `html`, in the subscription's language.
 
 Everything in a report comes from third-party sources, so every value is treated as hostile: it is cleaned of control
 characters, escaped for its format, and only an `http(s)` address becomes a link. The HTML page holds no script and

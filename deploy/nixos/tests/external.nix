@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-# Veilleur with proxy = "external", behind a Caddy that belongs to the host (cahier ENF-03b, ENF-06).
+# Veilleur with proxy = "external", behind a Caddy that belongs to the host (spec ENF-03b, ENF-06).
 {
   pkgs,
   serviceModule,

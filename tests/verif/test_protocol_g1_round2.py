@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: EUPL-1.2
 """Independent check of milestone G1, second round: cases the first round did not cover.
 
-Written from docs/en/protocol.md (normative) and the cahier (ES-03, ES-04, ES-07, ES-13). No network, no disk.
+Written from docs/en/protocol.md (normative) and the spec (ES-03, ES-04, ES-07, ES-13). No network, no disk.
 """
 
 from __future__ import annotations

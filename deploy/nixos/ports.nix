@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-# The ports that the rest of the host's configuration declares, to report conflicts with Veilleur's (cahier ENF-03b).
+# The ports that the rest of the host's configuration declares, to report conflicts with Veilleur's (spec ENF-03b).
 { config, lib }:
 let
   # "443", "8000-8010" or "8000:8010".

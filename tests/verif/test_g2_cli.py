@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Independent check of the administration command line of milestone G2 (cahier EF-70, EF-80, EF-10, EF-51)."""
+"""Independent check of the administration command line of milestone G2 (spec EF-70, EF-80, EF-10, EF-51)."""
 
 from __future__ import annotations
 

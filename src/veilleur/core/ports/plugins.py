@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Plugin interfaces (cahier EF-01, EF-20, EF-43, EF-52), found through entry points by the applications:
+"""Plugin interfaces (spec EF-01, EF-20, EF-43, EF-52), found through entry points by the applications:
 `veilleur.collectors`, `veilleur.filters`, `veilleur.renderers`, `veilleur.notifiers`."""
 
 from __future__ import annotations

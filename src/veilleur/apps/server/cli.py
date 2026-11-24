@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""`veilleur` command: administration of the watch server (cahier EF-70).
+"""`veilleur` command: administration of the watch server (spec EF-70).
 
 The language is chosen before the parser is built, so that help texts are translated too.
 """

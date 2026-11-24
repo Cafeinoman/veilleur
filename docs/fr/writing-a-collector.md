@@ -1,6 +1,6 @@
 # Écrire un collecteur
 
-Un collecteur est un greffon Python qui, pour des paramètres donnés, rend les éléments d'une source (cahier EF-01).
+Un collecteur est un greffon Python qui, pour des paramètres donnés, rend les éléments d'une source (spécification EF-01).
 Veilleur reste générique : une source propre à un domaine est un greffon, maintenu hors du dépôt de Veilleur.
 Un exemple complet se trouve dans [`examples/veilleur-example-collector`](../../examples/veilleur-example-collector).
 

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""SSRF guard (cahier ES-08): which resolved addresses a collector may reach.
+"""SSRF guard (spec ES-08): which resolved addresses a collector may reach.
 
 Only global unicast addresses are allowed. Refused: loopback, private, link-local, CGNAT (100.64/10), multicast,
 reserved, unspecified and documentation addresses, in IPv4 and IPv6; an IPv6 address that embeds an IPv4 one

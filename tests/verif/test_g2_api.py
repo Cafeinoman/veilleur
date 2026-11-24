@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Independent check of the `/v1` interface of milestone G2 (cahier §7.4, ES-06, ES-09, ES-11; protocol §8, §9).
+"""Independent check of the `/v1` interface of milestone G2 (spec §7.4, ES-06, ES-09, ES-11; protocol §8, §9).
 
 The WSGI application is called directly: no port is opened.
 """

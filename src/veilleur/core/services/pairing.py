@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
-"""Pairings (cahier EF-60 to EF-62): a random secret and `key_id`, a label that is a marker, never a name."""
+"""Pairings (spec EF-60 to EF-62): a random secret and `key_id`, a label that is a marker, never a name."""
 
 from __future__ import annotations
 
