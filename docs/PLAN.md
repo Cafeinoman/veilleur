@@ -79,7 +79,7 @@ test.
 - **Références.** ADR-0029, ADR-0002 ; SPEC §9 ; `docs/REPRISE.md` §2.8, §2.10.
 - **Risques.** `nix develop` en CI allonge la durée ; Python 3.12 seul dans ce travail (la matrice garde 3.13).
 - **Effort.** M
-- **Statut.** à faire
+- **Statut.** fait (réserves R27 à R30)
 
 ### J7-L2 — Retrait des anciens documents de pilotage
 
@@ -570,3 +570,7 @@ confort. Les tests cités sont dans `tests/verif/`. `/livrer` ajoute les réserv
 | R24 | P4 | G6 (PR #7) | Marque : recherche limitée à l'INPI (TMview, WIPO non consultés) | aucun | action de l'utilisateur, pas un lot |
 | R25 | P4 | entretien | PR Dependabot #8 (`actions/checkout` 4 → 7) et #9 (`setup-uv` 6 → 10), sauts majeurs | aucun | J14-L2 |
 | R26 | — | G3 (PR #4) | Quota de 200 requêtes par hôte jamais remis à zéro dans `serve` (fusionnée avec DV-03) | aucun | J10-L2 |
+| R27 | P4 | J7-L1 | `tools/ci_load.py` : l'alerte « plus de 20 minutes » ne nomme pas le travail en cause (ADR-0029) | `test_j7_l1_standard.py::test_a_workflow_above_20_minutes_names_the_job_in_cause` | à planifier (J14) |
+| R28 | P4 | J7-L1 | `tools/ci_load.py` ne mesure que les exécutions réussies : une CI qui dépasse `timeout-minutes` n'est jamais comptée | `test_j7_l1_standard.py::test_runs_that_timed_out_still_count` | à planifier (J14) |
+| R29 | P4 | J7-L1 | Non vérifié : flux `CI load` sur GitHub (`actions/checkout` avec seulement `actions: read`, médiane réelle du travail Nix sous 20 min) ; GitHub désactive un flux `schedule` après 60 jours sans activité | aucun | vérification de l'utilisateur (premier `workflow_dispatch`) |
+| R30 | P4 | J7-L1 | `LD_LIBRARY_PATH` (libstdc++) posé sur tout le shell de développement ; `xfail_tests` ne voit ni `pytestmark`, ni `pytest.param(marks=…)`, ni `pytest.xfail()` | aucun | à planifier (J14) |
