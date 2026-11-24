@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: EUPL-1.2
+# Weekly watch of the CI duration (ADR-0029, D3, D16): a failure of this workflow is the alert.
+name: CI load
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+
+jobs:
+  ci-load:
+    name: CI duration under the thresholds
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Median durations of the last successful runs on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: python3 tools/ci_load.py
