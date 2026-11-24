@@ -37,6 +37,21 @@ jobs:
       - name: Architecture
         run: uv run --locked lint-imports
 
+  just-test:
+    name: just test (nix develop)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@3dc140bfc76c49fbd4dd958429132e3746bcb086 # v31.11.5
+      # The NixOS tests of tests/verif evaluate the modules with `--offline`: fetch from the cache what they build.
+      - name: Store paths needed by the offline NixOS evaluations of the tests
+        run: nix eval --impure --json --expr "(import $PWD/tests/verif/g5_probe.nix { root = \"$PWD\"; }).report" > /dev/null
+      - name: Every check of the project, in the development shell
+        run: nix develop -c just test
+
   nix:
     name: NixOS modules and virtual machine tests
     runs-on: ubuntu-latest
