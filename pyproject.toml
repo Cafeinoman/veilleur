@@ -27,13 +27,13 @@ json_api = "veilleur.adapters.collectors.json_api:JsonApiCollector"
 page = "veilleur.adapters.collectors.page:PageCollector"
 
 [project.entry-points."veilleur.filters"]
-keywords = "veilleur.adapters.filters:KeywordsFilter"
-regex = "veilleur.adapters.filters:RegexFilter"
-dedup = "veilleur.adapters.filters:DedupFilter"
+keywords = "veilleur.adapters.filters.keywords:KeywordsFilter"
+regex = "veilleur.adapters.filters.regex:RegexFilter"
+dedup = "veilleur.adapters.filters.dedup:DedupFilter"
 
 [project.entry-points."veilleur.renderers"]
-markdown = "veilleur.adapters.renderers:MarkdownRenderer"
-html = "veilleur.adapters.renderers:HtmlRenderer"
+markdown = "veilleur.adapters.renderers.markdown:MarkdownRenderer"
+html = "veilleur.adapters.renderers.html:HtmlRenderer"
 
 [dependency-groups]
 dev = [
