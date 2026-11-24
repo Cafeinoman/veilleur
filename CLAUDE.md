@@ -1,67 +1,94 @@
 # Veilleur — consignes pour Claude
 
-Serveur de veille auto-hébergé et générique : collecteurs branchables (RSS/Atom, API JSON, pages web, greffons), détection des changements, rapports signés et chiffrés livrés à des outils de réception (hors périmètre). Python 3.12+, SQLite, architecture hexagonale, installation NixOS. Licence EUPL-1.2. Dépôt public `github.com/Cafeinoman/veilleur`.
+Serveur de veille auto-hébergé et générique : collecteurs branchables (RSS/Atom, API JSON, pages web, greffons),
+détection des changements, rapports signés et chiffrés livrés à des outils de réception (hors périmètre). Python 3.12+,
+SQLite, architecture hexagonale, installation NixOS. Licence EUPL-1.2. Dépôt public `github.com/Cafeinoman/veilleur`.
 
-**Documents qui font foi** (les lire avant de décider) :
-- `cahier_des_charges.MD` : quoi et comment ; il prime sur tout le reste ;
-- `plan.md` : mode de travail, questions en attente, lots et état. **Reprendre au premier lot non terminé** ;
-- `docs/{en,fr}/design.md` : présentation de la conception, qui suit le cahier ;
-- `docs/{en,fr}/translating.md` : traductions.
+Les règles communes (`~/.claude/CLAUDE.md`) s'appliquent ; ce fichier ne les recopie pas.
 
-Toute évolution met à jour le cahier d'abord, puis la documentation dans les deux langues.
+## Documents qui font foi
 
-## Questions et arrêts
+- `docs/SPEC.md` : quoi (exigences `EF`, `ES`, `ENF`) ; il prime sur tout le reste ;
+- `docs/adr/` : décisions et leurs raisons ;
+- `docs/PLAN.md` : lots, critères d'acceptation, réserves. **Reprendre au premier lot `à faire`** ;
+- `docs/DECISIONS.md` : questions ouvertes et réponses de l'utilisateur.
 
-- Un lot par session, clos par `/clear` puis `/livrer` (consignes communes).
-- S'arrêter sur une **erreur qu'on ne sait pas résoudre** ou un **arbitrage impératif** :
-  - un choix qui modifierait le cahier des charges ;
-  - une contradiction entre documents ;
-  - une action irréversible hors du plan (publication PyPI, suppression de données, réécriture de l'historique publié).
-- Pour s'arrêter : écrire la question et sa recommandation dans « Questions en attente » de `plan.md`, la reprendre dans la PR en cours, et terminer.
-- Au démarrage, lire « Questions en attente » : une question à laquelle l'utilisateur a répondu dans `plan.md` ou dans la PR est réglée ; reporter la décision dans le cahier (§10) et la retirer de la liste.
-- **Ne jamais fusionner une PR** (`gh pr merge`) : la fusion revient à l'utilisateur.
+`docs/REPRISE.md` trace la correspondance avec les anciens documents. `cahier_des_charges.MD` et `plan.md` ne font
+plus foi (renvois, lot J7-L2). Toute évolution met à jour `docs/SPEC.md` (ou un ADR) d'abord, puis la documentation
+publique dans les deux langues.
 
-## Règles
+## Lots et questions
 
-- **Projet générique** : aucune connaissance d'un domaine métier particulier dans le dépôt. Une source propre à un domaine est un greffon maintenu ailleurs.
-- **Architecture** : `core` (domain, services, ports) ne dépend ni du stockage, ni du réseau, ni de la traduction, ni de `adapters` ou `apps` ; `lint-imports` le vérifie. Le cœur renvoie des codes stables, que les applications traduisent.
-- **Langues** :
-  - code, identifiants, commentaires, docstrings, messages de commit et descriptions de PR en **anglais** ;
-  - tout texte lu par une personne passe par `_()` / `ngettext()` de `veilleur.i18n`, avec des textes sources en anglais et des paramètres nommés (`str.format`) ;
-  - lancer ensuite `uv run python tools/i18n.py all`, puis traduire en français dans le `.po`. Les tests refusent un message non traduit, approximatif ou obsolète, et un `.mo` périmé ;
-  - documentation : mêmes fichiers dans `docs/en/` et `docs/fr/` (un test vérifie la parité) ;
-  - les documents de pilotage (`cahier_des_charges.MD`, `plan.md`, ce fichier) et les échanges avec l'utilisateur sont en **français**.
-- **Licence** : la première ligne de chaque fichier Python est `# SPDX-License-Identifier: EUPL-1.2` (un test le vérifie). Une dépendance doit avoir une licence compatible avec l'EUPL-1.2, et en ajouter une se justifie : dépendances minimales, cryptographie par `pycryptodomex` seulement.
-- **Sécurité** (cahier §6) :
-  - jamais de corps de requête, d'en-tête d'authentification, de secret, de paramètre d'abonnement ni d'IP de membre dans les journaux ;
-  - secrets dans le dossier d'état, jamais dans le dépôt, le *store* Nix ou la configuration ;
-  - tout accès réseau d'un collecteur passe par le client HTTP du serveur (garde SSRF) ;
-  - un lecteur de paquets vérifie tout avant de lire ;
-  - toute modification du protocole met à jour sa spécification normative (en anglais), sa traduction et les vecteurs de test.
-- **Tests sans réseau** : réponses enregistrées, application WSGI appelée directement, aucun port ouvert.
-- **Données** : aucune donnée personnelle dans le dépôt ; les exemples utilisent des domaines réservés (`example.org`, `example.net`).
+- Un lot = un identifiant `J<n>-L<m>` de `docs/PLAN.md`, sur une branche `claude/<identifiant>-<sujet>`.
+- S'arrêter sur une erreur qu'on ne sait pas résoudre ou un arbitrage impératif (choix qui modifierait la
+  spécification, contradiction entre documents, action irréversible hors du plan) : écrire la question et sa
+  recommandation dans `docs/DECISIONS.md`, la reprendre dans la PR en cours, et terminer.
+- Une question répondue dans `docs/DECISIONS.md` est réglée : reporter la décision dans l'ADR ou la spécification.
+- Étiquettes : versions seulement (`v0.2.0`…), posées par l'utilisateur, ou par Claude sur sa demande explicite.
+  Plus d'étiquette par lot (D6).
 
-## Commandes (depuis la racine)
+## Contrôle
 
 ```bash
-uv sync --locked
-uv run pytest && uv run ruff check src tests tools protocol receiver && uv run mypy && uv run lint-imports
+just test        # tous les contrôles, ceux de la CI (dans nix develop, ou direnv)
+just fmt         # formatage
+just vm          # modules NixOS et machines virtuelles (nix flake check -L)
+just ci-load     # durée de la CI sous les seuils (D16)
 uv run python tools/i18n.py all          # extraire, fusionner, compiler les traductions
-uv run python tools/protocol_vectors.py  # régénérer les vecteurs du protocole (--check pour comparer)
-uv run python tools/check_vectors.py     # vérification indépendante des vecteurs (libsodium)
+uv run python tools/protocol_vectors.py  # régénérer les vecteurs du protocole
 uv run veilleur --lang fr --help
 ```
 
-Les quatre contrôles doivent passer avant tout commit. Sur le serveur de développement (NixOS), `uv`, `gh` et direnv sont installés ; à partir de G5, `nix develop` (ou direnv) fournit l'environnement.
+`just test` doit passer avant tout commit. Les commandes permises et interdites sont dans `.claude/settings.json`.
 
-Les commandes permises et interdites sont dans `.claude/settings.json`.
+## Règles propres
 
-## Git et GitHub
+- **Projet générique** : aucune connaissance d'un domaine métier particulier dans le dépôt. Une source propre à un
+  domaine est un greffon maintenu ailleurs (exemple : `veilleur-marches`).
+- **Architecture** : `core` (domain, services, ports) ne dépend ni du stockage, ni du réseau, ni de la traduction, ni de
+  `adapters` ou `apps` ; `lint-imports` le vérifie. Le cœur renvoie des codes stables, que les applications traduisent.
+  La surface publique de l'API des greffons est celle de l'ADR-0028 : ne la changer qu'avec des défauts.
+- **Langues** :
+  - code, identifiants, commentaires, docstrings, messages de commit et descriptions de PR en **anglais** ;
+  - tout texte lu par une personne passe par `_()` / `ngettext()` de `veilleur.i18n`, avec des textes sources en
+    anglais et des paramètres nommés (`str.format`) ;
+  - lancer ensuite `uv run python tools/i18n.py all`, puis traduire en français dans le `.po`. Les tests refusent un
+    message non traduit, approximatif ou obsolète, et un `.mo` périmé ;
+  - documentation publique : mêmes fichiers dans `docs/en/` et `docs/fr/` (un test vérifie la parité) ;
+  - documents de pilotage (`docs/SPEC.md`, `docs/PLAN.md`, `docs/adr/`, ce fichier) et échanges avec l'utilisateur en
+    **français**.
+- **Licence** : la première ligne de chaque fichier Python est `# SPDX-License-Identifier: EUPL-1.2` (un test le
+  vérifie). Une dépendance doit avoir une licence compatible avec l'EUPL-1.2, et en ajouter une se justifie :
+  dépendances minimales, cryptographie par `pycryptodomex` seulement.
+- **Sécurité** (SPEC, exigences `ES`) :
+  - jamais de corps de requête, d'en-tête d'authentification, de secret, de paramètre d'abonnement ni d'IP de membre
+    dans les journaux ;
+  - secrets dans le dossier d'état, jamais dans le dépôt, le *store* Nix ou la configuration ;
+  - tout accès réseau d'un collecteur passe par le client HTTP du serveur (garde SSRF) ;
+  - un lecteur de paquets vérifie tout avant de lire ;
+  - toute modification du protocole met à jour sa spécification normative (en anglais), sa traduction et les vecteurs
+    de test.
+- **Tests sans réseau** : réponses enregistrées, application WSGI appelée directement, aucun port ouvert.
+- **Tests du vérificateur** : `tests/verif/` ; un écart non bloquant y est un `xfail` strict cité dans une réserve de
+  `docs/PLAN.md` (`tests/test_pilot_documents.py` le vérifie) ; le lot qui lève la réserve retire le marqueur, jamais
+  le test. Nouveaux fichiers : `tests/verif/test_<lot>_*.py`.
+- **Données** : aucune donnée personnelle dans le dépôt ; les exemples utilisent des domaines réservés (`example.org`,
+  `example.net`).
 
-- **Une branche par lot ou par fonctionnalité** : `claude/<lot>-<sujet>`, créée depuis `main` à jour. Pas de travail directement sur `main`, sauf le premier commit (G0-R). Ensuite, `main` est protégée sur GitHub, administrateurs compris.
-- Accès GitHub : jeton à grain fin limité à ce dépôt (droits listés dans `plan.md`, G0-R étape 0). Une erreur 403 ou 404 signale un droit manquant : c'est un arrêt, et la question en attente nomme le droit, sans chercher à le contourner.
-- Commits courts, à l'impératif, en anglais, terminés par la ligne `Co-Authored-By` demandée par l'environnement.
-- Envoyer la branche, ouvrir la PR avec `gh pr create` (résumé, étapes du plan couvertes, vérifications faites), attendre la CI (`gh pr checks --watch`) et corriger jusqu'à ce qu'elle soit verte.
-- **La fusion est faite par l'utilisateur.** Jamais de `--force` sur une branche partagée ; jamais de réécriture de `main`.
-- Identité réglée **globalement** par l'utilisateur (15/11/2026) : `François Delalleau <Cafeinoman@users.noreply.github.com>`. La vérifier (`git config user.email`) avant de commiter ; ne pas la redéfinir dans le dépôt ni modifier la configuration globale.
-- Étiquette par lot fusionné (`g0`, `g1`…), puis versions (`v0.1.0`), posée sur `main` après la fusion.
+## GitHub
+
+- `main` est protégée, administrateurs compris : contrôles requis = les deux travaux de la matrice uv. Le travail
+  `just test (nix develop)` et le travail Nix tournent aussi sur chaque PR.
+- Après l'ouverture de la PR, attendre la CI (`gh pr checks --watch`) et corriger jusqu'à ce qu'elle soit verte.
+- Accès : jeton à grain fin limité à ce dépôt. Une erreur 403 ou 404 signale un droit manquant : c'est un arrêt, et la
+  question dans `docs/DECISIONS.md` nomme le droit, sans chercher à le contourner. Droits du jeton :
+
+  | Droit | Niveau | Pour |
+  |---|---|---|
+  | Contents | Read and write | envoyer les branches et les étiquettes |
+  | Pull requests | Read and write | ouvrir et mettre à jour les PR |
+  | Workflows | Read and write | envoyer `.github/workflows/` (sans ce droit, tout envoi qui touche la CI est refusé) |
+  | Actions | Read | suivre la CI (`gh run watch`, `gh pr checks`, `just ci-load`) |
+  | Commit statuses | Read | état des contrôles |
+  | Administration | Read and write | sujets, protection de `main`, signalement privé des failles |
+  | Metadata | Read | obligatoire, ajouté d'office |

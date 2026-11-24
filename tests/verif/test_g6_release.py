@@ -251,10 +251,6 @@ def test_the_guide_gives_the_checks_of_the_project(language: str) -> None:
         assert command in guide
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="outside the specification: the CI also runs tools/check_vectors.py, which the guides do not list",
-)
 @pytest.mark.parametrize("language", LANGUAGES)
 def test_the_guide_lists_every_check_of_the_ci(language: str) -> None:
     commands = re.findall(r"run: uv run --locked (.+)", read(".github/workflows/ci.yml"))
