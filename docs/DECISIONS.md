@@ -140,3 +140,17 @@
   (par exemple la charge de NixKS pendant `nix flake check` en local) : à préciser.
 - Recommandation : (a) ; aucun secret, rien à installer, et rien ne s'écrit publiquement.
 - **Réponse :** (a)
+
+## D17. Tests de J7-L1 qui lisent les anciens documents (lot J7-L2)
+- Contexte : une fois `plan.md` et `cahier_des_charges.MD` réduits à un renvoi, deux tests du vérificateur de J7-L1,
+  non prévus par le plan, échouent : `tests/verif/test_j7_l1_standard.py::test_claude_md_keeps_the_token_table_of_the_former_plan`
+  (tableau des droits du jeton de l'ancien `plan.md`) et `::test_every_identifier_of_the_former_specification_is_in_the_correspondence_table`
+  (identifiants `EF`/`ES`/`ENF` de l'ancien cahier). Les corriger sort du critère 3 de J7-L2.
+- Options : (a) figer l'ancien contenu (commit `c576de4`) en constantes dans le test ; (b) le lire par `git show`
+  (historique complet requis dans la CI) ; (c) rediriger vers `docs/REPRISE.md` (test presque tautologique) ;
+  (d) arrêt du lot.
+- Recommandation : (a) ; la vérification ne perd rien.
+- **Réponse :** (a), le 2026-11-24. Écart au critère 3 de J7-L2 admis pour ces deux tests, pour l'assertion du même
+  fichier qui nommait l'ancien cahier (critère 4, remplacée par « tout `.md` cité dans le paragraphe qui fait foi est
+  sous `docs/` ») et pour trois raisons de `xfail` qui citaient « cahier » (`test_g4_verif_pass3.py`,
+  `test_g5_pass2.py`).
