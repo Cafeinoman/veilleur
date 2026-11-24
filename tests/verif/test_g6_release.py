@@ -365,7 +365,7 @@ def test_no_document_installs_veilleur_from_pypi() -> None:
 
 
 def test_the_specification_records_the_decisions_of_the_release() -> None:
-    decisions = read("cahier_des_charges.MD").split("## 10. Décisions", 1)[1]
+    decisions = read("docs/adr/0021-publication-et-distribution.md").split("## Décision", 1)[1]
     assert "pas de publication sur PyPI" in decisions
     assert "`v0.1.0`" in decisions
     assert "le nom **Veilleur** est conservé" in decisions

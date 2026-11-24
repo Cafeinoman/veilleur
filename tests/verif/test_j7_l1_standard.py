@@ -305,8 +305,9 @@ def test_claude_md_names_the_documents_the_command_and_the_lot_rule() -> None:
     for document in ("`docs/PLAN.md`", "`docs/SPEC.md`", "`docs/adr/`"):
         assert document in authority
     first_paragraph = authority.split("\n\n")[1]
-    assert "cahier_des_charges.MD" not in first_paragraph
-    assert "plan.md`" not in first_paragraph
+    cited = re.findall(r"`([^`\n]+\.md)`", first_paragraph, flags=re.IGNORECASE)
+    assert cited
+    assert [path for path in cited if not path.startswith("docs/")] == []
     assert "just test" in text
     assert "J<n>-L<m>" in text
     assert "claude/<identifiant>-<sujet>" in text
@@ -314,8 +315,21 @@ def test_claude_md_names_the_documents_the_command_and_the_lot_rule() -> None:
     assert "v0.2.0" in text
 
 
+# The token table of plan.md at commit c576de4, frozen when plan.md became a pointer (lot J7-L2).
+FORMER_PLAN_TOKEN_ROWS = [
+    "| Contents | Read and write | envoyer les branches et les étiquettes |",
+    "| Pull requests | Read and write | ouvrir et mettre à jour les PR |",
+    "| Workflows | Read and write | envoyer `.github/workflows/`"
+    " (sans ce droit, tout envoi qui touche la CI est refusé) |",
+    "| Actions | Read | suivre la CI (`gh run watch`, `gh pr checks`) |",
+    "| Commit statuses | Read | état des contrôles |",
+    "| Administration | Read and write | sujets, protection de `main`, signalement privé des failles |",
+    "| Metadata | Read | obligatoire, ajouté d'office |",
+]
+
+
 def test_claude_md_keeps_the_token_table_of_the_former_plan() -> None:
-    former = [row.replace("(`gh run watch`, `gh pr checks`)", "") for row in table_rows(read(ROOT / "plan.md"))]
+    former = [row.replace("(`gh run watch`, `gh pr checks`)", "") for row in FORMER_PLAN_TOKEN_ROWS]
     current = [re.sub(r"\(`gh run watch`.*?\)", "", row) for row in table_rows(read(ROOT / "CLAUDE.md"))]
     for right in ("Contents", "Pull requests", "Workflows", "Actions", "Commit statuses", "Administration", "Metadata"):
         assert [row for row in former if row.startswith(f"| {right} |")] == [
@@ -336,9 +350,19 @@ def test_the_guides_cite_just_test_and_check_vectors(guide: str) -> None:
 # Step 8: the correspondence table against the former specification (TEST-STRATEGY section 4).
 
 
+# The 57 requirement identifiers of the former specification at commit c576de4, frozen when it became a pointer
+# (lot J7-L2).
+FORMER_SPECIFICATION_TEXT = (
+    "EF-01 EF-02 EF-03 EF-04 EF-05 EF-06 EF-10 EF-11 EF-12 EF-13 EF-14 EF-20 EF-21 EF-30 EF-31 EF-32"
+    " EF-40 EF-41 EF-42 EF-43 EF-44 EF-45 EF-50 EF-51 EF-52 EF-60 EF-61 EF-62 EF-70 EF-71 EF-72 EF-80"
+    " EF-81 EF-82 ENF-01 ENF-02 ENF-03 ENF-03b ENF-04 ENF-05 ENF-06 ENF-07 ENF-08 ENF-09 ES-01 ES-02 ES-03"
+    " ES-04 ES-05 ES-06 ES-07 ES-08 ES-09 ES-10 ES-11 ES-12 ES-13"
+)
+
+
 def test_every_identifier_of_the_former_specification_is_in_the_correspondence_table() -> None:
     requirement = re.compile(r"\b(?:EF|ES|ENF)-\d{2}[a-z]?\b")
-    former = set(requirement.findall(read(ROOT / "cahier_des_charges.MD")))
+    former = set(requirement.findall(FORMER_SPECIFICATION_TEXT))
     takeover = read(ROOT / "docs" / "REPRISE.md")
     table = takeover[takeover.index("### 2.2 ") : takeover.index("### 2.6 ")]
     column = {
