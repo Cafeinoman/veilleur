@@ -72,10 +72,13 @@
               pkgs.python312
               pkgs.gh
               pkgs.gitleaks
+              pkgs.just
             ];
             env = {
               UV_PYTHON_DOWNLOADS = "never";
               UV_PYTHON = "${pkgs.python312}/bin/python3.12";
+              # Binary wheels (google-re2) link to libstdc++, which the Nix Python does not find by itself.
+              LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [ pkgs.stdenv.cc.cc.lib ];
             };
           };
         }
