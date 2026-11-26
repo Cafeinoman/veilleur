@@ -159,7 +159,7 @@ Produit : Veilleur 0.1.x sans réserve de sécurité ouverte. À faire avant d'e
 - **Risques.** Le vérificateur de `/livrer` relit un lot dont le code est une revue : ses tests portent sur les
   mêmes diffs, ce qui fait deux regards indépendants.
 - **Effort.** S
-- **Statut.** à faire
+- **Statut.** fait (PR #20, réserves R39 à R41)
 
 ### J8-L2 — Récepteur : signalement et secrets
 
