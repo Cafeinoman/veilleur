@@ -40,6 +40,10 @@ _ORDER = 2**252 + 27742317777372353535851937790883648493
 """L, the prime order of the base point."""
 
 
+_NEUTRAL = (0, 1)
+"""The neutral point of edwards25519, in affine coordinates."""
+
+
 def is_public_key(public_key: object) -> bool:
     """True for the canonical encoding of a point of order L (§6.1).
 
@@ -53,10 +57,12 @@ def is_public_key(public_key: object) -> bool:
     except ValueError:
         return False
     point = key.pointQ
+    # Not is_point_at_infinity(): on Edwards curves pycryptodomex tests x == 0 alone, which the point of order 2,
+    # (0, -1), passes too; an honest key plus that point would then pass for a key of order L.
     return (
         key.export_key(format="raw") == public_key
-        and not point.is_point_at_infinity()
-        and (point * _ORDER).is_point_at_infinity()
+        and point.xy != _NEUTRAL
+        and (point * _ORDER).xy == _NEUTRAL
     )
 
 

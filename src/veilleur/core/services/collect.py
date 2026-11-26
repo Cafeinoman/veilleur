@@ -13,11 +13,13 @@ from typing import Any
 from veilleur.core.domain import errors
 from veilleur.core.domain.errors import CollectorError
 from veilleur.core.domain.model import (
+    MAX_ITEM_DEPTH,
     Collected,
     CollectedItem,
     SourceStatus,
     StoredItem,
     SubscriptionSpec,
+    is_deeper_than,
     item_hash,
 )
 from veilleur.core.domain.schema import validate
@@ -55,6 +57,8 @@ def _normalise(raw: Iterable[Any], now: datetime) -> tuple[dict[str, tuple[str, 
                 raise ValueError("not an item")
             if item.url is not None and not isinstance(item.url, str):
                 raise ValueError("url")
+            if is_deeper_than(item.fields, MAX_ITEM_DEPTH):
+                raise ValueError("too deep")  # checked before anything walks the fields recursively (EF-05, D19)
             digest = item_hash(item.fields)
             key = _key(item, digest)
             # A lone surrogate (valid JSON, decoded by json.loads) cannot be stored: the item is invalid, the
@@ -62,7 +66,7 @@ def _normalise(raw: Iterable[Any], now: datetime) -> tuple[dict[str, tuple[str, 
             key.encode("utf-8")
             if item.url is not None:
                 item.url.encode("utf-8")
-        except (ValueError, RecursionError):  # json.loads decodes deeper than the hash can walk (EF-05)
+        except ValueError:
             valid = False
             continue
         if len(key) > MAX_KEY:

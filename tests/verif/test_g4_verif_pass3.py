@@ -333,7 +333,7 @@ def _absent_member(bench: Bench) -> None:
     assert bench.core.store.package_bounds(bench.pairing.key_id, UID).purged_through == 2
 
 
-@pytest.mark.xfail(strict=True, reason="accepted limit (spec §10, protocol §6.3): purged gap and two rotations")
+@pytest.mark.xfail(strict=True, reason="accepted limit (ES-05, ADR-0019, protocol §6.3): purged gap and two rotations")
 @pytest.mark.parametrize("after", ["0", "1", "2", "3"])
 def test_a_member_back_after_a_purge_follows_two_rotations_from_a_folder(
     bench: Bench, tmp_path: Path, after: str
@@ -360,7 +360,7 @@ def test_the_statement_the_member_needs_is_in_the_folder(bench: Bench, tmp_path:
     ]
 
 
-@pytest.mark.xfail(strict=True, reason="accepted limit (spec §10, protocol §6.3): purged gap and two rotations")
+@pytest.mark.xfail(strict=True, reason="accepted limit (ES-05, ADR-0019, protocol §6.3): purged gap and two rotations")
 def test_a_member_back_after_a_purge_follows_two_rotations_over_http(bench: Bench) -> None:
     """Blocking, the same defect: the `state` asked for first is signed by a key the member cannot reach yet."""
     _absent_member(bench)

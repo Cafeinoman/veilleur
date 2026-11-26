@@ -92,7 +92,9 @@ métier ; la publication sur PyPI (ADR-0021).
   paramètres canoniques sont identiques ne provoquent qu'une collecte par tour.
 - **EF-05** — MUST, livré (R09). Une source en panne n'arrête pas le tour. L'état de chaque collecte (dernière
   réussite, dernière erreur résumée sans détail interne, avertissements) est conservé et figure dans les rapports et
-  dans l'administration. Au-delà de deux jours de panne, la notification le signale.
+  dans l'administration. Au-delà de deux jours de panne, la notification le signale. Un élément dont les champs
+  s'imbriquent sur plus de **100 niveaux** (l'objet `fields` compte pour un) est écarté comme invalide (`bad_item`) et
+  rend la collecte partielle, sans arrêter le tour (D19).
 - **EF-06** — MUST ; **révisée le 2026-11-19** (ADR-0022, à livrer en J9). Un collecteur n'accède au réseau **que**
   par le client HTTP du serveur (§6, ES-08) : cache, délais, quotas par hôte (DV-03), lecture de `robots.txt` pour la
   politique de l'administrateur (EF-07) et pour `Crawl-delay` (DV-04), respect de `Retry-After` sur `429` et `503`,

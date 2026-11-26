@@ -119,6 +119,53 @@ def test_invalid_items_make_the_collection_partial(world: World) -> None:
     assert world.app.store.package_bounds(key_id, uid).last == 1  # nothing gone
 
 
+@pytest.mark.parametrize(
+    ("value", "limit", "deeper"),
+    [
+        ("text", 0, False),
+        ({}, 1, False),
+        ({}, 0, True),
+        ({"a": [1, {"b": None}]}, 3, False),
+        ({"a": [1, {"b": None}]}, 2, True),
+        ([[[[]]]], 4, False),
+        ([[[[]]]], 3, True),
+    ],
+)
+def test_depth_counts_lists_and_objects(value: Any, limit: int, deeper: bool) -> None:
+    from veilleur.core.domain.model import is_deeper_than
+
+    assert is_deeper_than(value, limit) is deeper
+
+
+def test_depth_is_measured_without_recursion() -> None:
+    from veilleur.core.domain.model import is_deeper_than
+
+    value: Any = 0
+    for _ in range(100_000):
+        value = {"a": [value]}
+    assert is_deeper_than(value, 100)
+    assert not is_deeper_than(value, 200_000)
+
+
+def test_an_item_deeper_than_the_limit_is_invalid_and_the_round_goes_on(world: World) -> None:
+    """EF-05 (D19): the limit is checked before the hash and the storage walk the fields recursively."""
+    from veilleur.core.domain.model import MAX_ITEM_DEPTH, CollectedItem
+
+    key_id, uid = _subscribe(world)
+    other_key, other_uid = _subscribe(world, _doc("other"), uid="b" * 32)
+    for depth in (MAX_ITEM_DEPTH + 1, 990):  # 990: deep enough to fail in the storage, not in the hash (J8-L1)
+        value: Any = "leaf"
+        for _ in range(depth):  # `depth` nested objects, the item's fields being the outermost
+            value = {"a": value}
+        world.collector.items["news"] = [CollectedItem({"n": 0}, key="ok"), CollectedItem(value, key="deep")]
+        world.collector.set("other", ("x", {"title": "X"}))
+        round.run_round(world.app.core)
+        status = world.app.store.get_source(world.app.store.get_subscription(key_id, uid).spec.collection_id)  # type: ignore[union-attr]
+        assert status is not None and status.error == errors.BAD_ITEM
+        world.clock.advance(hours=1)
+    assert world.app.store.package_bounds(other_key, other_uid).last == 1
+
+
 @pytest.mark.parametrize("where", ["key", "url", "fields"])
 def test_lone_surrogate_makes_the_item_invalid(world: World, where: str) -> None:
     """EF-05: valid JSON may decode into a lone surrogate, which cannot be stored; the round goes on."""
