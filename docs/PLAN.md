@@ -176,7 +176,7 @@ Produit : Veilleur 0.1.x sans réserve de sécurité ouverte. À faire avant d'e
 - **Références.** R02, R03, R14 ; ADR-0019 ; SPEC ES-07, EF-60.
 - **Risques.** Faible.
 - **Effort.** M
-- **Statut.** à faire
+- **Statut.** fait
 
 ### J8-L3 — Service HTTP : requêtes non authentifiées, droits de la base
 
