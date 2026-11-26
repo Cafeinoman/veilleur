@@ -37,6 +37,9 @@ class State:
     rotated: bool = False
     """A key was adopted: packages signed by the outgoing key are no longer accepted (protocol §6.3)."""
     last: dict[str, int] = field(default_factory=dict)
+    given_up: list[bytes] = field(default_factory=list)
+    """Keys trusted once and given up since, most recent last: a package they signed is old, not forged. Empty in a
+    state written by 0.1.x, even after a rotation."""
 
 
 def default_directory() -> Path:
@@ -82,9 +85,20 @@ def _parse(document: Any) -> State:
     keys = document["trusted_keys"]
     if not isinstance(keys, list) or not keys or type(document["rotated"]) is not bool:
         raise ValueError("trusted_keys")
+    given_up = document.get("given_up", [])  # absent from a state written by 0.1.x
+    if not isinstance(given_up, list):
+        raise ValueError("given_up")
     # The pairing code's own checks apply to what was stored.
     code = PairingCode(document["server"], document["key_id"], b64u_decode(document["secret"]), b64u_decode(keys[0]))
-    return State(code.server, code.key_id, code.secret, [b64u_decode(k) for k in keys], document["rotated"], dict(last))
+    return State(
+        code.server,
+        code.key_id,
+        code.secret,
+        [b64u_decode(k) for k in keys],
+        document["rotated"],
+        dict(last),
+        [b64u_decode(k) for k in given_up],
+    )
 
 
 def load(directory: Path) -> State:
@@ -114,6 +128,7 @@ def save(directory: Path, state: State) -> None:
         "trusted_keys": [b64u_encode(key) for key in state.trusted_keys],
         "rotated": state.rotated,
         "last": state.last,
+        "given_up": [b64u_encode(key) for key in state.given_up],
     }
     descriptor, temporary = tempfile.mkstemp(prefix=".receiver-", dir=directory)  # created 600
     try:

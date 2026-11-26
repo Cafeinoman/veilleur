@@ -41,6 +41,8 @@ _NUMBERED = frozenset({Kind.DELTA, Kind.STATE})
 _HEADER_BYTES = 70
 """What `read_header` needs: the shortest envelope."""
 _MAX_RECOVERIES = 3
+_MAX_GIVEN_UP = 8
+"""Keys given up that are kept: each rotation adds one, and a rotation is rare."""
 
 
 @dataclass(frozen=True)
@@ -89,6 +91,24 @@ class _Filing:
             data, secret=self.state.secret, uid=uid, trusted_keys=self.state.trusted_keys, seq=seq, kinds=kinds
         )
 
+    def signed_by_given_up_key(self, data: bytes, uid: str, seq: int) -> bool:
+        """Whether a package refused for its signature is old rather than forged: signed by a key given up since.
+
+        Such a package is skipped in silence, since a `state` signed by the current key covers it (protocol §6.3);
+        any other is reported. A state written by 0.1.x after a rotation does not know the key it gave up: its
+        packages are skipped in silence, as they were before.
+        """
+        if not self.state.given_up:
+            return self.state.rotated
+        try:
+            opened = open_package(
+                data, secret=self.state.secret, uid=uid, trusted_keys=self.state.given_up, seq=seq, kinds=_NUMBERED
+            )
+        except ProtocolError:
+            return False
+        # Signed by a given-up key itself: a key vouched for by one (a stolen key's statement) is a forgery.
+        return opened.rotation is None
+
     def file(self, opened: OpenedPackage) -> None:
         try:
             self.outcome.written.append(deposit(self.folder, opened))
@@ -96,6 +116,8 @@ class _Filing:
             raise _Stop("bad_items", opened.seq) from exc
         if opened.rotation is not None:
             # Protocol §6.3: once the incoming key is adopted, the outgoing one is no longer trusted.
+            given_up = [key for key in self.state.given_up if key not in self.state.trusted_keys]
+            self.state.given_up = [*given_up, *self.state.trusted_keys][-_MAX_GIVEN_UP:]
             self.state.trusted_keys = [opened.rotation.new_key]
             self.state.rotated = True
             self.outcome.key_adopted = True
@@ -217,7 +239,7 @@ class _Puller:
         try:
             opened = self.filing.open(data, uid, seq=seq)
         except ProtocolError as exc:
-            if exc.code == "bad_signature" and self.filing.state.rotated:
+            if exc.code == "bad_signature" and self.filing.signed_by_given_up_key(data, uid, seq):
                 raise _Resync from exc  # signed by the key given up since: a `state` is signed by the new one
             raise _Stop(exc.code, seq) from exc
         self.filing.file(opened)
@@ -286,6 +308,26 @@ def _can_take_over(package: _Found, following: list[_Found]) -> bool:
 
 
 def _read_subscription(filing: _Filing, uid: str, packages: list[_Found]) -> None:
+    skipped: list[_Found] = []
+    try:
+        _read_in_order(filing, uid, packages, skipped)
+    finally:
+        _report_forged(filing, uid, skipped)
+
+
+def _report_forged(filing: _Filing, uid: str, skipped: list[_Found]) -> None:
+    """Packages skipped for their signature: an old one is expected in an export, any other is reported (R02)."""
+    for package in skipped:
+        try:
+            data = package.path.read_bytes()
+        except OSError:
+            filing.outcome.failures.append(Failure("unreadable_file", uid, package.header.seq))
+            continue
+        if not filing.signed_by_given_up_key(data, uid, package.header.seq):
+            filing.outcome.failures.append(Failure("bad_signature", uid, package.header.seq))
+
+
+def _read_in_order(filing: _Filing, uid: str, packages: list[_Found], skipped: list[_Found]) -> None:
     ordered = sorted(packages, key=lambda found: found.order)
     newest_state = max((p.header.seq for p in ordered if p.header.kind is Kind.STATE), default=0)
     for position, package in enumerate(ordered):
@@ -306,7 +348,10 @@ def _read_subscription(filing: _Filing, uid: str, packages: list[_Found]) -> Non
             opened = filing.open(package.path.read_bytes(), uid, seq=seq)
         except ProtocolError as exc:
             if exc.code == "bad_signature" and _can_take_over(package, ordered[position + 1 :]):
-                continue  # another key than the one trusted now: what follows is checked in turn, the last one stops
+                # Another key than the one trusted now: what follows is checked in turn, the last one stops. Whether
+                # this one was old or forged is told once the subscription is read, the keys adopted meanwhile known.
+                skipped.append(package)
+                continue
             raise _Stop(exc.code, seq) from exc
         except OSError as exc:
             raise _Stop("unreadable_file", seq) from exc
