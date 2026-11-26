@@ -15,6 +15,8 @@ from typing import Any
 LANGUAGES = ("en", "fr")
 RETENTION_DAYS = 90
 """Packages, gone items and finished jobs are kept 90 days (spec EF-45)."""
+MAX_ITEM_DEPTH = 100
+"""Nesting levels allowed in the fields of an item, the `fields` object counting as one (spec EF-05, decision D19)."""
 
 
 def canonical_json(value: Any) -> bytes:
@@ -44,6 +46,27 @@ def _check_json(value: Any) -> None:
             _check_json(element)
         return
     raise ValueError(f"{type(value).__name__} is not JSON")
+
+
+def is_deeper_than(value: Any, limit: int) -> bool:
+    """True if `value` nests lists and objects on more than `limit` levels; walks without recursion.
+
+    The hash and the storage walk fields recursively, at different depths of the call stack: an item must be refused
+    before either, well below Python's recursion limit, so that it cannot stop the round (EF-05).
+    """
+    stack: list[tuple[Any, int]] = [(value, 0)]
+    while stack:
+        current, depth = stack.pop()
+        if isinstance(current, dict):
+            children: Any = current.values()
+        elif isinstance(current, list):
+            children = current
+        else:
+            continue
+        if depth + 1 > limit:
+            return True
+        stack.extend((child, depth + 1) for child in children)
+    return False
 
 
 def sha256_hex(data: bytes) -> str:
