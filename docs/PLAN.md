@@ -176,7 +176,28 @@ Produit : Veilleur 0.1.x sans réserve de sécurité ouverte. À faire avant d'e
 - **Références.** R02, R03, R14 ; ADR-0019 ; SPEC ES-07, EF-60.
 - **Risques.** Faible.
 - **Effort.** M
-- **Statut.** fait
+- **Statut.** fait (PR #21, réserves R42 à R46)
+
+### J8-L5 — Récepteur : pas de fausse alerte après deux rotations
+
+- **Objectif.** Lever R42, régression P1 introduite par J8-L2. **À faire avant J8-L3** ; le numéro suit J8-L4 pour
+  ne pas renuméroter les lots déjà cités ailleurs.
+- **Étapes.**
+  1. Avant de signaler un paquet sauté puis refusé pour sa signature, le contrôler de nouveau avec les clés de
+     confiance à la fin de la lecture (clé courante et clés adoptées pendant la lecture) ; ne signaler que s'il reste
+     invalide.
+  2. Ce contrôle ne sert qu'au signalement : un paquet sauté n'est ni ouvert pour son contenu ni déposé (ES-07).
+- **Critères d'acceptation.**
+  1. `tests/verif/test_j8_l2_verif.py::test_a_legitimate_export_after_two_rotations_raises_no_alarm` passe sans marqueur
+     `xfail` : export après deux rotations (B→C→D, un seul paquet sous C), code de sortie 0 et stderr vide.
+  2. `tests/verif/test_g4_verif_pass3.py::test_a_forged_package_is_reported_even_when_a_state_covers_it` et les tests
+     de `tests/verif/test_j8_l2_verif.py` qui passent aujourd'hui passent encore (un paquet forgé reste signalé).
+  3. Une déclaration de rotation signée par une clé abandonnée au profit d'une clé tierce reste signalée, et la clé
+     tierce n'est jamais adoptée.
+- **Références.** R42 (voisin de R15, R45) ; ADR-0019 ; SPEC ES-07 ; protocole §6.3.
+- **Risques.** Faible : le changement ne touche que la décision de signaler, pas l'acceptation des paquets.
+- **Effort.** S
+- **Statut.** à faire
 
 ### J8-L3 — Service HTTP : requêtes non authentifiées, droits de la base
 
@@ -585,7 +606,7 @@ confort. Les tests cités sont dans `tests/verif/`. `/livrer` ajoute les réserv
 | R39 | P4 | J8-L1 | Critère 1 de J8-L1 : cinq tests de `tests/verif/test_j8_l1_review.py` ne citent aucun paragraphe de la spécification dans leur docstring (seuls les commentaires de section le font) | `test_j8_l1_verif.py::test_every_review_test_cites_its_paragraph` | à planifier (J14) |
 | R40 | P4 | J8-L1 | Hors spécification : le §8 du protocole ne place pas le refus de forme (méthode, chemin) dans l'ordre des contrôles ; pour une requête mal formée et mal datée, la bibliothèque répond `bad_date`, `check_vectors.py` `bad_authorization` | `test_j8_l1_verif.py::test_both_implementations_give_the_same_code_for_a_bad_form_and_a_bad_date` | à planifier (J13) : fixer l'ordre dans §8, puis aligner les deux lecteurs |
 | R41 | P4 | J8-L1 | Hors spécification : les notes de version (en, fr) ne citent pas la limite de 100 niveaux d'imbrication d'un élément (D19), changement de comportement pour les auteurs de greffons | aucun | prochaine publication |
-| R42 | P1 | J8-L2 | Régression par rapport à `main` : export légitime après deux rotations (B→C→D, un seul paquet sous C) ; le `delta` signé par C, sauté avant l'adoption de C, est signalé `bad_signature` à la fin et le récepteur sort avec 1 (`signed_by_given_up_key` ne compare qu'aux clés abandonnées) ; piste : rouvrir les paquets sautés avec les clés de confiance actuelles avant de les signaler | `test_j8_l2_verif.py::test_a_legitimate_export_after_two_rotations_raises_no_alarm` | à planifier en priorité (voisin de R15, J13-L1) |
+| R42 | P1 | J8-L2 | Régression par rapport à `main` : export légitime après deux rotations (B→C→D, un seul paquet sous C) ; le `delta` signé par C, sauté avant l'adoption de C, est signalé `bad_signature` à la fin et le récepteur sort avec 1 (`signed_by_given_up_key` ne compare qu'aux clés abandonnées) ; piste : rouvrir les paquets sautés avec les clés de confiance actuelles avant de les signaler | `test_j8_l2_verif.py::test_a_legitimate_export_after_two_rotations_raises_no_alarm` | J8-L5 |
 | R43 | P2 | J8-L2 | R02 incomplet : un `delta` forgé non ouvert n'est pas signalé, qu'il porte le numéro d'un `state` valide passé avant (`seq <= last`) ou qu'il tombe dans un trou couvert par un `state` ultérieur (`newest_state > seq`) ; ES-07 tenu (rien de forgé n'est lu) | `test_j8_l2_verif.py::test_a_forged_delta_covered_by_a_state_is_reported`, `::test_a_forged_delta_in_a_gap_covered_by_a_later_state_is_reported` | à planifier (J13-L1) |
 | R44 | P3 | J8-L2 | R03 incomplet : hors `pair`, un code qui contient un caractère de contrôle ou invisible (`\r`, `\t`, `\n`, `\x1b`, U+FEFF, U+200B) est répété par argparse via `repr()`, que `_hide` ne masque pas ; piste : masquer aussi `repr(token)[1:-1]` | `test_j8_l2_verif.py::test_a_code_with_a_control_character_is_not_repeated`, `::test_a_code_with_an_invisible_character_is_not_repeated` | à planifier (J13-L1) |
 | R45 | P4 | J8-L2 | Hors spécification : un état 0.1.x déjà tourné (`given_up` vide, `rotated` vrai) perd la clé la plus ancienne à la rotation suivante ; ses paquets encore présents dans un export seraient signalés comme forgés | aucun | à planifier (J13-L1) |
