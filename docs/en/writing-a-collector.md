@@ -77,3 +77,32 @@ the parameters of your examples pass it (`veilleur.core.domain.schema.validate`)
 
 Filters (`veilleur.filters`) follow the same pattern: `name`, `schema`, `apply(item, params)` returning the item
 (possibly transformed) or `None`, and optionally `select(items, params)` for a filter that needs every item at once.
+
+## 7. Public API and compatibility
+
+A plugin may rely on these names only (version 1 of the plugin API, ADR-0028):
+
+| Module or group | Public names |
+|---|---|
+| entry point groups | `veilleur.collectors`, `veilleur.filters`, `veilleur.renderers`, `veilleur.notifiers` |
+| `veilleur.core.ports.plugins` | `Collector`, `ParamsCheck`, `FilterItem`, `Filter`, `SetFilter`, `ReportView`, `Renderer`, `RoundCounts`, `NotificationTarget`, `Notifier`, `Plugins` |
+| `veilleur.core.ports.http` | `HttpClient`, `HttpResponse` |
+| `veilleur.core.domain.model` | `Collected`, `CollectedItem`, `ItemChange`, `SourceStatus`, `Kind`, `Change` |
+| `veilleur.core.domain.errors` | `CollectorError` |
+| `veilleur.core.domain.schema` | `validate` |
+| `veilleur` | `__version__` |
+
+Everything else, `veilleur.adapters` included, is internal and may change in any version; the
+`veilleur.adapters.plugins.validated` helper of the previous section is meant for tests only.
+
+The compatibility rule, in 0.x versions:
+
+- a minor version only adds: a final field with a default to a data object, a method, an enumeration member, a
+  public name;
+- a removal or a rename keeps an alias for at least one minor version, announced by a `DeprecationWarning` and the
+  release notes;
+- no module of this list changes its path.
+
+The names, the fields of the data objects (order and defaults), the methods of the protocols and the enumeration
+members are frozen by `tests/test_plugin_api.py`. A plugin that uses an addition checks `veilleur.__version__` when it
+is loaded. A fake HTTP client in a plugin's tests implements only the methods the plugin calls.

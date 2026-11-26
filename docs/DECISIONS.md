@@ -154,3 +154,12 @@
   fichier qui nommait l'ancien cahier (critère 4, remplacée par « tout `.md` cité dans le paragraphe qui fait foi est
   sous `docs/` ») et pour trois raisons de `xfail` qui citaient « cahier » (`test_g4_verif_pass3.py`,
   `test_g5_pass2.py`).
+
+## D18. Test de J7-L2 qui compare à `main` (lot J7-L3)
+- Contexte : `tests/verif/test_j7_l2_pointers.py::test_tests_changed_only_in_docstrings_comments_and_the_redirected_paths`
+  comparait `main...HEAD` et l'arbre de travail. Une fois J7-L2 fusionné, il visait le diff du lot suivant : J7-L3, qui
+  ajoute `tests/test_plugin_api.py` (critère 1), le faisait échouer, donc `just test` (critère 4). Les critères 3 et 4
+  de J7-L3 étaient incompatibles tels quels ; le corriger sort du critère 3.
+- Options : (a) fixer la comparaison sur les commits de J7-L2 (`c576de4...c307a5c`, état final lu dans `c307a5c`),
+  assertion inchangée ; (b) arrêt du lot.
+- **Réponse :** (a), le 2026-11-24 (commit `35c517d`). Écart au critère 3 de J7-L3 admis pour ce seul fichier.
