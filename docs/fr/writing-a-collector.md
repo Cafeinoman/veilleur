@@ -25,7 +25,9 @@ le client HTTP du serveur.
 
 - `fields` : un objet JSON (chaînes, nombres, booléens, `null`, listes, objets). Son SHA-256 sur le JSON canonique
   est l'empreinte de l'élément : tout changement de `fields` donne un élément **modifié**. Laissez de côté ce qui
-  change sans signification (compteur de visites, date de génération).
+  change sans signification (compteur de visites, date de génération). Listes et objets s'imbriquent sur 100 niveaux
+  au plus, `fields` comptant pour un ; un élément plus profond est écarté comme invalide (`bad_item`) et la collecte
+  est partielle.
 - `key` : un identifiant stable fourni par la source. À défaut, Veilleur prend `url`, et à défaut l'empreinte du
   contenu.
 - `url` : l'adresse de l'élément, `http` ou `https`, s'il en a une.

@@ -3,7 +3,7 @@
 > Questions ouvertes de la reprise. Répondre sous chaque **Réponse**, puis passer les ADR concernés en `Accepté` ou
 > `Rejeté`. Les ADR 0001 à 0021 (rétrospectifs) sont déjà `Accepté`.
 >
-> **État au 2026-11-24** : D1 à D16 répondues ; ADR 0022 à 0029 `Accepté`. Aucune décision ouverte.
+> **État au 2026-11-26** : D1 à D19 répondues ; ADR 0022 à 0029 `Accepté`. Aucune décision ouverte.
 
 ## D1. Accepter le changement de politique `robots.txt` (passer outre avec alerte par défaut) ?
 - Contexte : seul engagement public que la reprise change (README, guides, cahier §10 du 2026-11-18). Arguments, pratique
@@ -163,3 +163,15 @@
 - Options : (a) fixer la comparaison sur les commits de J7-L2 (`c576de4...c307a5c`, état final lu dans `c307a5c`),
   assertion inchangée ; (b) arrêt du lot.
 - **Réponse :** (a), le 2026-11-24 (commit `35c517d`). Écart au critère 3 de J7-L3 admis pour ce seul fichier.
+
+## D19. Profondeur maximale des champs d'un élément (lot J8-L1)
+- Contexte : la revue de `0e30a66` (J8-L1) montre qu'un élément imbriqué sur environ 990 niveaux passe le hachage
+  de `collect`, puis lève `RecursionError` dans `canonical_json` au stockage (`store.save_reported`), plus bas dans la
+  pile : tout le tour s'arrête, pour tous les abonnements (EF-05). Le correctif de `0e30a66` attrapait
+  `RecursionError` au hachage seulement ; la bande fautive dépend de la profondeur de la pile, donc du déploiement.
+  Aucune limite de profondeur n'est écrite dans la spécification.
+- Options : (a) limite explicite de 100 niveaux, contrôlée sans récursion avant le hachage, élément écarté en
+  `bad_item` ; (b) réserve P1 et correctif dans un lot ultérieur ; (c) limite de 500 niveaux.
+- Recommandation : (a) ; aucune source utile n'imbrique ses données sur 100 niveaux, et la marge sous la limite de
+  récursion de Python (1000) couvre toute pile d'appel du tour.
+- **Réponse :** (a), le 2026-11-26. Limite côté serveur (EF-05, guide des collecteurs), sans changement du protocole.

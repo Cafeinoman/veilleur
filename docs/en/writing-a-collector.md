@@ -25,7 +25,8 @@ first time) and the server's HTTP client.
 
 - `fields`: a JSON object (strings, numbers, booleans, `null`, lists, objects). Its SHA-256 over canonical JSON is
   the item's hash: any change in `fields` is a **changed** item. Leave out what changes without meaning (a
-  visitor counter, a generation date).
+  visitor counter, a generation date). Lists and objects nest on at most 100 levels, `fields` counting as one; a
+  deeper item is left out as invalid (`bad_item`) and the collection is partial.
 - `key`: a stable identifier from the source. Without one, Veilleur uses `url`, and without it the hash of the
   content.
 - `url`: the item's address, `http` or `https`, if it has one.
