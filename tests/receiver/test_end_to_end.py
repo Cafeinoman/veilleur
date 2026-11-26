@@ -736,3 +736,50 @@ def test_over_http_a_forged_package_after_a_rotation_is_refused_not_replaced(
     assert "package 4: refused (bad_signature)" in capsys.readouterr().err
     assert f"/v1/subscriptions/{UID}/state" not in bench.transport.requests and bench.last() == 3
 
+
+def _no_part_of(code: str, text: str) -> bool:
+    return not any(code[start : start + 16] in text for start in range(len(code) - 15))
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ("pair", "{code}"),
+        ("pair", "--code={code}"),
+        ("{code}",),
+        ("pull", "--folder", "reports", "{code}"),
+        ("--state-dir", "s", "pair", "x", "{code}"),
+    ],
+)
+def test_a_code_typed_on_the_command_line_is_never_repeated(
+    bench: Bench, argv: tuple[str, ...], capsys: pytest.CaptureFixture[str]
+) -> None:
+    """R03: the error says how to give the code, never the code."""
+    with pytest.raises(SystemExit) as raised:
+        cli.main(["--lang", "en", *(token.format(code=bench.code) for token in argv)])
+    assert raised.value.code != 0
+    captured = capsys.readouterr()
+    assert _no_part_of(bench.code, captured.out + captured.err)
+
+
+def test_a_code_on_the_command_line_of_pair_is_explained(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit):
+        cli.main(["--lang", "fr", "pair", "VEIL1:eyJ2IjoxfQ-and-the-rest"])
+    err = capsys.readouterr().err
+    assert "jamais sur la ligne de commande" in err and "eyJ2IjoxfQ" not in err
+
+
+def test_a_short_mistake_on_the_command_line_is_still_shown(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit):
+        cli.main(["--lang", "en", "pul"])
+    err = capsys.readouterr().err
+    assert "'pul'" in err and "pull)" in err
+
+
+def test_a_pairing_code_that_is_not_text_is_refused_as_invalid(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """R14."""
+    monkeypatch.setattr("sys.stdin", io.TextIOWrapper(io.BytesIO(b"\xff\xfe\n"), encoding="utf-8"))
+    assert cli.main(["--lang", "en", "--state-dir", str(tmp_path / "s"), "pair"]) == 1
+    assert "not valid" in capsys.readouterr().err and not (tmp_path / "s" / store.STATE_FILE).exists()

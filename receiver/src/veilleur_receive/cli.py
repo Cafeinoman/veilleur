@@ -13,6 +13,7 @@ import sys
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any, NoReturn
 
 from veilleur_protocol import ProtocolError, decode_pairing_code
 
@@ -24,6 +25,9 @@ from .transport import HttpsTransport, Transport
 
 FOLDER_SERVER = "folder:"
 MAX_CODE = 4096
+HIDDEN = "…"
+"""Stands for an argument in an error message: it may be a pairing code typed where it should not be (R03)."""
+MIN_HIDDEN = 16
 
 
 def N_(message: str) -> str:
@@ -69,16 +73,47 @@ def _language_option(argv: Sequence[str]) -> str | None:
     return found
 
 
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="veilleur-receive", description=_("Reference receiver of Veilleur reports."), allow_abbrev=False
+class _Parser(argparse.ArgumentParser):
+    """A parser whose error messages never repeat what was typed on the command line.
+
+    argparse quotes a wrong argument back (`unrecognized arguments: VEIL1:…`, `invalid choice: 'VEIL1:…'`): a pairing
+    code given there would also land on the screen and in the logs that capture it.
+    """
+
+    def __init__(self, *args: Any, typed: Sequence[str] = (), **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.typed = tuple(typed)
+
+    def error(self, message: str) -> NoReturn:
+        for token in sorted(self.typed, key=len, reverse=True):
+            message = _hide(message, token)
+        super().error(message)
+
+
+def _hide(message: str, token: str) -> str:
+    """Remove a typed argument, or the value after its `=`, from a message: argparse quotes either.
+
+    Short ones stay, since they also make up the parser's own words (`pull`, `--folder`), and no secret is that short.
+    """
+    for part in (token, token.partition("=")[2]):
+        if len(part) >= MIN_HIDDEN:
+            message = message.replace(part, HIDDEN)
+    return message
+
+
+def build_parser(typed: Sequence[str] = ()) -> argparse.ArgumentParser:
+    parser = _Parser(
+        prog="veilleur-receive",
+        description=_("Reference receiver of Veilleur reports."),
+        allow_abbrev=False,
+        typed=typed,
     )
     parser.add_argument("--lang", choices=i18n.LANGUAGES, help=_("language of messages (default: from the system)"))
     parser.add_argument("--state-dir", type=Path, metavar=_("folder"), help=_("where the pairing is kept"))
-    commands = parser.add_subparsers(dest="command", metavar=_("command"), required=True)
-    commands.add_parser("version", help=_("show the version"))
-    commands.add_parser("pair", help=_("read a pairing code from the terminal or standard input"))
-    fetch = commands.add_parser("pull", help=_("fetch, check and file the new reports"))
+    commands = parser.add_subparsers(dest="command", metavar=_("command"), required=True)  # of `_Parser`
+    commands.add_parser("version", help=_("show the version"), typed=typed)
+    commands.add_parser("pair", help=_("read a pairing code from the terminal or standard input"), typed=typed)
+    fetch = commands.add_parser("pull", help=_("fetch, check and file the new reports"), typed=typed)
     fetch.add_argument("--folder", type=Path, required=True, metavar=_("folder"), help=_("where to file the reports"))
     fetch.add_argument(
         "--from",
@@ -91,9 +126,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _read_code() -> str:
-    if sys.stdin.isatty():
-        return getpass.getpass(_("Pairing code: "))
-    return sys.stdin.readline(MAX_CODE + 2)
+    try:
+        if sys.stdin.isatty():
+            return getpass.getpass(_("Pairing code: "))
+        return sys.stdin.readline(MAX_CODE + 2)
+    except UnicodeDecodeError as exc:  # not text: no pairing code is (R14)
+        raise ReceiveError(errors.BAD_PAIRING_CODE) from exc
 
 
 def _pair(directory: Path) -> None:
@@ -174,7 +212,12 @@ def main(
     i18n.setup(_language_option(arguments))
     argparse._ = i18n._  # type: ignore[attr-defined]
     argparse.ngettext = i18n.ngettext  # type: ignore[attr-defined]
-    args = build_parser().parse_args(arguments)
+    parser = build_parser(arguments)
+    args, extra = parser.parse_known_args(arguments)
+    if extra and args.command == "pair":
+        parser.error(_("the pairing code is read from the terminal or standard input, never from the command line"))
+    if extra:
+        parser.error(_("unrecognized arguments: %s") % HIDDEN)
     if args.command == "version":
         print(_("veilleur-receive {version}").format(version=__version__))
         return 0
