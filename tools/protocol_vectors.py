@@ -382,13 +382,21 @@ NEUTRAL = bytes([1]) + bytes(31)
 """The neutral point of edwards25519: under RFC 8032 alone, (R = neutral, S = 0) "verifies" any message."""
 
 
-def _rotation_to_neutral() -> dict[str, bytes]:
-    """A rotation statement, signed by KEY_1, naming the neutral point as the incoming key."""
+def _plus_order_2(public_key: bytes) -> bytes:
+    """The encoding of A + (0, -1), that is (-x, -y): an honest key plus the point of order 2, of order 2L."""
+    p = 2**255 - 19
+    encoded = int.from_bytes(public_key, "little")
+    y, sign = encoded & ((1 << 255) - 1), encoded >> 255
+    return ((p - y) | ((1 - sign) << 255)).to_bytes(32, "little")
+
+
+def _rotation_to_neutral(new_key: bytes = NEUTRAL) -> dict[str, bytes]:
+    """A rotation statement, signed by KEY_1, naming a key of small order component (the neutral point by default)."""
     statement = json.dumps(
         {
             "protocol": "1.0",
             "old_key": _b64u(KEY_1.public_key),
-            "new_key": _b64u(NEUTRAL),
+            "new_key": _b64u(new_key),
             "issued_at": format_time(YESTERDAY),
         },
         sort_keys=True,
@@ -633,6 +641,14 @@ def refusals() -> JSON:
         _refusal(
             "rotation to the neutral point",
             _sealed(_signed({"items.jsonl": items, **_rotation_to_neutral()}, key=KEY_2), "rot neutral"),
+            "bad_rotation",
+        ),
+        _refusal(
+            "rotation to an honest key plus the point of order 2",
+            _sealed(
+                _signed({"items.jsonl": items, **_rotation_to_neutral(_plus_order_2(KEY_2.public_key))}, key=KEY_2),
+                "rot order 2",
+            ),
             "bad_rotation",
         ),
         _refusal(
