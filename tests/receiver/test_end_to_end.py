@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import io
 import json
+import re
 import stat
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field, replace
@@ -385,9 +387,7 @@ def _rotate(bench: Bench) -> Core:
     return replace(bench.core, sealer=ProtocolSealer(signing, keys.current_rotation(state_dir, signing, now)))
 
 
-def test_a_key_rotation_is_followed_and_the_old_key_given_up(
-    bench: Bench, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_a_key_rotation_is_followed_and_the_old_key_given_up(bench: Bench, capsys: pytest.CaptureFixture[str]) -> None:
     _two_reports(bench)
     assert bench.pull() == 0
     old_key = bench.core.sealer.public_key
@@ -640,3 +640,148 @@ def test_packages_of_the_same_number_that_all_fail_are_reported(
     _export(source, "2.veil", _sealed(bench, 1, Kind.STATE, key=SigningKey.generate()))
     assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(source)) == 1
     assert "bad_signature" in capsys.readouterr().err and bench.filed() == []
+
+
+# --- J8-L2: what is reported, what is never repeated -------------------------------------------------------------
+
+
+def test_a_forged_package_covered_by_a_state_is_reported_and_the_state_still_filed(
+    bench: Bench, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """R02: nothing forged is used, and the member is told, as over HTTP."""
+    source = tmp_path / "usb"
+    _export(source, "1.veil", _sealed(bench, 1, Kind.STATE, key=SigningKey.generate()))
+    _export(source, "2.veil", _sealed(bench, 2, Kind.STATE))
+    assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(source)) == 1
+    err = capsys.readouterr().err
+    assert f"subscription {UID}, package 1: refused (bad_signature)" in err
+    assert bench.filed() == ["00000002-state"] and bench.last() == 2
+
+
+def test_a_forged_package_is_told_from_one_of_a_key_given_up(
+    bench: Bench, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _two_reports(bench)
+    assert bench.pull() == 0
+    old = _server_key(bench)
+    bench.core = _rotate(bench)
+    bench.world.collector.set("news", ("z", {"title": "Z"}))
+    bench.round()
+    assert bench.pull() == 0
+    assert store.load(bench.state_dir).given_up == [old.public_key]
+    source = tmp_path / "usb"
+    _export(source, "1.veil", _sealed(bench, 1, Kind.STATE, uid=OTHER, key=old))
+    _export(source, "2.veil", _sealed(bench, 2, Kind.STATE, uid=OTHER, key=SigningKey.generate()))
+    _export(source, "3.veil", _sealed(bench, 3, Kind.STATE, uid=OTHER, key=_server_key(bench)))
+    capsys.readouterr()
+    assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(source)) == 1
+    err = capsys.readouterr().err
+    assert "package 2: refused (bad_signature)" in err and "package 1" not in err
+    assert bench.filed(OTHER) == ["00000003-state"]
+
+
+def test_a_state_written_before_given_up_keys_were_kept_still_reads_old_packages(bench: Bench, tmp_path: Path) -> None:
+    """A 0.1.x state that adopted a key does not know the one it gave up: its packages are skipped as before."""
+    _two_reports(bench)
+    assert bench.pull() == 0
+    old = _server_key(bench)
+    bench.core = _rotate(bench)
+    bench.world.collector.set("news", ("z", {"title": "Z"}))
+    bench.round()
+    assert bench.pull() == 0
+    path = bench.state_dir / store.STATE_FILE
+    document = json.loads(path.read_text())
+    del document["given_up"]
+    path.write_text(json.dumps(document))
+    assert store.load(bench.state_dir).given_up == []
+    source = tmp_path / "usb"
+    _export(source, "1.veil", _sealed(bench, 1, Kind.STATE, uid=OTHER, key=old))
+    _export(source, "2.veil", _sealed(bench, 2, Kind.STATE, uid=OTHER, key=_server_key(bench)))
+    assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(source)) == 0
+    assert bench.filed(OTHER) == ["00000002-state"]
+
+
+def test_given_up_keys_are_kept_but_not_trusted_and_their_number_is_bounded(bench: Bench) -> None:
+    _two_reports(bench)
+    assert bench.pull() == 0
+    seen = [bench.core.sealer.public_key]
+    for index in range(10):
+        bench.core = _rotate(bench)
+        bench.transport.api = Api(bench.core, limiter=RateLimiter(limit=100_000))
+        bench.world.collector.set("news", ("z", {"title": f"Z{index}"}))
+        bench.round()
+        assert bench.pull() == 0
+        seen.append(bench.core.sealer.public_key)
+    state = store.load(bench.state_dir)
+    assert state.trusted_keys == [seen[-1]]
+    assert state.given_up == seen[-9:-1]
+
+
+def test_over_http_a_forged_package_after_a_rotation_is_refused_not_replaced(
+    bench: Bench, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Only a package of a key given up gives way to a `state`; a forged one stops its subscription."""
+    _two_reports(bench)
+    assert bench.pull() == 0
+    bench.core = _rotate(bench)
+    bench.transport.api = Api(bench.core, limiter=RateLimiter(limit=100_000))
+    bench.world.collector.set("news", ("z", {"title": "Z"}))
+    bench.round()
+    assert bench.pull() == 0 and store.load(bench.state_dir).rotated
+    forged = _sealed(bench, 4, Kind.DELTA, key=SigningKey.generate())
+    listing = {"packages": [{"seq": 4, "size": len(forged), "sha256": hashlib.sha256(forged).hexdigest()}], "last": 4}
+    bench.transport.replies[f"/v1/subscriptions/{UID}/reports?after=3"] = Reply(200, json.dumps(listing).encode())
+    bench.transport.replies[f"/v1/subscriptions/{UID}/reports/4"] = Reply(200, forged)
+    capsys.readouterr()
+    assert bench.pull() == 1
+    assert "package 4: refused (bad_signature)" in capsys.readouterr().err
+    assert f"/v1/subscriptions/{UID}/state" not in bench.transport.requests and bench.last() == 3
+
+
+def _no_part_of(code: str, text: str) -> bool:
+    return not any(code[start : start + 16] in text for start in range(len(code) - 15))
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ("pair", "{code}"),
+        ("pair", "--code={code}"),
+        ("{code}",),
+        ("pull", "--folder", "reports", "{code}"),
+        ("--state-dir", "s", "pair", "x", "{code}"),
+    ],
+)
+def test_a_code_typed_on_the_command_line_is_never_repeated(
+    bench: Bench, argv: tuple[str, ...], capsys: pytest.CaptureFixture[str]
+) -> None:
+    """R03: the error says how to give the code, never the code."""
+    with pytest.raises(SystemExit) as raised:
+        cli.main(["--lang", "en", *(token.format(code=bench.code) for token in argv)])
+    assert raised.value.code != 0
+    captured = capsys.readouterr()
+    assert _no_part_of(bench.code, captured.out + captured.err)
+
+
+def test_a_code_on_the_command_line_of_pair_is_explained(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit):
+        cli.main(["--lang", "fr", "pair", "VEIL1:eyJ2IjoxfQ-and-the-rest"])
+    err = capsys.readouterr().err
+    assert "jamais sur la ligne de commande" in err and "eyJ2IjoxfQ" not in err
+
+
+def test_a_short_mistake_on_the_command_line_is_still_shown(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit):
+        cli.main(["--lang", "en", "pul"])
+    err = capsys.readouterr().err
+    # Python 3.13 quotes the choices (`'pull')`), 3.12 does not (`pull)`).
+    assert "'pul'" in err and re.search(r"choose from .*\bpull'?\)", err)
+
+
+def test_a_pairing_code_that_is_not_text_is_refused_as_invalid(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """R14."""
+    monkeypatch.setattr("sys.stdin", io.TextIOWrapper(io.BytesIO(b"\xff\xfe\n"), encoding="utf-8"))
+    assert cli.main(["--lang", "en", "--state-dir", str(tmp_path / "s"), "pair"]) == 1
+    assert "not valid" in capsys.readouterr().err and not (tmp_path / "s" / store.STATE_FILE).exists()

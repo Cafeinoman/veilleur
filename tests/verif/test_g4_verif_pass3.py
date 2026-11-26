@@ -261,8 +261,10 @@ def test_a_forged_state_alone_is_reported(bench: Bench, tmp_path: Path, capsys: 
     assert "bad_signature" in capsys.readouterr().err and bench.filed() == []
 
 
-def test_a_forged_statement_beside_a_real_package_gives_no_key_away(bench: Bench, tmp_path: Path) -> None:
-    """A stranger signs for itself: the skip must not let its key in."""
+def test_a_forged_statement_beside_a_real_package_gives_no_key_away(
+    bench: Bench, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A stranger signs for itself: the skip must not let its key in. Since J8-L2 (R02) the forgery is reported."""
     _two_reports(bench)
     trusted = store.load(bench.state_dir).trusted_keys
     stranger, successor = SigningKey.generate(), SigningKey.generate()
@@ -271,12 +273,15 @@ def test_a_forged_statement_beside_a_real_package_gives_no_key_away(bench: Bench
     assert _export(bench, source) == 0
     forged = _forged(bench, 1, Kind.STATE, successor, rotation)
     (source / f"{UID}-00000001-state-rebuilt.veil").write_bytes(forged)
-    assert _read(bench, source) == 0
+    assert _read(bench, source) == 1 and "bad_signature" in capsys.readouterr().err
     assert store.load(bench.state_dir).trusted_keys == trusted and bench.last() == 2
 
 
-def test_the_key_given_up_does_not_come_back_through_a_skipped_package(bench: Bench, tmp_path: Path) -> None:
-    """Protocol §6.3: the stolen key signs a statement for a key of the thief, beside a real `state`."""
+def test_the_key_given_up_does_not_come_back_through_a_skipped_package(
+    bench: Bench, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Protocol §6.3: the stolen key signs a statement for a key of the thief, beside a real `state`. Since J8-L2
+    (R02) the forgery is reported."""
     _two_reports(bench)
     assert bench.pull() == 0
     stolen = keys.load_signing_key(bench.world.app.config.state_dir)
@@ -290,7 +295,7 @@ def test_the_key_given_up_does_not_come_back_through_a_skipped_package(bench: Be
     source.mkdir()
     (source / "1.veil").write_bytes(_forged(bench, 4, Kind.DELTA, thief, rotation))
     (source / "2.veil").write_bytes(_sealed(bench, 5, Kind.STATE))
-    assert _read(bench, source) == 0
+    assert _read(bench, source) == 1 and "bad_signature" in capsys.readouterr().err
     assert store.load(bench.state_dir).trusted_keys == adopted and bench.last() == 5
     assert "00000004-delta" not in bench.filed()
 
@@ -399,7 +404,6 @@ def test_two_rotations_without_a_package_between_them_are_followed(bench: Bench,
     assert bench.last() == 2
 
 
-@pytest.mark.xfail(strict=True, reason="out of spec: a forged package covered by a later `state` is dropped silently")
 def test_a_forged_package_is_reported_even_when_a_state_covers_it(
     bench: Bench, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

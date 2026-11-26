@@ -154,6 +154,13 @@ msgstr "abonnement {uid} : le serveur prépare un rapport, relancez plus tard"
 msgid "the following arguments are required: %s"
 msgstr "les arguments suivants sont obligatoires : %s"
 
+msgid ""
+"the pairing code is read from the terminal or standard input, never from "
+"the command line"
+msgstr ""
+"le code de jumelage se lit au terminal ou sur l’entrée standard, jamais "
+"sur la ligne de commande"
+
 #, python-brace-format
 msgid "the server refused or failed ({code})"
 msgstr "le serveur a refusé ou échoué ({code})"

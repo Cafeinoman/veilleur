@@ -339,9 +339,7 @@ def _listing(last: int, **packages: bytes) -> Reply:
     return Reply(200, json.dumps({"packages": entries, "oldest": None, "last": last}).encode())
 
 
-def test_a_package_served_under_another_number_is_refused(
-    bench: Bench, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_a_package_served_under_another_number_is_refused(bench: Bench, capsys: pytest.CaptureFixture[str]) -> None:
     bench.subscribe()
     data = _sealed(bench, 2, EnvelopeKind.DELTA)
     bench.transport.replies[f"/v1/subscriptions/{UID}/reports?after=0"] = _listing(1, n1=data)
@@ -388,7 +386,6 @@ def test_a_very_deep_answer_is_a_refusal(bench: Bench, capsys: pytest.CaptureFix
 # --- Command line -----------------------------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(strict=True, reason="minor: a pairing code that is not UTF-8 ends in a traceback")
 def test_a_pairing_code_that_is_not_text_is_refused_cleanly(tmp_path: Path) -> None:
     done = subprocess.run(
         [sys.executable, "-m", "veilleur_receive", "--lang", "en", "--state-dir", str(tmp_path / "s"), "pair"],
@@ -401,7 +398,6 @@ def test_a_pairing_code_that_is_not_text_is_refused_cleanly(tmp_path: Path) -> N
     assert b"Traceback" not in done.stderr
 
 
-@pytest.mark.xfail(strict=True, reason="out of spec: a code given as an argument is refused but echoed on stderr")
 def test_a_code_given_as_an_argument_is_not_repeated(bench: Bench, capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit):
         cli.main(["--lang", "en", "--state-dir", str(bench.state_dir), "pair", bench.code])

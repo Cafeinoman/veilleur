@@ -81,7 +81,7 @@ Security deliverables: the protocol specification (**normative in English**, inf
 
 The receiving tool is out of scope. Veilleur provides:
 - `veilleur-protocol`, a standalone library (pairing code, request signing, opening and checking a package; single dependency `pycryptodomex`);
-- a minimal **reference receiver** (`veilleur-receive`, package in `receiver/`, depending on `veilleur-protocol` alone): `pair` reads the pairing code from the terminal or standard input, never from the command line; `pull --folder …` fetches, checks and files reports in `<folder>/<uid>/<number>-<kind>/`, readable by the current user only; `pull --folder … --from …` reads a folder written by `veilleur export`. A gap in the numbers is accepted only when a `state` covers it. It is used for end-to-end tests and as an example.
+- a minimal **reference receiver** (`veilleur-receive`, package in `receiver/`, depending on `veilleur-protocol` alone): `pair` reads the pairing code from the terminal or standard input, never from the command line; `pull --folder …` fetches, checks and files reports in `<folder>/<uid>/<number>-<kind>/`, readable by the current user only; `pull --folder … --from …` reads a folder written by `veilleur export`. A gap in the numbers is accepted only when a `state` covers it. A package refused for its signature is reported, unless a key the receiver has given up signed it (protocol §6.3); a pairing code given on the command line is refused without being repeated. It is used for end-to-end tests and as an example.
 
 ## 6. HTTP interface `/v1`
 

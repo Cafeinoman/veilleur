@@ -220,9 +220,9 @@ def test_a_lot_without_a_rubric_is_noticed() -> None:
 
 
 def test_a_lot_with_another_status_is_noticed() -> None:
-    lot = section(PLAN, "### J8-L2 ", None)
+    lot = section(PLAN, "### J8-L3 ", None)
     altered = PLAN.replace(lot, lot.replace("- **Statut.** à faire", "- **Statut.** en cours"))
-    assert lot_problems(altered) == ["J8-L2: status is neither « à faire » nor « fait »"]
+    assert lot_problems(altered) == ["J8-L3: status is neither « à faire » nor « fait »"]
 
 
 def test_a_lot_identifier_used_twice_is_noticed() -> None:
