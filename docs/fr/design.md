@@ -81,7 +81,7 @@ Livrables de sécurité : spécification du protocole (**normative en anglais**,
 
 L'outil de réception est hors périmètre. Veilleur fournit :
 - `veilleur-protocol`, une bibliothèque autonome (code de jumelage, signature des requêtes, ouverture et vérification d'un paquet ; dépendance unique `pycryptodomex`) ;
-- un **récepteur de référence** minimal (`veilleur-receive`, paquet dans `receiver/`, qui ne dépend que de `veilleur-protocol`) : `pair` lit le code de jumelage au terminal ou sur l'entrée standard, jamais sur la ligne de commande ; `pull --folder …` récupère, vérifie et dépose les rapports dans `<dossier>/<uid>/<numéro>-<genre>/`, réservé à l'utilisateur courant ; `pull --folder … --from …` lit un dossier écrit par `veilleur export`. Un trou de numérotation n'est accepté que s'il est couvert par un `state`. Il sert aux tests de bout en bout et d'exemple.
+- un **récepteur de référence** minimal (`veilleur-receive`, paquet dans `receiver/`, qui ne dépend que de `veilleur-protocol`) : `pair` lit le code de jumelage au terminal ou sur l'entrée standard, jamais sur la ligne de commande ; `pull --folder …` récupère, vérifie et dépose les rapports dans `<dossier>/<uid>/<numéro>-<genre>/`, réservé à l'utilisateur courant ; `pull --folder … --from …` lit un dossier écrit par `veilleur export`. Un trou de numérotation n'est accepté que s'il est couvert par un `state`. Un paquet refusé pour sa signature est signalé, sauf s'il est signé par une clé que le récepteur a abandonnée (protocole §6.3) ; un code de jumelage donné sur la ligne de commande est refusé sans être répété. Il sert aux tests de bout en bout et d'exemple.
 
 ## 6. Interface HTTP `/v1`
 

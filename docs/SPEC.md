@@ -177,7 +177,7 @@ métier ; la publication sur PyPI (ADR-0021).
 
 ### 5.7 Jumelage
 
-- **EF-60** — MUST, livré (R03, R14). L'administrateur crée un jumelage (`veilleur pairing new --label …`) ; le serveur
+- **EF-60** — MUST, livré. L'administrateur crée un jumelage (`veilleur pairing new --label …`) ; le serveur
   tire un secret de 32 octets et un `key_id` aléatoire, et affiche un **code de jumelage** `VEIL1:<JSON en base64url>`
   contenant : version, adresse du serveur (ou `folder:`), `key_id`, secret, clé publique de signature du serveur, et, le
   cas échéant, adresse, sujet et jeton ntfy.
@@ -230,7 +230,7 @@ métier ; la publication sur PyPI (ADR-0021).
 - **ES-06 Authentification des requêtes** — MUST, livré (R04) :
   `Authorization: Veilleur <key_id>:<base64url(HMAC-SHA256(A, méthode ⏎ chemin et requête ⏎ horodatage ⏎ SHA-256 du corps))>`
   et `X-Veilleur-Date` (UTC, tolérance de 5 minutes). Toute requête est authentifiée.
-- **ES-07 Lecteur de paquets** — MUST, livré (R02) : avant toute lecture, il contrôle la taille du paquet, le nombre de
+- **ES-07 Lecteur de paquets** — MUST, livré : avant toute lecture, il contrôle la taille du paquet, le nombre de
   fichiers (32 au plus), leurs noms (aucun chemin, aucun fichier non prévu par le genre), leurs tailles ; il n'écrit
   rien en clair sur le disque.
 - **ES-08 SSRF** — MUST, livré (R05) : le client HTTP refuse, **après résolution DNS** et à chaque redirection, les
