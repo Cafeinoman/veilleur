@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import re
 import stat
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field, replace
@@ -773,7 +774,8 @@ def test_a_short_mistake_on_the_command_line_is_still_shown(capsys: pytest.Captu
     with pytest.raises(SystemExit):
         cli.main(["--lang", "en", "pul"])
     err = capsys.readouterr().err
-    assert "'pul'" in err and "pull)" in err
+    # Python 3.13 quotes the choices (`'pull')`), 3.12 does not (`pull)`).
+    assert "'pul'" in err and re.search(r"choose from .*\bpull'?\)", err)
 
 
 def test_a_pairing_code_that_is_not_text_is_refused_as_invalid(
