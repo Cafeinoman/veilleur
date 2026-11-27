@@ -338,12 +338,6 @@ def test_a_corrupt_given_up_list_is_an_unreadable_state(
     assert "state file cannot be read" in err and "Traceback" not in err
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="minor (J8-L2 R02, regression from main): a legitimate rebuilt `state` skipped before the `delta` that "
-    "makes its signer's predecessor trusted is reported as `bad_signature` (exit 1); main read the same export with "
-    "exit 0. `signed_by_given_up_key` checks given-up keys only, not the keys adopted meanwhile",
-)
 def test_a_legitimate_export_after_two_rotations_raises_no_alarm(
     bench: Bench, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

@@ -27,7 +27,7 @@ from veilleur.core.domain.model import Pairing
 from veilleur.core.ports.plugins import Plugins, Renderer
 from veilleur.core.services import jobs, pairing, round, subscriptions
 from veilleur.core.services.context import Core
-from veilleur_protocol import PairingCode, seal_package
+from veilleur_protocol import PairingCode, make_rotation, seal_package
 from veilleur_protocol.envelope import Kind
 from veilleur_protocol.package import PackageContent
 from veilleur_protocol.signing import SigningKey
@@ -785,3 +785,68 @@ def test_a_pairing_code_that_is_not_text_is_refused_as_invalid(
     monkeypatch.setattr("sys.stdin", io.TextIOWrapper(io.BytesIO(b"\xff\xfe\n"), encoding="utf-8"))
     assert cli.main(["--lang", "en", "--state-dir", str(tmp_path / "s"), "pair"]) == 1
     assert "not valid" in capsys.readouterr().err and not (tmp_path / "s" / store.STATE_FILE).exists()
+
+
+# --- J8-L5: no false alarm after two rotations ---------------------------------------------------------------------
+
+
+def _member_then_two_rotations(bench: Bench, *, package_under_third_key: bool) -> SigningKey:
+    """A member on the first key at package 1; package 2 under the second key, then a rotation to a third key.
+
+    Returns the second key. With `package_under_third_key`, package 3 is signed by the third key: a member who reads
+    packages 2 and 3 adopts the second key, then gives it up.
+    """
+    bench.world.collector.set("news", ("a", {"title": "A"}))
+    bench.subscribe()
+    bench.round()
+    assert bench.pull() == 0
+    bench.core = _rotate(bench)
+    bench.world.collector.set("news", ("a", {"title": "A"}), ("b", {"title": "B"}))
+    bench.round()
+    second = _server_key(bench)
+    bench.core = _rotate(bench)
+    if package_under_third_key:
+        bench.world.collector.set("news", ("a", {"title": "A"}), ("b", {"title": "B"}), ("c", {"title": "C"}))
+        bench.round()
+    return second
+
+
+def test_a_package_skipped_before_its_key_is_adopted_raises_no_alarm(
+    bench: Bench, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """R42: the rebuilt `state` 2 (third key) comes before the `delta` 2 that makes the second key trusted.
+
+    The `state` is skipped, then vouched for by the key adopted meanwhile: it is old, not forged.
+    """
+    _member_then_two_rotations(bench, package_under_third_key=False)
+    source = tmp_path / "usb"
+    _export_command(bench, monkeypatch, source, UID, "--after", "1")
+    assert sorted(path.name for path in source.iterdir()) == [
+        f"{UID}-00000002-delta.veil",
+        f"{UID}-00000002-state-rebuilt.veil",
+    ]
+    capsys.readouterr()
+    assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(source)) == 0
+    assert capsys.readouterr().err == "" and bench.last() == 2
+    assert bench.filed() == ["00000001-state", "00000002-delta"]
+
+
+def test_a_statement_from_a_key_adopted_then_given_up_during_the_read_is_reported(
+    bench: Bench, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """J8-L5 criterion 3: the second key, stolen, vouches for a thief's key; the read adopts then gives it up."""
+    second = _member_then_two_rotations(bench, package_under_third_key=True)
+    source = tmp_path / "usb"
+    _export_command(bench, monkeypatch, source, UID, "--after", "1")
+    thief = SigningKey.generate()
+    moment = bench.world.clock.now()
+    statement = make_rotation(second, thief.public_key, moment)
+    content = PackageContent(UID, 2, Kind.STATE, moment, moment, None, b"", rotation=statement)
+    _export(source, "forged.veil", seal_package(bench.pairing.secret, thief, content))
+    capsys.readouterr()
+    assert bench.receive("pull", "--folder", str(bench.folder), "--from", str(source)) == 1
+    assert f"subscription {UID}, package 2: refused (bad_signature)" in capsys.readouterr().err
+    state = store.load(bench.state_dir)
+    assert thief.public_key not in state.trusted_keys and thief.public_key not in state.given_up
+    assert second.public_key in state.given_up and bench.last() == 3
+    assert "00000002-state" not in bench.filed()
