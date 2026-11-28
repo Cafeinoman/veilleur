@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
+import stat
 import threading
 from pathlib import Path
 
@@ -93,3 +95,29 @@ def test_threads_share_one_connection(tmp_path: Path) -> None:
         t.join()
     assert len(store.list_pairings()) == 8
     store.close()
+
+
+def _mode(path: Path) -> int:
+    return stat.S_IMODE(path.stat().st_mode)
+
+
+def test_database_and_wal_files_are_private_whatever_the_umask(tmp_path: Path) -> None:
+    previous = os.umask(0o022)
+    try:
+        store = SqliteStore(tmp_path / "v.db")
+        with store.transaction():
+            pass
+        files = [tmp_path / "v.db", tmp_path / "v.db-wal", tmp_path / "v.db-shm"]
+        assert all(f.exists() for f in files)
+        assert [_mode(f) for f in files] == [0o600] * 3
+        store.close()
+    finally:
+        os.umask(previous)
+
+
+def test_an_older_readable_database_is_made_private(tmp_path: Path) -> None:
+    path = tmp_path / "v.db"
+    SqliteStore(path).close()
+    path.chmod(0o644)
+    SqliteStore(path).close()
+    assert _mode(path) == 0o600
