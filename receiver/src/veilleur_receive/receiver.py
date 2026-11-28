@@ -91,6 +91,18 @@ class _Filing:
             data, secret=self.state.secret, uid=uid, trusted_keys=self.state.trusted_keys, seq=seq, kinds=kinds
         )
 
+    def opens_with_trusted_keys(self, data: bytes, uid: str, seq: int) -> bool:
+        """Whether a package skipped for its signature opens with the keys trusted now (R42).
+
+        A key adopted after the package was skipped may vouch for it: the export then holds no forgery. The check only
+        decides whether to report: the package is neither read for its content nor filed (ES-07).
+        """
+        try:
+            self.open(data, uid, seq=seq)
+        except ProtocolError:
+            return False
+        return True
+
     def signed_by_given_up_key(self, data: bytes, uid: str, seq: int) -> bool:
         """Whether a package refused for its signature is old rather than forged: signed by a key given up since.
 
@@ -316,15 +328,20 @@ def _read_subscription(filing: _Filing, uid: str, packages: list[_Found]) -> Non
 
 
 def _report_forged(filing: _Filing, uid: str, skipped: list[_Found]) -> None:
-    """Packages skipped for their signature: an old one is expected in an export, any other is reported (R02)."""
+    """Packages skipped for their signature: an old one is expected in an export, any other is reported (R02).
+
+    Old means signed by a key trusted once the whole subscription is read, adopted meanwhile included (R42), or by a
+    key given up since.
+    """
     for package in skipped:
         try:
             data = package.path.read_bytes()
         except OSError:
             filing.outcome.failures.append(Failure("unreadable_file", uid, package.header.seq))
             continue
-        if not filing.signed_by_given_up_key(data, uid, package.header.seq):
-            filing.outcome.failures.append(Failure("bad_signature", uid, package.header.seq))
+        seq = package.header.seq
+        if not (filing.opens_with_trusted_keys(data, uid, seq) or filing.signed_by_given_up_key(data, uid, seq)):
+            filing.outcome.failures.append(Failure("bad_signature", uid, seq))
 
 
 def _read_in_order(filing: _Filing, uid: str, packages: list[_Found], skipped: list[_Found]) -> None:
