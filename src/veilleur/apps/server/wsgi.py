@@ -18,7 +18,6 @@ import time
 from collections import deque
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any
 
 from veilleur.core.domain import errors
@@ -39,6 +38,8 @@ MAX_BODY = 1_000_000
 RETRY_AFTER = 5
 RATE_LIMIT = 120
 RATE_WINDOW = 60.0
+UNAUTHENTICATED_LIMIT = 300
+"""Most `401` answers per `RATE_WINDOW` for the whole process (R04, D12); beyond, `429` without reading the body."""
 _SUBSCRIPTION = re.compile(r"/v1/subscriptions/([0-9a-f]{32})(/reports|/reports/([1-9][0-9]{0,17})|/state|/history)?")
 _AFTER = re.compile(r"after=(0|[1-9][0-9]{0,17})")
 _SINCE = re.compile(r"since=([0-9]{4}-[0-9]{2}-[0-9]{2})")
@@ -121,7 +122,7 @@ def request_language(header: str | None, default: str) -> str:
 
 
 class RateLimiter:
-    """At most `limit` requests per pairing in any `window` seconds (`429`)."""
+    """At most `limit` events per key in any `window` seconds (`429`): requests of a pairing, or `401` answers."""
 
     def __init__(
         self, limit: int = RATE_LIMIT, window: float = RATE_WINDOW, clock: Callable[[], float] = time.monotonic
@@ -151,11 +152,13 @@ class Api:
         *,
         language: str = "en",
         limiter: RateLimiter | None = None,
+        refusals: RateLimiter | None = None,
         wake_worker: Callable[[], None] = lambda: None,
     ) -> None:
         self.core = core
         self.language = language
         self.limiter = limiter or RateLimiter()
+        self.refusals = refusals or RateLimiter(UNAUTHENTICATED_LIMIT, RATE_WINDOW)
         self.wake_worker = wake_worker
 
     def __call__(self, environ: dict[str, Any], start_response: StartResponse) -> Iterable[bytes]:
@@ -204,35 +207,55 @@ class Api:
             raise _Refusal(400, errors.BAD_REQUEST)
         return body
 
-    def _authenticate(self, method: str, target: str, body: bytes, environ: Mapping[str, Any]) -> Pairing:
-        """In the order of §8: header, date, staleness, and only then the secret looked up by `key_id`."""
+    def _identify(self, target: str, environ: Mapping[str, Any]) -> Pairing:
+        """The checks of §8 that need no body: header, date, staleness, then the pairing found by `key_id`."""
         authorization = environ.get("HTTP_AUTHORIZATION")
         date = environ.get("HTTP_" + DATE_HEADER.upper().replace("-", "_"))
-        now: datetime = self.core.clock.now()
         try:
             key_id, _mac = parse_authorization(authorization)
             try:
                 sent = parse_time(date)
             except ProtocolError as exc:
                 raise ProtocolError("bad_date") from exc
-            if abs(now - sent) > TOLERANCE:
+            if abs(self.core.clock.now() - sent) > TOLERANCE:
                 raise ProtocolError("stale_date")
             request_scope(target)
             pairing = self.core.store.get_pairing(key_id)
             if pairing is None:
                 raise ProtocolError("bad_authorization", "unknown key_id")
-            verify_request(pairing.secret, method, target, body, authorization=authorization, date=date, now=now)
         except ProtocolError as exc:
-            raise _Refusal(401, exc.code) from exc
+            raise self._unauthenticated(exc.code) from exc
         return pairing
+
+    def _verify(self, pairing: Pairing, method: str, target: str, body: bytes, environ: Mapping[str, Any]) -> None:
+        """The last check of §8, the MAC, which covers the body's hash."""
+        try:
+            verify_request(
+                pairing.secret,
+                method,
+                target,
+                body,
+                authorization=environ.get("HTTP_AUTHORIZATION"),
+                date=environ.get("HTTP_" + DATE_HEADER.upper().replace("-", "_")),
+                now=self.core.clock.now(),
+            )
+        except ProtocolError as exc:
+            raise self._unauthenticated(exc.code) from exc
+
+    def _unauthenticated(self, code: str) -> _Refusal:
+        """`401`, or `429` once the process has given `UNAUTHENTICATED_LIMIT` of them in the window (R04)."""
+        if not self.refusals.allow(""):
+            return _Refusal(429, errors.RATE_LIMITED)
+        return _Refusal(401, code)
 
     # --- Routing (protocol §9) ---------------------------------------------------------------------------------
 
     def _handle(self, environ: Mapping[str, Any]) -> Response:
         method = environ.get("REQUEST_METHOD", "")
         target = self._target(environ)
+        pairing = self._identify(target, environ)  # before the body is read (R04)
         body = self._body(environ)
-        pairing = self._authenticate(method, target, body, environ)
+        self._verify(pairing, method, target, body, environ)
         if not pairing.active:
             raise _Refusal(403, errors.REVOKED)
         if not self.limiter.allow(pairing.key_id):

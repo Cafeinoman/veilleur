@@ -5,13 +5,14 @@ from __future__ import annotations
 
 import io
 import json
+import os
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
 import pytest
 
-from veilleur.apps.server.wsgi import MAX_BODY, Api, RateLimiter, request_language
+from veilleur.apps.server.wsgi import MAX_BODY, UNAUTHENTICATED_LIMIT, Api, RateLimiter, request_language
 from veilleur.core.domain.model import Pairing, SubscriptionSpec
 from veilleur.core.services import jobs, pairing, round
 from veilleur.core.services.subscriptions import TeamSubscription, sync_team
@@ -391,3 +392,65 @@ def test_subscription_listing(client: Client) -> None:
     assert [s["uid"] for s in client.call("GET", "/v1/subscriptions").json()["subscriptions"]] == [team["uid"]]
     assert _error(client.call("GET", "/v1/subscriptions?x=1")) == (400, "bad_request")
     assert _error(client.call("POST", "/v1/subscriptions")) == (404, "not_found")
+
+
+class _Untouchable(io.RawIOBase):
+    """A request body that fails the test if the server reads it."""
+
+    def read(self, size: int = -1) -> bytes:
+        raise AssertionError("the body was read")
+
+    readline = readinto = read  # type: ignore[assignment]
+
+
+def test_unauthenticated_requests_are_refused_before_the_body_is_read(client: Client) -> None:
+    untouchable = {"wsgi.input": _Untouchable(), "CONTENT_LENGTH": "10"}
+    target = f"/v1/subscriptions/{UID}"
+    missing = client.call("PUT", target, sign=False, environ=untouchable)
+    assert _error(missing) == (401, "bad_authorization")
+    stranger = Client(
+        client.api,
+        client.world,
+        Pairing(client.pairing.key_id[::-1], "desk 9", os.urandom(32), client.world.clock.now()),
+    )
+    assert _error(stranger.call("PUT", target, environ=untouchable)) == (401, "bad_authorization")
+    stale = client.call("PUT", target, at=client.world.clock.now() - timedelta(minutes=6), environ=untouchable)
+    assert _error(stale) == (401, "stale_date")
+    unauthenticated_large = client.call("PUT", target, sign=False, environ={"CONTENT_LENGTH": str(MAX_BODY + 1)})
+    assert _error(unauthenticated_large) == (401, "bad_authorization")
+
+
+def test_unauthenticated_answers_are_limited_for_the_whole_process(world: World) -> None:
+    now = [0.0]
+    client = _client(world, refusals=RateLimiter(UNAUTHENTICATED_LIMIT, 60, clock=lambda: now[0]))
+    other = Client(client.api, world, pairing.create_pairing(world.app.core, "desk 4"))
+    untouchable = {"wsgi.input": _Untouchable(), "CONTENT_LENGTH": "10"}
+    codes = [client.call("GET", "/v1/collectors", sign=False).code for _ in range(UNAUTHENTICATED_LIMIT)]
+    assert codes == [401] * UNAUTHENTICATED_LIMIT
+    now[0] = 59.0
+    assert _error(client.call("PUT", f"/v1/subscriptions/{UID}", sign=False, environ=untouchable)) == (
+        429,
+        "rate_limited",
+    )
+    assert _error(client.call("GET", "/v1/collectors", headers={"Authorization": "Veilleur x:y"})) == (
+        429,
+        "rate_limited",
+    )
+    # Authenticated requests, of this pairing or another, are neither counted nor refused.
+    assert client.call("GET", "/v1/collectors").code == 200
+    assert other.call("GET", "/v1/subscriptions").code == 200
+    now[0] = 60.0
+    assert _error(client.call("GET", "/v1/collectors", sign=False)) == (401, "bad_authorization")
+
+
+def test_a_bad_mac_counts_as_an_unauthenticated_answer(world: World) -> None:
+    client = _client(world, refusals=RateLimiter(1, 60, clock=lambda: 0.0))
+    forged = client.call("PUT", f"/v1/subscriptions/{UID}", b"{}", signed_target=f"/v1/subscriptions/{UID}/state")
+    assert _error(forged) == (401, "bad_authorization")
+    again = client.call("PUT", f"/v1/subscriptions/{UID}", b"{}", signed_target=f"/v1/subscriptions/{UID}/state")
+    assert _error(again) == (429, "rate_limited")
+    assert client.call("GET", "/v1/collectors").code == 200
+
+
+def test_the_default_unauthenticated_limit_is_300_per_minute(client: Client) -> None:
+    assert (client.api.refusals.limit, client.api.refusals.window) == (300, 60.0)
