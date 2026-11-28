@@ -70,7 +70,9 @@ These are known and documented; they follow from the design choices of the speci
 - **Server compromise**: the server holds the pairing secrets and the signing key, hence everything. Hardening (dedicated
   user, read-only system, no capability, system call filtering, container) reduces this risk without removing it.
 - **Denial of service**: rate limiting (`429`) and quotas protect the server from one pairing, not from a determined
-  network attack; this is left to the host.
+  network attack; this is left to the host. Unauthenticated requests are refused before their body is read, and
+  beyond 300 `401` answers per minute they all get `429`: an attacker can then hinder other unauthenticated clients,
+  not paired ones.
 
 ## 5. Out of scope
 

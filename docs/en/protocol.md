@@ -258,6 +258,9 @@ internal detail, in the language of `Accept-Language` (`en` or `fr`) or else the
 
 Statuses: `400`, `401` (authentication), `403` (revoked pairing, or collector not allowed for this pairing), `404`,
 `409`, `410`, `413` (body over 1 000 000 bytes), `429`, `500`. After a `410`, the receiving tool asks for a `state`.
+The server reads the body only once the `Authorization` header, the date and the `key_id` have passed (§8), to check
+its hash. Beyond 300 `401` answers per minute, unauthenticated requests get `429` instead; authenticated requests are
+not affected.
 
 The server routes on the path exactly as signed (§8), without decoding or normalising it: `N` and `n` are decimal
 numbers without leading zero, a query not listed here is refused (`400`), and anything else is `404`. Each pairing
@@ -311,7 +314,7 @@ subscription envelope with `400`, `too_large` with `413`):
 | `subscription_deleted` | 409 | the `uid` belongs to a deleted subscription |
 | `purged` | 410 | the package is no longer kept |
 | `body_too_large` | 413 | body over 1 000 000 bytes |
-| `rate_limited` | 429 | too many requests from this pairing |
+| `rate_limited` | 429 | too many requests from this pairing, or too many unauthenticated requests |
 | `internal_error` | 500 | failure of the server, without detail |
 
 ## 10. Reader

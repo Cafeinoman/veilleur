@@ -264,6 +264,9 @@ sans détail interne, dans la langue d'`Accept-Language` (`en` ou `fr`), sinon c
 
 États : `400`, `401` (authentification), `403` (jumelage révoqué, ou collecteur non autorisé pour ce jumelage), `404`,
 `409`, `410`, `413` (corps de plus de 1 000 000 octets), `429`, `500`. Après un `410`, l'outil de réception demande un `state`.
+Le serveur ne lit le corps qu'une fois l'en-tête `Authorization`, la date et le `key_id` acceptés (§8), pour vérifier
+son empreinte. Au-delà de 300 réponses `401` par minute, les requêtes non authentifiées reçoivent `429` à la place ; les
+requêtes authentifiées n'en sont pas affectées.
 
 Le serveur aiguille sur le chemin exactement tel que signé (§8), sans le décoder ni le normaliser : `N` et `n` sont
 des nombres décimaux sans zéro initial, une requête (partie après `?`) non prévue ici est refusée (`400`), et tout le
@@ -318,7 +321,7 @@ d'abonnement refusée avec `400`, `too_large` avec `413`) :
 | `subscription_deleted` | 409 | l'`uid` appartient à un abonnement supprimé |
 | `purged` | 410 | le paquet n'est plus gardé |
 | `body_too_large` | 413 | corps de plus de 1 000 000 octets |
-| `rate_limited` | 429 | trop de requêtes de ce jumelage |
+| `rate_limited` | 429 | trop de requêtes de ce jumelage, ou trop de requêtes non authentifiées |
 | `internal_error` | 500 | défaillance du serveur, sans détail |
 
 ## 10. Lecteur
