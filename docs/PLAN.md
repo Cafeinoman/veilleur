@@ -197,7 +197,7 @@ Produit : Veilleur 0.1.x sans réserve de sécurité ouverte. À faire avant d'e
 - **Références.** R42 (voisin de R15, R45) ; ADR-0019 ; SPEC ES-07 ; protocole §6.3.
 - **Risques.** Faible : le changement ne touche que la décision de signaler, pas l'acceptation des paquets.
 - **Effort.** S
-- **Statut.** fait (réserves R47, R48)
+- **Statut.** fait (PR #23, réserves R47, R48)
 
 ### J8-L3 — Service HTTP : requêtes non authentifiées, droits de la base
 
