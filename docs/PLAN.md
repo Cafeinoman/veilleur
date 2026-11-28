@@ -197,7 +197,7 @@ Produit : Veilleur 0.1.x sans réserve de sécurité ouverte. À faire avant d'e
 - **Références.** R42 (voisin de R15, R45) ; ADR-0019 ; SPEC ES-07 ; protocole §6.3.
 - **Risques.** Faible : le changement ne touche que la décision de signaler, pas l'acceptation des paquets.
 - **Effort.** S
-- **Statut.** à faire
+- **Statut.** fait (réserves R47, R48)
 
 ### J8-L3 — Service HTTP : requêtes non authentifiées, droits de la base
 
@@ -611,3 +611,5 @@ confort. Les tests cités sont dans `tests/verif/`. `/livrer` ajoute les réserv
 | R44 | P3 | J8-L2 | R03 incomplet : hors `pair`, un code qui contient un caractère de contrôle ou invisible (`\r`, `\t`, `\n`, `\x1b`, U+FEFF, U+200B) est répété par argparse via `repr()`, que `_hide` ne masque pas ; piste : masquer aussi `repr(token)[1:-1]` | `test_j8_l2_verif.py::test_a_code_with_a_control_character_is_not_repeated`, `::test_a_code_with_an_invisible_character_is_not_repeated` | à planifier (J13-L1) |
 | R45 | P4 | J8-L2 | Hors spécification : un état 0.1.x déjà tourné (`given_up` vide, `rotated` vrai) perd la clé la plus ancienne à la rotation suivante ; ses paquets encore présents dans un export seraient signalés comme forgés | aucun | à planifier (J13-L1) |
 | R46 | P4 | J8-L2 | Hors spécification : le lot renforce deux tests existants du vérificateur (`test_g4_verif_pass3.py::test_a_forged_statement_beside_a_real_package_gives_no_key_away`, `::test_the_key_given_up_does_not_come_back_through_a_skipped_package` : `== 0` devient `== 1` avec `bad_signature`), conséquence de R02 | aucun | aucun lot : écart admis sous réserve de l'utilisateur |
+| R47 | P2 | J8-L5 | R02 rétréci par J8-L5 (le test passe sur `main`) : dans l'export R42, une déclaration « C→voleur » posée à côté de la vraie C→D n'est plus signalée, car le `state` reconstruit signé par D est sauté et C n'est jamais abandonnée ; le second contrôle l'ouvre avec C et se tait (la clé du voleur n'est pas adoptée) ; piste : signaler deux déclarations contradictoires d'une même clé | `test_j8_l5_verif.py::test_a_statement_of_c_for_a_thief_beside_the_server_statement_c_to_d_is_reported` | à planifier (J13-L1) |
+| R48 | P2 | J8-L5 | Hors spécification, antérieur au lot (voisin de R43, R45) : la clé d'un voleur est adoptée quand son faux `state` 3 (déclaration C→voleur, fichier nommé pour trier en premier) passe avant le vrai `delta` 3 (C→D) ; contraire à la lecture littérale du critère 3 de J8-L5, admis par le §6.3 tant que la rotation n'est pas connue | `test_j8_l5_verif.py::test_a_thief_key_vouched_for_by_c_is_not_adopted_when_its_state_sorts_first` | à planifier (J13-L1) |
