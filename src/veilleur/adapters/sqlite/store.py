@@ -5,6 +5,7 @@ at opening after a backup of the database, one connection per process used under
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import threading
 from collections.abc import Iterable, Iterator, Mapping, Sequence
@@ -91,6 +92,14 @@ def _spec_from_json(text: str) -> SubscriptionSpec:
     )
 
 
+def _private(path: Path) -> None:
+    """Create the database (or tighten an older one, and its WAL files) in mode 0600, whatever the umask (R08)."""
+    os.close(os.open(path, os.O_RDWR | os.O_CREAT, 0o600))
+    for name in (path, Path(f"{path}-wal"), Path(f"{path}-shm")):
+        if name.exists() and name.stat().st_mode & 0o077:
+            name.chmod(0o600)
+
+
 class SqliteStore:
     """Implements `veilleur.core.ports.store.Store`."""
 
@@ -99,11 +108,13 @@ class SqliteStore:
         self._lock = threading.RLock()
         self._depth = 0
         existed = self.path != ":memory:" and Path(self.path).exists() and Path(self.path).stat().st_size > 0
+        if self.path != ":memory:":
+            _private(Path(self.path))
         self._db = sqlite3.connect(self.path, isolation_level=None, check_same_thread=False)
         self._db.execute(f"PRAGMA busy_timeout = {BUSY_TIMEOUT_MS}")
         self._db.execute("PRAGMA foreign_keys = ON")
         if self.path != ":memory:":
-            self._db.execute("PRAGMA journal_mode = WAL")
+            self._db.execute("PRAGMA journal_mode = WAL")  # SQLite gives -wal and -shm the mode of the database
         self.backup: Path | None = None
         self._migrate(existed, backup_dir, now or datetime.now(UTC))
 

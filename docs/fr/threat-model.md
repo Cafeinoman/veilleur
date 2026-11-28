@@ -74,7 +74,9 @@ Connus et documentés, ils découlent des choix de la spécification.
   durcissement (utilisateur dédié, système en lecture seule, aucune capacité, filtrage des appels système, conteneur)
   réduit ce risque sans le supprimer.
 - **Déni de service** : la limitation de débit (`429`) et les quotas protègent le serveur d'un jumelage, pas d'une
-  attaque réseau déterminée ; c'est l'affaire de l'hôte.
+  attaque réseau déterminée ; c'est l'affaire de l'hôte. Les requêtes non authentifiées sont refusées avant la
+  lecture de leur corps, et au-delà de 300 réponses `401` par minute elles reçoivent toutes `429` : un attaquant peut
+  alors gêner les autres clients non authentifiés, pas les membres jumelés.
 
 ## 5. Hors périmètre
 

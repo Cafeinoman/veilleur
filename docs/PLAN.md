@@ -217,7 +217,7 @@ Produit : Veilleur 0.1.x sans réserve de sécurité ouverte. À faire avant d'e
 - **Références.** R04, R08 ; ADR-0012 ; SPEC ES-06, ES-10, ES-11 ; protocole §8.
 - **Risques.** La limite globale permet à un attaquant de gêner les clients non authentifiés seulement, pas les autres.
 - **Effort.** M
-- **Statut.** à faire
+- **Statut.** fait (PR #24, réserves R49 à R52)
 
 ### J8-L4 — Sorties du serveur : cache, webhook, unité des jetons
 
@@ -613,3 +613,7 @@ confort. Les tests cités sont dans `tests/verif/`. `/livrer` ajoute les réserv
 | R46 | P4 | J8-L2 | Hors spécification : le lot renforce deux tests existants du vérificateur (`test_g4_verif_pass3.py::test_a_forged_statement_beside_a_real_package_gives_no_key_away`, `::test_the_key_given_up_does_not_come_back_through_a_skipped_package` : `== 0` devient `== 1` avec `bad_signature`), conséquence de R02 | aucun | aucun lot : écart admis sous réserve de l'utilisateur |
 | R47 | P2 | J8-L5 | R02 rétréci par J8-L5 (le test passe sur `main`) : dans l'export R42, une déclaration « C→voleur » posée à côté de la vraie C→D n'est plus signalée, car le `state` reconstruit signé par D est sauté et C n'est jamais abandonnée ; le second contrôle l'ouvre avec C et se tait (la clé du voleur n'est pas adoptée) ; piste : signaler deux déclarations contradictoires d'une même clé | `test_j8_l5_verif.py::test_a_statement_of_c_for_a_thief_beside_the_server_statement_c_to_d_is_reported` | à planifier (J13-L1) |
 | R48 | P2 | J8-L5 | Hors spécification, antérieur au lot (voisin de R43, R45) : la clé d'un voleur est adoptée quand son faux `state` 3 (déclaration C→voleur, fichier nommé pour trier en premier) passe avant le vrai `delta` 3 (C→D) ; contraire à la lecture littérale du critère 3 de J8-L5, admis par le §6.3 tant que la rotation n'est pas connue | `test_j8_l5_verif.py::test_a_thief_key_vouched_for_by_c_is_not_adopted_when_its_state_sorts_first` | à planifier (J13-L1) |
+| R49 | P3 | J8-L3 | Hors spécification, antérieur au lot : la sauvegarde de migration (`store.py:148-153`) est créée sous le masque du processus puis passée en 0600 après la copie ; pendant cet intervalle, la copie (tous les secrets) peut être en 0644 dans un dossier en 0700 ; piste : l'ouvrir en 0600 dès sa création | aucun | à planifier (J13-L3) |
+| R50 | P3 | J8-L3 | Hors spécification : `store.py:97` ouvre la base par `os.open(path, O_RDWR \| O_CREAT, 0o600)` à chaque ouverture ; un processus qui n'a que le droit de lecture échoue désormais, et une commande qui ne fait que lire crée une base absente [Probable, non testé] | aucun | à planifier (J13-L3) |
+| R51 | P4 | J8-L3 | Hors spécification : `store.py:100`, le `chmod` d'un `-wal` ou `-shm` appartenant à un autre utilisateur (créé par root via la CLI) lève `PermissionError` et le store ne s'ouvre plus ; cas rare, SQLite échouerait sans doute aussi [Supposé] | aucun | à planifier (J14) |
+| R52 | P4 | J8-L3 | Hors spécification : le `429` des requêtes non authentifiées (`wsgi.py:248`) n'a pas d'en-tête `Retry-After`, pas plus que le `429` par jumelage | aucun | à planifier (J14) |

@@ -243,9 +243,12 @@ métier ; la publication sur PyPI (ADR-0021).
   `127.0.0.1`). Ajouts : ni adresse collectée dans une alerte `robots.txt`, ni corps de POST, ni cookie, ni valeur de
   formulaire.
 - **ES-10 Secrets** — MUST, livré (R07, R08) : dans le dossier d'état du service (droits 700), jamais dans le *store*
-  Nix, la configuration NixOS, les journaux ni le dépôt.
+  Nix, la configuration NixOS, les journaux ni le dépôt. `veilleur.db` et ses fichiers WAL sont en 0600 quel que soit
+  le masque du processus.
 - **ES-11 Limites** — MUST, livré (R04, R13) : corps de requête de 1 Mo au plus (`413`), refusé par l'application même si
-  le mandataire laisse passer.
+  le mandataire laisse passer. En-tête, date et `key_id` sont contrôlés avant toute lecture du corps ; au plus 300
+  réponses `401` par minute pour le processus, au-delà `429 rate_limited` (D12), sans compter les requêtes
+  authentifiées.
 - **ES-12 Pas de confidentialité persistante** — MUST, livré : un secret de jumelage volé ouvre les paquets passés de
   ce jumelage. Assumé et documenté dans le modèle de menace.
 - **ES-13 Livrables** — MUST, livré (R22) : spécification du protocole (**normative en anglais**, traduction française
